@@ -25,10 +25,8 @@ data DateDirective = DateDir (Maybe (Int, Int, Int)) Day deriving (Show)
 
 
 
--- TODO: This means cannot use `#` in middle of line, right? Hmm.
 sc :: Parser ()
-sc = hidden . skipMany $ choice [(void spaceChar),
-                                 (L.skipLineComment "#")]
+sc = hidden . skipMany $ void spaceChar
 
 
 lexeme :: Parser a -> Parser a
@@ -47,6 +45,7 @@ dash = symbol "-"
 
 
 
+-- TODO: No need to be case-sensitive here.
 day :: Parser Day
 day =
   ((      string "MON")  *> pure Mon) <|>
@@ -57,14 +56,15 @@ day =
   ((try $ string "SAT")  *> pure Sat) <|>
   ((try $ string "SUN")  *> pure Sun)
 
+-- TODO: at the moment, not strict about `yyyy-mm-dd`
 date :: Parser (Int, Int, Int)
 date =
-  do yyyy <- integer -- todo: check 4x??
+  do yyyy <- fromIntegral <$> integer
      void  dash
-     mm <- integer
+     mm <- fromIntegral integer
      void  dash
-     dd <- integer
-     return $ (fromIntegral yyyy, fromIntegral mm, fromIntegral dd)
+     dd <- fromIntegral integer
+     return $ (yyyy, mm, dd)
 
 dateDirective :: Parser DateDirective
 dateDirective =
