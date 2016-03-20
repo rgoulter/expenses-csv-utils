@@ -22,11 +22,20 @@ import qualified Text.Megaparsec.Char as C
 
 
 -- ~ 1234.12 CUR
-data Money = Amount Int Int (Maybe String) Bool deriving (Show)
+data Money = Amount {
+               moneyDollar   :: Int,
+               moneyCents    :: Int,
+               moneyCurrency :: Maybe String,
+               moneyIsApprox :: Bool
+             } deriving (Show)
 
 data Direction = Spent | Received deriving (Show)
 
-data Expense = Expense Direction Money String deriving (Show)
+data Expense = Expense {
+                 expenseDirection :: Direction,
+                 expenseAmount    :: Money,
+                 expenseRemark    :: String
+               } deriving (Show)
 
 
 
