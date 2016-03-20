@@ -19,10 +19,10 @@ So, I can keep track of expenses in a format something like:
 ```
 2016-01-01 MON
 Spent 100 on groceries
-Spent 30 on games (BoneStorm)
+Spent 30 on games
 
 TUE
-Spent 1 on crabby patty from Krusty Krabs
+Spent 2 on breakfast
 ```
 
 Where:
