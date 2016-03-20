@@ -12,7 +12,9 @@ date, amount, currency, remark, category
 I've found apps on my phone where I enter in what expenses I've made
 to be too cumbersome. But I want to be aware of how I'm spending my money.
 
-So I've kept track of it in a textfile something like:
+It's much easier for me to type into a textfile, & keep this file in a VCS
+repository somewhere.  
+So, I can keep track of expenses in a format something like:
 
 ```
 2016-01-01 MON
