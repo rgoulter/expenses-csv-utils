@@ -52,7 +52,10 @@ rowFromExp (y,m,d) exp =
   where
       date   = printf "%4d-%02d-%02d" y m d
       amount = expenseAmount exp
-      price  = printf "%d.%d" (moneyDollar amount) (moneyCents amount)
+      mult = case (expenseDirection exp) of
+               Spent -> (1 *)
+               Received -> ((-1) *)
+      price  = printf "%d.%d" (mult $ moneyDollar amount) (moneyCents amount)
       cur    = fromMaybe "SGD" (moneyCurrency amount)
       remark = expenseRemark exp
 
