@@ -38,3 +38,18 @@ Where:
 
 * The 'remark' is natural language (ish); although I prefer to use
   phrases like "on X at Y", "on X (a, b, c)", etc.
+
+## Running in a Cabal Sandbox
+
+You can run the following commands to setup a sandbox, install this project's
+dependencies (to the sandbox):
+
+```
+cabal sandbox init
+cabal install --only-dependencies
+cabal build
+```
+
+builds to `dist/build/expenses-csv-utils/expenses-csv-utils`.  
+Alternatively (in the sandbox), `cabal exec -- runghc Main.hs <file1> <file2>`
+to run main.
