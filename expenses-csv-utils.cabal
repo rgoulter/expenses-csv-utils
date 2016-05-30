@@ -19,6 +19,26 @@ executable expenses-csv-utils
   main-is:             Main.hs
   -- other-modules:
   -- other-extensions:
-  build-depends:       base >=4.8 && <4.9, megaparsec >=4.3 && <4.4, time >=1.6 && <1.7, csv >=0.1 && <0.2
+  build-depends:       base >=4.8 && <4.9
+                     , megaparsec >=4.3 && <4.4
+                     , time >=1.6 && <1.7
+                     , csv >=0.1 && <0.2
+                     , hspec-megaparsec == 0.1.0
+  -- hs-source-dirs:
+  default-language:    Haskell2010
+
+test-suite tests
+  main-is:             ParseDateDirectiveSpec.hs
+  type: exitcode-stdio-1.0
+  -- other-modules:
+  -- other-extensions:
+  build-depends:       base >=4.8 && <4.9
+                     , megaparsec >=4.3 && <4.4
+                     , time >=1.6 && <1.7
+                     , csv >=0.1 && <0.2
+                     , hspec              >= 2.0
+                     , hspec-expectations >= 0.5
+                     , hspec-megaparsec == 0.1.0
+                     , containers
   -- hs-source-dirs:
   default-language:    Haskell2010
