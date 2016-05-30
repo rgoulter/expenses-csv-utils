@@ -64,7 +64,7 @@ rowFromExp (y,m,d) exp =
 process :: String -> String -> IO ()
 process inputF outputF = do
   -- Parse the input file to list of [DateDir | ExpDir]
-  result <- parseFromFile parseExpensesFile inputF
+  result <- runParser parseExpensesFile inputF <$> readFile inputF
 
   case result of
     Left err -> print err

@@ -1,40 +1,43 @@
 module Main (main) where
 
+import Data.List.NonEmpty (NonEmpty (..))
 import Test.Hspec
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
-import Text.Megaparsec.Error (newErrorMessages)
-import Text.Megaparsec.Pos (initialPos)
+import Text.Megaparsec.String
+import qualified Data.Set as E
 
 -- Adapted from
--- https://raw.githubusercontent.com/mrkkrp/hspec-megaparsec/0.1.1/tests/Main.hs
--- 0.1.1 version is for MegaParsec 0.4.4
+-- https://raw.githubusercontent.com/mrkkrp/hspec-megaparsec/0.2.0/tests/Main.hs
 
 main :: IO ()
 main = hspec $ do
   describe "shouldParse" $
     it "works" $
-      parse letterChar "" "x" `shouldParse` 'x'
+      parse (letterChar :: Parser Char) "" "x" `shouldParse` 'x'
   describe "parseSatisfies" $
     it "works" $
-      parse (many punctuationChar) "" "?!!" `parseSatisfies` ((== 3) . length)
+      parse (many punctuationChar :: Parser String) "" "?!!"
+        `parseSatisfies` ((== 3) . length)
   describe "shouldFailOn" $
     it "works" $
-      parse (char 'x') "" `shouldFailOn` "a"
+      parse (char 'x' :: Parser Char) "" `shouldFailOn` "a"
   describe "shouldSucceedOn" $
     it "works" $
-      parse (char 'x') "" `shouldSucceedOn` "x"
+      parse (char 'x' :: Parser Char) "" `shouldSucceedOn` "x"
   describe "shouldFailWith" $
     it "works" $
-      parse (char 'x') "" "b" `shouldFailWith`
-        newErrorMessages [Unexpected "'b'", Expected "'x'"] (initialPos "")
+      parse (char 'x' :: Parser Char) "" "b" `shouldFailWith`
+        ParseError
+          { errorPos        = initialPos "" :| []
+          , errorUnexpected = E.singleton (Tokens $ 'b' :| [])
+          , errorExpected   = E.singleton (Tokens $ 'x' :| [])
+          , errorCustom     = E.empty }
   describe "failsLeaving" $
     it "works" $
-      runParser' (many (char 'x') <* eof) (initialState "xxa")
-        -- n.b. with MegaParsec >= 0.4.4, the remaining input is "a"
-        -- but we're currently only using < 0.4.4
-        `failsLeaving` "xxa"
+      runParser' (many (char 'x') <* eof :: Parser String) (initialState "xxa")
+        `failsLeaving` "a"
   describe "succeedsLeaving" $
     it "works" $
-      runParser' (many (char 'x')) (initialState "xxa")
+      runParser' (many (char 'x') :: Parser String) (initialState "xxa")
         `succeedsLeaving` "a"
