@@ -59,6 +59,24 @@ parseDateDirectiveSpec =
       parse D.dateDirective "" `shouldFailOn` "MO"
       -- n.b. "SUN 1234-56-78" consumes the "SUN", so not a failure case.
 
+    it "shouldn't consume too much" $ do
+      runParser' D.dateDirective (initialState "MON \nnext") `succeedsLeaving` " \nnext"
+      runParser' D.dateDirective (initialState "FRI \nnext") `succeedsLeaving` " \nnext"
+      runParser' D.dateDirective (initialState "SAT \nnext") `succeedsLeaving` " \nnext"
+      runParser' D.dateDirective (initialState "SUN \nnext") `succeedsLeaving` " \nnext"
+
+      -- Tues, Weds, Thurs consume *until* newline.
+      runParser' D.dateDirective (initialState "TUE   \nnext") `succeedsLeaving` "\nnext"
+      runParser' D.dateDirective (initialState "TUES  \nnext") `succeedsLeaving` "\nnext"
+      runParser' D.dateDirective (initialState "WED   \nnext") `succeedsLeaving` "\nnext"
+      runParser' D.dateDirective (initialState "WEDS  \nnext") `succeedsLeaving` "\nnext"
+      runParser' D.dateDirective (initialState "THU   \nnext") `succeedsLeaving` "\nnext"
+      runParser' D.dateDirective (initialState "THURS \nnext") `succeedsLeaving` "\nnext"
+
+    it "shouldn't consume too much (on failure)" $ do
+      runParser' D.dateDirective (initialState "Spent 3 on whatever") `failsLeaving` "Spent 3 on whatever"
+      runParser' D.dateDirective (initialState "Sent etc.") `failsLeaving` "Sent etc."
+
 
 
 {-
@@ -101,6 +119,19 @@ parseExpenseDirectiveSpec =
       parse E.expense "" "Spent 1.23 on food" `shouldParse` E.Expense E.Spent (E.Amount 1 23 Nothing False) "on food"
     it "should not parse not expense directive" $ do
       parse E.amount "" `shouldFailOn` "NotAnExpenseDirective"
+
+    it "shouldn't consume too much" $ do
+      -- consume everything until the newline, for the 'remark'
+      runParser' E.expense (initialState "Spent 1 on x\nnext") `succeedsLeaving` "\nnext"
+
+    it "shouldn't consume too much (on failure)" $ do
+      -- Preserve all input on case of date directive
+      runParser' E.expense (initialState "MON\nnext") `failsLeaving` "MON\nnext"
+      runParser' E.expense (initialState "2016-02-01 MON\nnext") `failsLeaving` "2016-02-01 MON\nnext"
+      runParser' E.expense (initialState "Sent 3 on x\nnext") `failsLeaving` "Sent 3 on x\nnext"
+
+      -- Comments are taken care of in main
+      runParser' E.expense (initialState "#cmt\nnext") `failsLeaving` "#cmt\nnext"
 
 
 
