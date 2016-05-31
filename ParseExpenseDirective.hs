@@ -27,15 +27,15 @@ data Money = Amount {
                moneyCents    :: Int,
                moneyCurrency :: Maybe String,
                moneyIsApprox :: Bool
-             } deriving (Show)
+             } deriving (Show, Eq)
 
-data Direction = Spent | Received deriving (Show)
+data Direction = Spent | Received deriving (Show, Eq)
 
 data Expense = Expense {
                  expenseDirection :: Direction,
                  expenseAmount    :: Money,
                  expenseRemark    :: String
-               } deriving (Show)
+               } deriving (Show, Eq)
 
 
 
