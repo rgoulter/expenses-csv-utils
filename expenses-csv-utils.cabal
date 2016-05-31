@@ -36,6 +36,7 @@ library
   -- hs-source-dirs:
   exposed-modules:     ParseDateDirective
                      , ParseExpenseDirective
+                     , ParseExpensesDoc
   default-language:    Haskell2010
 
 
