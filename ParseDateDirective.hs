@@ -20,12 +20,12 @@ import qualified Data.Time.Calendar as DT
 
 
 
-data Day = Mon | Tue | Wed | Thu | Fri | Sat | Sun deriving (Show)
+data Day = Mon | Tue | Wed | Thu | Fri | Sat | Sun deriving (Show, Eq)
 
 data DateDirective = DateDir {
                        dateDirDate :: Maybe (Int, Int, Int),
                        dateDirDay  :: Day
-                     } deriving (Show)
+                     } deriving (Show, Eq)
 
 
 
