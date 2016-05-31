@@ -64,10 +64,11 @@ rowFromExp (y,m,d) exp =
 process :: String -> String -> IO ()
 process inputF outputF = do
   -- Parse the input file to list of [DateDir | ExpDir]
-  result <- runParser parseExpensesFile inputF <$> readFile inputF
+  result <- runParser (parseExpensesFile <* eof) inputF <$> readFile inputF
 
   case result of
-    Left err -> print err
+    Left err ->
+      putStrLn $ parseErrorPretty err
     Right xs -> do
       let (_, _, rows) = foldl (\(date, day, rows) lineD -> case lineD of
                                   ExpCmd exp -> (date, day, rowFromExp date exp : rows)
