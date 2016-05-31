@@ -85,13 +85,13 @@ dash = symbol "-"
 -- TODO: No need to be case-sensitive here.
 day :: Parser Day
 day =
-  ((      string "MON")  *> pure Mon) <|>
-  ((try $ string "TUE" <* skipMany (noneOf "\n\r\0")) *> pure Tue) <|>
-  ((      string "WED" <* skipMany (noneOf "\n\r\0"))  *> pure Wed) <|>
-  ((try $ string "THU" <* skipMany (noneOf "\n\r\0")) *> pure Thu) <|>
-  ((      string "FRI")  *> pure Fri) <|>
-  ((try $ string "SAT")  *> pure Sat) <|>
-  ((try $ string "SUN")  *> pure Sun)
+  ((string "MON")  *> pure Mon) <|>
+  ((string "TUE" <* skipMany (noneOf "\n\r\0")) *> pure Tue) <|>
+  ((string "WED" <* skipMany (noneOf "\n\r\0"))  *> pure Wed) <|>
+  ((string "THU" <* skipMany (noneOf "\n\r\0")) *> pure Thu) <|>
+  ((string "FRI")  *> pure Fri) <|>
+  ((string "SAT")  *> pure Sat) <|>
+  ((string "SUN")  *> pure Sun)
 
 -- TODO: at the moment, not strict about `yyyy-mm-dd`
 date :: Parser (Int, Int, Int)
