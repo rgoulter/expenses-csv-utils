@@ -18,6 +18,24 @@ import ParseExpenseDirective hiding (sc)
 data LineDirective = DateCmd DateDirective | ExpCmd Expense deriving (Show, Eq)
 
 
+-- For now, we'll just have categories as strings
+data Category = Uncategorised
+              | Category String
+
+
+
+data Entry = Entry
+  { entryDate       :: (Int, Int, Int)    -- (y,m,d)
+  , entryPrice      :: (Int, Int, String) -- (dlr,cents,cur)
+  , entryRemark     :: String
+  , entryCategories :: [Category]
+  }
+
+
+
+-- PARSER
+
+
 
 sc :: Parser ()
 sc = hidden . skipMany $ choice [void spaceChar,
@@ -33,23 +51,53 @@ parseExpensesFile =
 
 
 
-rowFromExp :: (Int, Int, Int) -> Expense -> [String]
-rowFromExp (y,m,d) exp =
-  [date, price, cur, remark, "Uncategorised"]
+-- UTILITY FUNCTIONS
+
+
+
+entryFromExpense :: (Int, Int, Int) -> Expense -> Entry
+entryFromExpense (y,m,d) exp =
+  Entry { entryDate       = (y,m,d)
+        , entryPrice      = (dollars, cents, cur)
+        , entryRemark     = expenseRemark exp
+        -- MAGIC: 2x categories.
+        , entryCategories = [ Uncategorised
+                            , Uncategorised
+                            ]
+        }
   where
-    date   = printf "%4d-%02d-%02d" y m d
-    amount = expenseAmount exp
-    mult   = case expenseDirection exp of
+    amount  = expenseAmount exp
+    mult    = case expenseDirection exp of
                Spent -> (1 *)
                Received -> ((-1) *)
-    price  = printf "%d.%d" (mult $ moneyDollar amount) (moneyCents amount)
-    cur    = fromMaybe "SGD" (moneyCurrency amount)
-    remark = expenseRemark exp
+    dollars = mult $ moneyDollar amount
+    cents   = moneyCents amount
+
+    -- MAGIC: Implicit currency is SGD if not given.
+    cur     = fromMaybe "SGD" (moneyCurrency amount)
 
 
 
-rowsFromDirectives :: [LineDirective] -> [[String]]
-rowsFromDirectives directives =
+stringOfCategory :: Category -> String
+stringOfCategory Uncategorised = "Uncategorised"
+stringOfCategory (Category c) = c
+
+
+
+rowFromEntry :: Entry -> [String]
+rowFromEntry entry =
+  [date, price, cur, remark] ++ map stringOfCategory (entryCategories entry)
+  where
+    (y, m, d) = entryDate entry
+    date   = printf "%4d-%02d-%02d" y m d
+    (dollars, cents, cur) = entryPrice entry
+    price  = printf "%d.%d" dollars cents
+    remark = entryRemark entry
+
+
+
+entriesFromDirectives :: [LineDirective] -> [Entry]
+entriesFromDirectives directives =
   let init = ((-1, -1, -1), Mon, [])
 
       -- Fold over a (Date, Day, GatheredRows)
@@ -58,7 +106,7 @@ rowsFromDirectives directives =
                  case lineD of
                    -- For ExpenseDirectives, simply add to list of 'rows'.
                    ExpCmd exp ->
-                     (date, day, rowFromExp date exp : rows)
+                     (date, day, entryFromExpense date exp : rows)
 
                    -- For DateDirectives, increment/set the date/day.
                    DateCmd dateDir ->
@@ -68,4 +116,10 @@ rowsFromDirectives directives =
               directives
       rows' = reverse rows
   in  rows'
+
+
+
+rowsFromDirectives :: [LineDirective] -> [[String]]
+rowsFromDirectives directives =
+  map rowFromEntry $ entriesFromDirectives directives
 
