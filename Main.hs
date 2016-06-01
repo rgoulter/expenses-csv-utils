@@ -30,7 +30,7 @@ process inputF outputF = do
     Left err ->
       putStrLn $ parseErrorPretty err
     Right directives ->
-      let rows = rowsFromDirectives directives
+      let rows = recordsFromDirectives directives
           outp = printCSV rows
       in  writeFile outputF outp
 
