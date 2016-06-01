@@ -53,6 +53,20 @@ parseExpensesFile =
 
 
 
+signedInteger :: Parser Integer
+signedInteger = L.signed sc D.integer
+
+
+-- for getting from CSV field,
+-- e.g. -1.23 to (-1, 23), 3 to (3, 0)
+price :: Parser (Int, Int)
+price =
+  do dollars <- signedInteger
+     cents <- fromMaybe 0 <$> optional (D.symbol "." *> signedInteger)
+     return (fromIntegral dollars, fromIntegral cents)
+
+
+
 -- UTILITY FUNCTIONS
 
 
@@ -127,4 +141,25 @@ entriesFromDirectives directives =
 
 
 
+recordsFromDirectives :: [LineDirective] -> [CSV.Record]
+recordsFromDirectives directives =
+  map recordFromEntry $ entriesFromDirectives directives
+
+
+
+-- Pattern-match the Record's fields, ensures sufficient.
+entryFromRecord :: CSV.Record -> Maybe Entry
+entryFromRecord (dateStr:priceStr:cur:remark:categories) = do
+  (dollars, cents) <- parseMaybe price priceStr
+  (y, m, d)        <- parseMaybe D.date dateStr
+  return Entry { entryDate       = (y,m,d)
+               , entryPrice      = (dollars, cents, cur)
+               , entryRemark     = remark
+               -- May-be want to 'pad' this to 2?
+               , entryCategories = map categoryFromString categories
+               }
+
+-- If insufficient number of fields, Nothing.
+entryFromRecord _ =
+  Nothing
 
