@@ -163,3 +163,11 @@ entryFromRecord (dateStr:priceStr:cur:remark:categories) = do
 entryFromRecord _ =
   Nothing
 
+
+
+entriesFromCSV :: CSV.CSV -> [Entry]
+entriesFromCSV =
+  -- If any Record is malformed (for some reason),
+  -- discard/ignore it.
+  mapMaybe entryFromRecord
+
