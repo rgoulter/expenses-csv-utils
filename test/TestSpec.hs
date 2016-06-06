@@ -16,7 +16,7 @@ import TestDateParser
 import TestExpenseParser
 import TestExpenseDocParser
 import TestMergeEntries
-import TestCategoriseExpenses
+import TestCategoriseEntries
 
 -- Adapted from
 -- https://raw.githubusercontent.com/mrkkrp/hspec-megaparsec/0.2.0/tests/Main.hs

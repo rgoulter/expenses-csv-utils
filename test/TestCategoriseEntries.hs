@@ -1,4 +1,4 @@
-module TestCategoriseExpenses where
+module TestCategoriseEntries where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import Test.Hspec
@@ -37,6 +37,12 @@ model1 = ( [entry1, entry2]
          )
 model1' = CE.nextModel model1
 
+-- All empty
+model2 = ( [entry2, entry2]
+         , []
+         , [C.emptyModel, C.emptyModel]
+         )
+
 
 
 categoriseExpensesSpec :: Spec
@@ -54,4 +60,10 @@ categoriseExpensesSpec =
           (s, (_,xs1):(_,xs2):_) = CE.promptFromModel model
       xs1 `shouldBe` ["C1"]
       xs2 `shouldBe` ["C2"]
+
+    it "updateModelWith" $ do
+      -- If we give the same categories,
+      -- the models should be the same
+      let model' = CE.updateModelWith model2 ["C1", "C2"]
+      model' `shouldBe` model1'
 

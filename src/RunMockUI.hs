@@ -11,7 +11,7 @@ import UI (initialState, theApp, St(..))
 samplePrompt :: CategorisePrompt
 samplePrompt = ( "Spent 10 SGD remark"
                , [ (Just "initA", ["item1", "item2", "item3", "item4", "item5"])
-                 , (Just "initB", ["itemA", "itemB", "itemC", "itemD", "itemE"])
+                 , (Just "initB", ["itemA", "itemB", "itemC"])
                  ]
                )
 

@@ -49,7 +49,7 @@ promptFromEntry e models =
       suggestionsFromCategory (c, model) =
         let probable = M.probableCategories model remark
             -- MAGIC assumption that UI has only 5.
-            sug = take 5 $ map (\(c,_) -> D.stringFromCategory c) probable
+            sug = take 5 $ (map (\(c,_) -> D.stringFromCategory c) probable)
             mt =
               case c of
                 D.Uncategorised -> Nothing
@@ -80,14 +80,20 @@ initFromCSV csv =
 
 
 
+updateModelWith :: ProcessModel -> [String] -> ProcessModel
+updateModelWith (e:es,done,m) newCategories =
+  let e' = e { D.entryCategories = map D.categoryFromString newCategories }
+  in  nextModel (e':es,done,m)
+
+
+
 -- `m`, some model for computing the results,
 -- `res`, the values of edit.
 nextPrompt :: ProcessModel -> [String] -> IO (ProcessModel, CategorisePrompt)
 nextPrompt ([],  done,m) newCategories = return (([],done,m), emptyPrompt)
-nextPrompt (e:es,done,m) newCategories =
+nextPrompt model newCategories =
   -- call nextModel, updating the head of "to-process" entries w/ the cats.,
-  let e' = e { D.entryCategories = map D.categoryFromString newCategories }
-      model' = nextModel (e':es,done,m)
+  let model' = updateModelWith model newCategories
   in do
     -- XXX write the whole CSV to file. (or wait till exit?).
 
