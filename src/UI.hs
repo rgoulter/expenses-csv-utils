@@ -8,7 +8,6 @@ import Data.Monoid ((<>))
 import Data.Maybe (fromMaybe, maybeToList, listToMaybe)
 import qualified Data.Text.Zipper as Z
 
-import Control.Monad (void, forM_)
 import Control.Monad.IO.Class (liftIO)
 import Lens.Micro
 import Lens.Micro.TH
@@ -50,26 +49,6 @@ In order to be useful, we need:
 -}
 
 type CategorisePrompt = (String, [(Maybe String, [String])])
-
-
-
-samplePrompt :: CategorisePrompt
-samplePrompt = ( "Spent 10 SGD remark"
-               , [ (Just "initA", ["item1", "item2", "item3", "item4", "item5"])
-                 , (Just "initB", ["itemA", "itemB", "itemC", "itemD", "itemE"])
-                 ]
-               )
-
-
--- `m`, some model for computing the results,
--- `res`, the values of edit.
-nextSamplePrompt :: m -> [String] -> IO (m, CategorisePrompt)
-nextSamplePrompt m res = do
-  putStrLn "Outputs:"
-  forM_ res putStrLn
-  putStrLn ""
-  -- Doesn't matter, just do like this.
-  return (m, samplePrompt)
 
 
 

@@ -53,10 +53,28 @@ import UI
        save to the CSV file.
 -}
 
+initPrompt :: CategorisePrompt
+initPrompt = ( "Spent 10 SGD remark"
+               , [ (Just "initA", ["item1", "item2", "item3", "item4", "item5"])
+                 , (Just "initB", ["itemA", "itemB", "itemC", "itemD", "itemE"])
+                 ]
+               )
+
+
+
+-- `m`, some model for computing the results,
+-- `res`, the values of edit.
+nextPrompt :: m -> [String] -> IO (m, CategorisePrompt)
+nextPrompt m res = do
+  putStrLn "Got result"
+  -- Doesn't matter, just do like this.
+  return (m, initPrompt)
+
+
 
 
 main :: IO ()
 main =
   -- initialState :: CategorisePrompt -> UpdateFn -> [ Maybe String ]
-  let initState = initialState samplePrompt nextSamplePrompt ()
+  let initState = initialState initPrompt nextPrompt ()
   in  void $ M.defaultMain theApp initState
