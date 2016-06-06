@@ -49,25 +49,27 @@ In order to be useful, we need:
       (IO, b/c presumably this func. writes to file).
 -}
 
-type CategorisePrompt = (String, [[String]])
+type CategorisePrompt = (String, [(Maybe String, [String])])
 
 
 
 samplePrompt :: CategorisePrompt
 samplePrompt = ( "Spent 10 SGD remark"
-               , [ ["item1", "item2", "item3", "item4", "item5"]
-                 , ["itemA", "itemB", "itemC", "itemD", "itemE"]
+               , [ (Just "initA", ["item1", "item2", "item3", "item4", "item5"])
+                 , (Just "initB", ["itemA", "itemB", "itemC", "itemD", "itemE"])
                  ]
                )
 
 
-nextSamplePrompt :: CategorisePrompt -> [String] -> IO (CategorisePrompt, [Maybe String])
-nextSamplePrompt p res = do
+-- `m`, some model for computing the results,
+-- `res`, the values of edit.
+nextSamplePrompt :: m -> [String] -> IO (m, CategorisePrompt)
+nextSamplePrompt m res = do
   putStrLn "Outputs:"
   forM_ res putStrLn
   putStrLn ""
   -- Doesn't matter, just do like this.
-  return (samplePrompt, [ Just "init1", Just "init2" ])
+  return (m, samplePrompt)
 
 
 
@@ -145,14 +147,15 @@ currentName (idx, namedBools) =
 -- Don't need much more than a dumb list.
 data MyList = List Name [String]
 
-data St =
+data St m =
   St { _modalState :: ModalState
      , _edit1 :: E.Editor Name
      , _list1 :: MyList
      , _edit2 :: E.Editor Name
      , _list2 :: MyList
      , _prompt :: CategorisePrompt
-     , _updatePrompt :: CategorisePrompt -> [String] -> IO (CategorisePrompt, [Maybe String])
+     , _updatePrompt :: m -> [String] -> IO (m, CategorisePrompt)
+     , _promptState :: m
      }
 
 makeLenses ''St
@@ -160,10 +163,10 @@ makeLenses ''St
 
 
 initialState :: CategorisePrompt
-             -> (CategorisePrompt -> [String] -> IO (CategorisePrompt, [Maybe String]))
-             -> [Maybe String]
-             -> St
-initialState prompt@(s,suggestions) updateFn initText =
+             -> (m -> [String] -> IO (m, CategorisePrompt))
+             -> m
+             -> St m
+initialState prompt@(s,(mt1,sg1):(mt2,sg2):_) updateFn initState =
      -- I'm thinking this mightn't be the right model for our modal focus,
      -- don't need to know name of ConfirmBtn;
      -- & want to know to switch between Edit1/List1, etc.
@@ -173,12 +176,13 @@ initialState prompt@(s,suggestions) updateFn initText =
                       , NamedB ConfirmBtn Nothing
                       ])
      -- ASSUMPTION: For now, assume `prompt` contains at-least 2 suggestions
-     , _edit1      = E.editor Edit1 (str . unlines) (Just 1) (fromMaybe "" $ initText !! 0)
-     , _list1      = List List1 $ suggestions !! 0
-     , _edit2      = E.editor Edit2 (str . unlines) (Just 1) (fromMaybe "" $ initText !! 1)
-     , _list2      = List List2 $ suggestions !! 1
+     , _edit1      = E.editor Edit1 (str . unlines) (Just 1) (fromMaybe "" mt1)
+     , _list1      = List List1 sg1
+     , _edit2      = E.editor Edit2 (str . unlines) (Just 1) (fromMaybe "" mt2)
+     , _list2      = List List2 sg2
      , _prompt     = prompt
      , _updatePrompt = updateFn
+     , _promptState = initState
      }
 
 
@@ -197,7 +201,7 @@ theMap = A.attrMap V.defAttr
 
 -- <=> is "put on top",
 -- <+> is "put beside"
-drawUI :: St -> [T.Widget Name]
+drawUI :: St m -> [T.Widget Name]
 drawUI st = [ui]
   where
     -- TODO: This pattern-match is dangerous and a kludge.
@@ -255,13 +259,12 @@ drawUI st = [ui]
 
 
 
-appEvent :: St -> V.Event -> T.EventM Name (T.Next St)
+appEvent :: St m -> V.Event -> T.EventM Name (T.Next (St m))
 appEvent st ev =
   let modalSt@(modalIdx,_) = _modalState st
       isEdit = isEditing modalSt
 
       (_,suggestions) = _prompt st
-      updateFn = _updatePrompt st
 
       -- XXX Strictly, this should only work for if the list has than idx..
       acceptsHotkey :: Char -> Bool
@@ -270,7 +273,7 @@ appEvent st ev =
       stringForHotkey :: Char -> Maybe String
       stringForHotkey c =
         -- Unsafe assumption that |suggestions| > |modalIdx|
-        lookup c $ zip ['1'..] (suggestions !! modalIdx)
+        lookup c $ zip ['1'..] (snd (suggestions !! modalIdx))
   in case ev of
     -- Esc Quits the App
     V.EvKey V.KEsc         [] -> M.halt st
@@ -289,18 +292,21 @@ appEvent st ev =
       -- If we're going back to 1st, need to:
       --   - clear the Edits,
       --   - refresh the suggestions
-      -- TODO:LENS: a better way to do multiple updates in Lens syntax?
       let getFirstLine ed = fromMaybe "" . listToMaybe $ E.getEditContents ed
           txt1 = getFirstLine $ st ^. edit1
           txt2 = getFirstLine $ st ^. edit2
       in M.suspendAndResume $ do
-        (prompt', initText1:initText2:_) <- _updatePrompt st (_prompt st) [txt1, txt2]
+        -- Filthy pattern match, ASSUMPTION of size 2
+        (m', prompt'@(_,(initText1,_):(initText2,_):_)) <- _updatePrompt st (_promptState st) [txt1, txt2]
         let setTextZipper ms =
               Z.stringZipper (maybeToList ms) (Just 1)
-            st1 = st  & edit1 %~ E.applyEdit (\z -> setTextZipper initText1)
-            st2 = st1 & edit2 %~ E.applyEdit (\z -> setTextZipper initText2)
-            st3 = st2 & prompt %~ const prompt'
-        return $ st3 & modalState %~ incrModalState
+            st' = st { _modalState  = incrModalState (_modalState st)
+                     , _edit1       = E.applyEdit (\z -> setTextZipper initText1) (_edit1 st)
+                     , _edit2       = E.applyEdit (\z -> setTextZipper initText2) (_edit2 st)
+                     , _prompt      = prompt'
+                     , _promptState = m'
+                     }
+        return $ st'
 
     V.EvKey V.KEnter      [] ->
       M.continue $ st & modalState %~ incrModalState
@@ -327,7 +333,7 @@ appEvent st ev =
 
 
 
-appCursor :: St -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
+appCursor :: St m -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
 appCursor st locs =
   let mn = currentName (_modalState st)
   -- in case mn of
@@ -337,7 +343,7 @@ appCursor st locs =
 
 
 
-theApp :: M.App St V.Event Name
+theApp :: M.App (St m) V.Event Name
 theApp =
   M.App { M.appDraw = drawUI
         , M.appChooseCursor = appCursor
