@@ -3,12 +3,11 @@ module CategoriseEntries where
 import Text.CSV (CSV, printCSV, parseCSVFromFile)
 
 import Control.Monad (void)
-import Brick.Main (defaultMain)
 
 import qualified Categorise as M
 import qualified ParseExpensesDoc as D
 
-import UI
+import UI.Types (CategorisePrompt)
 
 
 

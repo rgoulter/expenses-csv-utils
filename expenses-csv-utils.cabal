@@ -30,6 +30,8 @@ library
                      , ParseExpenseDirective
                      , ParseExpensesDoc
                      , Categorise
+                     , CategoriseEntries
+                     , UI.Types
   default-language:    Haskell2010
 
 

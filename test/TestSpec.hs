@@ -16,6 +16,7 @@ import TestDateParser
 import TestExpenseParser
 import TestExpenseDocParser
 import TestMergeEntries
+import TestCategoriseExpenses
 
 -- Adapted from
 -- https://raw.githubusercontent.com/mrkkrp/hspec-megaparsec/0.2.0/tests/Main.hs
@@ -30,6 +31,7 @@ main = hspec $ do
   parseExpenseDirectiveSpec
   parseExpensesFileSpec
   entryListMerge
+  categoriseExpensesSpec
 
 sample :: Spec
 sample = do

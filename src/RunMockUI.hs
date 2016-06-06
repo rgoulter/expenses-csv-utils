@@ -3,7 +3,8 @@ module Main where
 import Control.Monad (void, forM_)
 import qualified Brick.Main as M
 
-import UI (CategorisePrompt, initialState, theApp, St(..))
+import UI.Types (CategorisePrompt)
+import UI (initialState, theApp, St(..))
 
 
 
