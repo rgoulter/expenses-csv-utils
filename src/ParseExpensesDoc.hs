@@ -177,8 +177,9 @@ entryFromRecord (dateStr:priceStr:cur:remark:categories) = do
   return Entry { entryDate       = (y,m,d)
                , entryPrice      = (dollars, cents, cur)
                , entryRemark     = remark
-               -- May-be want to 'pad' this to 2?
-               , entryCategories = map categoryFromString categories
+               -- MAGIC assumption: 2 categories
+               , entryCategories = take 2 $
+                                   map categoryFromString categories ++ [Uncategorised, Uncategorised]
                }
 
 -- If insufficient number of fields, Nothing.
