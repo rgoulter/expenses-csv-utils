@@ -48,6 +48,7 @@ test-suite tests
                      , hspec-megaparsec == 0.2.0
                      , containers         >= 0.5 && < 0.6
                      , heredoc >= 0.2
+                     , hashable
   if !impl(ghc >= 8.0)
     build-depends:     semigroups         == 0.18.*
   hs-source-dirs:      test/
@@ -59,9 +60,11 @@ executable expenses-csv-utils
   -- other-modules:
   -- other-extensions:
   build-depends:       base >=4.8 && <4.9
+                     , expenses-csv-utils
                      , megaparsec >= 5.0.0
                      , time >=1.6 && <1.7
                      , csv >=0.1 && <0.2
+                     , hashable
   hs-source-dirs:      src/
   default-language:    Haskell2010
 
@@ -71,6 +74,7 @@ executable categorise-expenses
   -- other-modules:
   other-extensions:    OverloadedStrings, TemplateHaskell, RankNTypes
   build-depends:       base         >=4.8  && <4.9
+                     , expenses-csv-utils
                      , microlens    >=0.4  && <0.5
                      , vty          >=5.5  && <5.6
                      , brick        >=0.7  && <0.8
@@ -79,6 +83,13 @@ executable categorise-expenses
                      , microlens
                      , text-zipper
                      , transformers
+                     , expenses-csv-utils
+                     , megaparsec >= 5.0.0
+                     , time >=1.6 && <1.7
+                     , csv >=0.1 && <0.2
+                     , hashable
+                     , unordered-containers
+                     , split
   hs-source-dirs:      src/
   default-language:    Haskell2010
   ghc-options: -threaded

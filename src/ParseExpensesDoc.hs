@@ -4,6 +4,7 @@ import Text.Printf (printf)
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.List (find, groupBy, concatMap)
 import Data.Function (on)
+import Data.Hashable (Hashable(..))
 
 import Control.Monad (void, forM_)
 import Text.Megaparsec
@@ -25,7 +26,7 @@ data LineDirective = DateCmd D.DateDirective | ExpCmd E.Expense deriving (Show, 
 -- For now, we'll just have categories as strings
 data Category = Uncategorised
               | Category String
-              deriving (Show, Eq)
+              deriving (Eq)
 
 
 
@@ -111,7 +112,19 @@ stringFromCategory (Category c) = c
 
 categoryFromString :: String -> Category
 categoryFromString "Uncategorised" = Uncategorised
+categoryFromString "" = Uncategorised
 categoryFromString s = Category s
+
+
+
+instance Hashable Category where
+  hashWithSalt s Uncategorised = s
+  hashWithSalt s (Category c) = hashWithSalt s c
+
+
+
+instance Show Category where
+  show = stringFromCategory
 
 
 
