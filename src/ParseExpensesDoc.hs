@@ -204,6 +204,12 @@ compareEntries freshEntry oldEntry =
 
 
 -- TODO: I'd prefer if this were more maintainable
+-- `mergeEntryLists` is analogous to DropBox syncing.
+--
+-- It only handles cases where the (date,price,remark) are unchanged,
+-- and only the Categorisation has been changed.
+-- i.e. can't handle cases where remark is changed, or entries are
+-- removed.
 mergeEntryLists :: [Entry] -> [Entry] -> [Entry]
 mergeEntryLists freshEntries oldEntries =
   let key e = (entryDate e, entryPrice e, entryRemark e)
