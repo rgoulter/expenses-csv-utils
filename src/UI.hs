@@ -34,21 +34,7 @@ import qualified Brick.Focus as F
 import Brick.Util (on, fg)
 import Brick.Markup (markup, (@?))
 
-
-
--- INTERFACE TYPE
-{-
-In order to be useful, we need:
-  * Prompt
-  * List-of-suggestions. (i.e. [[String]] or whatever),
-    in this case, n=2
-  * some (IO?) function with which to
-    - output [String] (n=2, the values we had),
-      & get new (prompt,[suggestions]) back.
-      (IO, b/c presumably this func. writes to file).
--}
-
-type CategorisePrompt = (String, [(Maybe String, [String])])
+import UI.Types
 
 
 
@@ -276,11 +262,14 @@ appEvent st ev =
           txt2 = getFirstLine $ st ^. edit2
       in M.suspendAndResume $ do
         -- Filthy pattern match, ASSUMPTION of size 2
-        (m', prompt'@(_,(initText1,_):(initText2,_):_)) <- _updatePrompt st (_promptState st) [txt1, txt2]
+        (m', prompt'@(_,(initText1,sg1):(initText2,sg2):_)) <- _updatePrompt st (_promptState st) [txt1, txt2]
         let setTextZipper ms =
               Z.stringZipper (maybeToList ms) (Just 1)
             st' = st { _modalState  = incrModalState (_modalState st)
+                     -- So .. this is the only place we update _list1, _prompt right?
+                     , _list1       = List Edit1 sg1
                      , _edit1       = E.applyEdit (\z -> setTextZipper initText1) (_edit1 st)
+                     , _list2       = List Edit2 sg2
                      , _edit2       = E.applyEdit (\z -> setTextZipper initText2) (_edit2 st)
                      , _prompt      = prompt'
                      , _promptState = m'

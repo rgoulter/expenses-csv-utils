@@ -21,7 +21,7 @@ data Model category = Model
   -- Could compute the next ones from the above, but,
   , wordCounts :: HM.HashMap Term Count
   , totalWordCount :: Count
-  }
+  } deriving (Eq, Show)
 
 
 
