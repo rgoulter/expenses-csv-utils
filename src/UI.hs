@@ -59,27 +59,24 @@ data Name = Edit1
           deriving (Ord, Show, Eq)
 
 -- Use this for keeping track of modes/focus
-data NamedBool = NamedB Name (Maybe Bool)
+data NamedBool = NamedB Name Name Bool
+               | NamedN Name
 
 type ModalState = (Int, [NamedBool])
 
 clearNamedBools :: [NamedBool] -> [NamedBool]
 clearNamedBools =
-  map (\(NamedB n b) ->
-         let b' =
-               case b of
-                 Nothing -> Nothing
-                 Just _ -> Just False
-         in NamedB n b')
+  map (\nb ->
+         case nb of
+           NamedB n1 n2 _ -> NamedB n1 n2 False
+           NamedN n -> NamedN n)
 
 enableIdx :: Int -> [NamedBool] -> [NamedBool]
 enableIdx idx namedBools =
-  map (\(b, NamedB n mb) ->
-         let mb' =
-              case mb of
-                Nothing -> Nothing
-                Just bool -> Just b
-         in NamedB n mb')
+  map (\(b, nb) ->
+         case nb of
+           NamedB n1 n2 _ -> NamedB n1 n2 b
+           NamedN n -> NamedN n)
       (zip (map (idx ==) [0..]) -- Sequence of [True at idx, False otherwise]
            namedBools)
 
@@ -100,14 +97,16 @@ editModalState (idx, namedBools) =
 
 isEditing :: ModalState -> Bool
 isEditing (idx, namedBools) =
-  let (NamedB _ m) = namedBools !! idx
-  in fromMaybe False m
+  case namedBools !! idx of
+    NamedB _ _ b -> b
+    NamedN _ -> False
 
--- "Maybe Name",
-currentName :: ModalState -> Maybe Name
+currentName :: ModalState -> Name
 currentName (idx, namedBools) =
-  let NamedB n _ = namedBools !! idx
-  in  Just n
+  case namedBools !! idx of
+    NamedB n _ False -> n
+    NamedB _ n True  -> n
+    NamedN n -> n
 
 
 
@@ -146,9 +145,9 @@ initialState :: CategorisePrompt
 initialState prompt updateFn initState =
   let st =
         St { _modalState = (0,
-                            [ NamedB Edit1 (Just False)
-                            , NamedB Edit2 (Just False)
-                            , NamedB ConfirmBtn Nothing
+                            [ NamedB List1 Edit1 False
+                            , NamedB List2 Edit2 False
+                            , NamedN ConfirmBtn
                             ])
            -- XXX:TWO
            , _categorise1  =
@@ -204,23 +203,22 @@ theMap = A.attrMap V.defAttr
 drawUI :: St m -> [T.Widget Name]
 drawUI st = [ui]
   where
-    -- TODO: This pattern-match is dangerous and a kludge.
-    (modalIdx, NamedB _ (Just b1):NamedB _ (Just b2):_) = _modalState st -- XXX:TWO
+    focusName = currentName $ _modalState st
 
     -- renderEditor  :: Bool -> Editor n -> Widget n
     -- XXX:TWO
     ed1 = st ^. categorise1 . edit
     ls1 = st ^. categorise1 . list
     sug1 = st ^. categorise1 . suggestions
-    e1  = E.renderEditor (modalIdx == 0 && b1)     ed1
-    l1  = renderList     (modalIdx == 0 && not b1) sug1
+    e1  = E.renderEditor (focusName == Edit1)     ed1
+    l1  = renderList     (focusName == List1) sug1
     ed2 = st ^. categorise2 . edit
     ls2 = st ^. categorise2 . list
     sug2 = st ^. categorise2 . suggestions
-    e2  = E.renderEditor (modalIdx == 1 && b2)     ed2
-    l2  = renderList     (modalIdx == 1 && not b2) sug2
+    e2  = E.renderEditor (focusName == Edit2)     ed2
+    l2  = renderList     (focusName == List2) sug2
 
-    cfm = renderConfirm (modalIdx == 2)
+    cfm = renderConfirm (focusName == ConfirmBtn)
 
     -- Render our list widgets
     renderList :: Bool -> [String] -> T.Widget Name
@@ -342,7 +340,7 @@ appEvent st ev =
 
 appCursor :: St m -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
 appCursor st locs =
-  let mn = currentName (_modalState st)
+  let mn = Just $ currentName (_modalState st)
   -- in case mn of
   --      Nothing -> Nothing
   --      Just n ->
