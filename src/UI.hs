@@ -51,10 +51,8 @@ listUnfocusAttr = "myApp" <> "listUnfocus"
 helpBarAttr     :: A.AttrName
 helpBarAttr     = "myApp" <> "helpBar"
 
-data Name = Edit1
-          | List1
-          | Edit2
-          | List2
+data Name = Edit Int
+          | List Int
           | ConfirmBtn
           deriving (Ord, Show, Eq)
 
@@ -121,14 +119,9 @@ makeLenses ''CategoriseComponent
 
 
 
--- Don't need much more than a dumb list.
-data MyList = List Name [String]
-
 data St m =
   St { _modalState :: ModalState
-     -- XXX:TWO
-     , _categorise1 :: CategoriseComponent
-     , _categorise2 :: CategoriseComponent
+     , _categorisers :: [CategoriseComponent]
      , _promptStr :: String
      , _updatePrompt :: m -> [String] -> IO (m, CategorisePrompt)
      , _promptState :: m
@@ -145,21 +138,20 @@ initialState :: CategorisePrompt
 initialState prompt updateFn initState =
   let st =
         St { _modalState = (0,
-                            [ NamedB List1 Edit1 False
-                            , NamedB List2 Edit2 False
+                            [ NamedB (List 1) (Edit 1) False
+                            , NamedB (List 2) (Edit 2) False
                             , NamedN ConfirmBtn
                             ])
-           -- XXX:TWO
-           , _categorise1  =
-               Category { _edit = E.editor Edit1 (str . unlines) (Just 1) ""
-                        , _list = List1
-                        , _suggestions = []
-                        }
-           , _categorise2  =
-               Category { _edit = E.editor Edit2 (str . unlines) (Just 1) ""
-                        , _list = List2
-                        , _suggestions = []
-                        }
+           , _categorisers =
+               [ Category { _edit = E.editor (Edit 1) (str . unlines) (Just 1) ""
+                          , _list = List 1
+                          , _suggestions = []
+                          }
+               , Category { _edit = E.editor (Edit 2) (str . unlines) (Just 1) ""
+                          , _list = List 2
+                          , _suggestions = []
+                          }
+               ]
            , _promptStr    = ""
            , _updatePrompt = updateFn
            , _promptState  = initState
@@ -169,18 +161,16 @@ initialState prompt updateFn initState =
 
 
 stateWithPrompt :: St m -> CategorisePrompt -> St m
-stateWithPrompt st (promptStr,(initText1,sg1):(initText2,sg2):_) = -- XXX:TWO
+stateWithPrompt st (promptStr,catSuggestions) =
    let setTextZipper ms =
          Z.stringZipper (maybeToList ms) (Just 1)
-       sugCompWith catComp initText sg =
+       sugCompWith catComp (initText, sg) =
           catComp { _edit = E.applyEdit (\z -> setTextZipper initText) (_edit catComp)
                   , _suggestions = sg
                   }
    in
      -- XXX:LENS
-     -- XXX:TWO
-     st { _categorise1 = sugCompWith (_categorise1 st) initText1 sg1
-        , _categorise2 = sugCompWith (_categorise2 st) initText2 sg2
+     st { _categorisers = zipWith sugCompWith (_categorisers st) catSuggestions
         , _promptStr   = promptStr
         }
 
@@ -205,20 +195,22 @@ drawUI st = [ui]
   where
     focusName = currentName $ _modalState st
 
-    -- renderEditor  :: Bool -> Editor n -> Widget n
-    -- XXX:TWO
-    ed1 = st ^. categorise1 . edit
-    ls1 = st ^. categorise1 . list
-    sug1 = st ^. categorise1 . suggestions
-    e1  = E.renderEditor (focusName == Edit1)     ed1
-    l1  = renderList     (focusName == List1) sug1
-    ed2 = st ^. categorise2 . edit
-    ls2 = st ^. categorise2 . list
-    sug2 = st ^. categorise2 . suggestions
-    e2  = E.renderEditor (focusName == Edit2)     ed2
-    l2  = renderList     (focusName == List2) sug2
-
     cfm = renderConfirm (focusName == ConfirmBtn)
+
+    -- Combine the categorisers,
+    mid = foldr (\(cat, idx) accum ->
+                   renderCategory cat idx <+> accum)
+                cfm
+                (zip (st ^. categorisers) [1..])
+
+    renderCategory :: CategoriseComponent -> Int -> T.Widget Name
+    renderCategory c idx =
+      let ed = E.renderEditor (focusName == getName (c ^. edit)) (c ^. edit)
+          ls = renderList (focusName == (c ^. list)) (c ^. suggestions)
+      in padAll 1 $
+        str ("Category " ++ show idx ++ ":") <=>
+        hLimit 30 (vLimit 1 ed) <=>
+        ls
 
     -- Render our list widgets
     renderList :: Bool -> [String] -> T.Widget Name
@@ -243,17 +235,7 @@ drawUI st = [ui]
       <=>
       B.hBorder
       <=>
-      ((padAll 1 $
-        str "Category 1:" <=>
-        hLimit 30 (vLimit 1 e1) <=>
-        l1)
-       <+>
-       (padAll 1 $
-        str "Category 2: " <=>
-        hLimit 30 (vLimit 1 e2) <=>
-        l2)
-       <+>
-       cfm)
+      mid
       <=>
       B.hBorder
       <=>
@@ -264,12 +246,11 @@ drawUI st = [ui]
 
 appEvent :: St m -> V.Event -> T.EventM Name (T.Next (St m))
 appEvent st ev =
-  let modalSt@(modalIdx,_) = _modalState st
+  let modalSt@(modalIdx,modes) = _modalState st
       isEdit = isEditing modalSt
 
       suggestions =
-        -- XXX:TWO
-        map _suggestions [_categorise1 st, _categorise2 st]
+        map _suggestions $ _categorisers st
 
       -- XXX Strictly, this should only work for if the list has than idx..
       acceptsHotkey :: Char -> Bool
@@ -292,18 +273,18 @@ appEvent st ev =
 
 
     -- Cycle between "Focus Rings" (Col1, Col2, Cfm)
-    V.EvKey V.KEnter      [] | modalIdx == 2 -> -- XXX:TWO
+    V.EvKey V.KEnter      [] | modalIdx == length modes ->
       -- ASSUMPTION only 3x modal states; coupled that incrMS touches modalIdx
       -- If we're going back to 1st, need to:
       --   - clear the Edits,
       --   - refresh the suggestions
       let getFirstLine ed = fromMaybe "" . listToMaybe $ E.getEditContents ed
-          -- XXX:TWO
-          txt1 = getFirstLine $ st ^. categorise1 . edit -- XXX:LENS Not Idiomatic
-          txt2 = getFirstLine $ st ^. categorise2 . edit
+          -- txt = map getFirstLine $ st ^. categorisers . traverse . edit
+          txt :: [String]
+          txt = map getFirstLine $ st ^.. (categorisers . traverse . edit)
       in M.suspendAndResume $ do
         -- Filthy pattern match, ASSUMPTION of size 2
-        (m', prompt') <- _updatePrompt st (_promptState st) [txt1, txt2]
+        (m', prompt') <- _updatePrompt st (_promptState st) txt
         let setTextZipper ms =
               Z.stringZipper (maybeToList ms) (Just 1)
             st' = st { _modalState  = incrModalState (_modalState st)
@@ -316,12 +297,11 @@ appEvent st ev =
 
     V.EvKey (V.KChar n)   [] | not isEdit && acceptsHotkey n -> do
       -- TODO:LENS: I don't understand lenses enough to know the idiomatic case here
-      let str  = fromMaybe "" $ stringForHotkey n
-          -- XXX:TWO
-          categorise = if modalIdx == 0 then categorise1 else categorise2
+      let str = fromMaybe "" $ stringForHotkey n
+          ed = categorisers . ix modalIdx . edit
           setTextZipper =
             Z.stringZipper [str] (Just 1)
-          st'  = st & (categorise . edit) %~ E.applyEdit (\z -> setTextZipper)
+          st'  = st & ed %~ E.applyEdit (\z -> setTextZipper)
       M.continue $ st' & modalState %~ incrModalState
 
     V.EvKey (V.KChar 'e') [] | not (isEditing $ _modalState st) ->
@@ -329,11 +309,10 @@ appEvent st ev =
 
 
     _ -> M.continue =<< case _modalState st of
-           -- XXX:TWO
-           (0, _) | isEdit ->
-             T.handleEventLensed st (categorise1 . edit) E.handleEditorEvent ev
-           (1, _) | isEdit ->
-             T.handleEventLensed st (categorise2 . edit) E.handleEditorEvent ev
+           -- XXX Why doesn't this work??
+           -- (idx, _) | isEdit &&
+           --            idx < length (st ^. categorisers) ->
+           --   T.handleEventLensed st (categorisers . (ix idx) . edit) E.handleEditorEvent ev
            _ -> return st
 
 
