@@ -131,24 +131,37 @@ initialState :: CategorisePrompt
              -> (m -> [String] -> IO (m, CategorisePrompt))
              -> m
              -> St m
-initialState prompt@(s,(mt1,sg1):(mt2,sg2):_) updateFn initState =
-     -- I'm thinking this mightn't be the right model for our modal focus,
-     -- don't need to know name of ConfirmBtn;
-     -- & want to know to switch between Edit1/List1, etc.
-  St { _modalState = (0,
-                      [ NamedB Edit1 (Just False)
-                      , NamedB Edit2 (Just False)
-                      , NamedB ConfirmBtn Nothing
-                      ])
-     -- ASSUMPTION: For now, assume `prompt` contains at-least 2 suggestions
-     , _edit1      = E.editor Edit1 (str . unlines) (Just 1) (fromMaybe "" mt1)
-     , _list1      = List List1 sg1
-     , _edit2      = E.editor Edit2 (str . unlines) (Just 1) (fromMaybe "" mt2)
-     , _list2      = List List2 sg2
-     , _prompt     = prompt
-     , _updatePrompt = updateFn
-     , _promptState = initState
-     }
+initialState prompt updateFn initState =
+  let st =
+        St { _modalState = (0,
+                            [ NamedB Edit1 (Just False)
+                            , NamedB Edit2 (Just False)
+                            , NamedB ConfirmBtn Nothing
+                            ])
+           -- ASSUMPTION: For now, assume `prompt` contains at-least 2 suggestions
+           , _edit1        = E.editor Edit1 (str . unlines) (Just 1) ""
+           , _list1        = List List1 []
+           , _edit2        = E.editor Edit2 (str . unlines) (Just 1) ""
+           , _list2        = List List2 []
+           , _prompt       = prompt
+           , _updatePrompt = updateFn
+           , _promptState  = initState
+           }
+  in stateWithPrompt st prompt
+
+
+
+stateWithPrompt :: St m -> CategorisePrompt -> St m
+stateWithPrompt st prompt@(_,(initText1,sg1):(initText2,sg2):_) =
+   let setTextZipper ms =
+         Z.stringZipper (maybeToList ms) (Just 1)
+   in
+     st { _list1       = List Edit1 sg1
+        , _edit1       = E.applyEdit (\z -> setTextZipper initText1) (_edit1 st)
+        , _list2       = List Edit2 sg2
+        , _edit2       = E.applyEdit (\z -> setTextZipper initText2) (_edit2 st)
+        , _prompt      = prompt
+        }
 
 
 
@@ -172,7 +185,7 @@ drawUI st = [ui]
     -- TODO: This pattern-match is dangerous and a kludge.
     (modalIdx, NamedB _ (Just b1):NamedB _ (Just b2):_) = _modalState st
 
-    (promptStr, _) = _prompt st
+    (promptStr, _) = _prompt st -- XXX use of prompt here, for the promptStr
 
     -- renderEditor  :: Bool -> Editor n -> Widget n
     e1  = E.renderEditor (modalIdx == 0 && b1)     (_edit1 st)
@@ -229,7 +242,7 @@ appEvent st ev =
   let modalSt@(modalIdx,_) = _modalState st
       isEdit = isEditing modalSt
 
-      (_,suggestions) = _prompt st
+      (_,suggestions) = _prompt st -- XXX use of prompt here, to get suggestions
 
       -- XXX Strictly, this should only work for if the list has than idx..
       acceptsHotkey :: Char -> Bool
@@ -262,19 +275,13 @@ appEvent st ev =
           txt2 = getFirstLine $ st ^. edit2
       in M.suspendAndResume $ do
         -- Filthy pattern match, ASSUMPTION of size 2
-        (m', prompt'@(_,(initText1,sg1):(initText2,sg2):_)) <- _updatePrompt st (_promptState st) [txt1, txt2]
+        (m', prompt') <- _updatePrompt st (_promptState st) [txt1, txt2]
         let setTextZipper ms =
               Z.stringZipper (maybeToList ms) (Just 1)
             st' = st { _modalState  = incrModalState (_modalState st)
-                     -- So .. this is the only place we update _list1, _prompt right?
-                     , _list1       = List Edit1 sg1
-                     , _edit1       = E.applyEdit (\z -> setTextZipper initText1) (_edit1 st)
-                     , _list2       = List Edit2 sg2
-                     , _edit2       = E.applyEdit (\z -> setTextZipper initText2) (_edit2 st)
-                     , _prompt      = prompt'
                      , _promptState = m'
                      }
-        return $ st'
+        return $ stateWithPrompt st' prompt'
 
     V.EvKey V.KEnter      [] ->
       M.continue $ st & modalState %~ incrModalState
