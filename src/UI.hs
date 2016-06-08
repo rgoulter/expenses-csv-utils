@@ -127,6 +127,7 @@ data MyList = List Name [String]
 
 data St m =
   St { _modalState :: ModalState
+     -- XXX:TWO
      , _categorise1 :: CategoriseComponent
      , _categorise2 :: CategoriseComponent
      , _promptStr :: String
@@ -149,7 +150,7 @@ initialState prompt updateFn initState =
                             , NamedB Edit2 (Just False)
                             , NamedB ConfirmBtn Nothing
                             ])
-           -- ASSUMPTION: For now, assume `prompt` contains at-least 2 suggestions
+           -- XXX:TWO
            , _categorise1  =
                Category { _edit = E.editor Edit1 (str . unlines) (Just 1) ""
                         , _list = List1
@@ -169,7 +170,7 @@ initialState prompt updateFn initState =
 
 
 stateWithPrompt :: St m -> CategorisePrompt -> St m
-stateWithPrompt st (promptStr,(initText1,sg1):(initText2,sg2):_) =
+stateWithPrompt st (promptStr,(initText1,sg1):(initText2,sg2):_) = -- XXX:TWO
    let setTextZipper ms =
          Z.stringZipper (maybeToList ms) (Just 1)
        sugCompWith catComp initText sg =
@@ -177,7 +178,8 @@ stateWithPrompt st (promptStr,(initText1,sg1):(initText2,sg2):_) =
                   , _suggestions = sg
                   }
    in
-     -- XXX:Lens
+     -- XXX:LENS
+     -- XXX:TWO
      st { _categorise1 = sugCompWith (_categorise1 st) initText1 sg1
         , _categorise2 = sugCompWith (_categorise2 st) initText2 sg2
         , _promptStr   = promptStr
@@ -203,9 +205,10 @@ drawUI :: St m -> [T.Widget Name]
 drawUI st = [ui]
   where
     -- TODO: This pattern-match is dangerous and a kludge.
-    (modalIdx, NamedB _ (Just b1):NamedB _ (Just b2):_) = _modalState st
+    (modalIdx, NamedB _ (Just b1):NamedB _ (Just b2):_) = _modalState st -- XXX:TWO
 
     -- renderEditor  :: Bool -> Editor n -> Widget n
+    -- XXX:TWO
     ed1 = st ^. categorise1 . edit
     ls1 = st ^. categorise1 . list
     sug1 = st ^. categorise1 . suggestions
@@ -267,6 +270,7 @@ appEvent st ev =
       isEdit = isEditing modalSt
 
       suggestions =
+        -- XXX:TWO
         map _suggestions [_categorise1 st, _categorise2 st]
 
       -- XXX Strictly, this should only work for if the list has than idx..
@@ -290,12 +294,13 @@ appEvent st ev =
 
 
     -- Cycle between "Focus Rings" (Col1, Col2, Cfm)
-    V.EvKey V.KEnter      [] | modalIdx == 2 ->
+    V.EvKey V.KEnter      [] | modalIdx == 2 -> -- XXX:TWO
       -- ASSUMPTION only 3x modal states; coupled that incrMS touches modalIdx
       -- If we're going back to 1st, need to:
       --   - clear the Edits,
       --   - refresh the suggestions
       let getFirstLine ed = fromMaybe "" . listToMaybe $ E.getEditContents ed
+          -- XXX:TWO
           txt1 = getFirstLine $ st ^. categorise1 . edit -- XXX:LENS Not Idiomatic
           txt2 = getFirstLine $ st ^. categorise2 . edit
       in M.suspendAndResume $ do
@@ -314,6 +319,7 @@ appEvent st ev =
     V.EvKey (V.KChar n)   [] | not isEdit && acceptsHotkey n -> do
       -- TODO:LENS: I don't understand lenses enough to know the idiomatic case here
       let str  = fromMaybe "" $ stringForHotkey n
+          -- XXX:TWO
           categorise = if modalIdx == 0 then categorise1 else categorise2
           setTextZipper =
             Z.stringZipper [str] (Just 1)
@@ -325,6 +331,7 @@ appEvent st ev =
 
 
     _ -> M.continue =<< case _modalState st of
+           -- XXX:TWO
            (0, _) | isEdit ->
              T.handleEventLensed st (categorise1 . edit) E.handleEditorEvent ev
            (1, _) | isEdit ->
