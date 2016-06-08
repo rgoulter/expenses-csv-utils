@@ -109,16 +109,27 @@ currentName (idx, namedBools) =
   let NamedB n _ = namedBools !! idx
   in  Just n
 
+
+
+-- Would this benefit from being a record, lens access?
+data CategoriseComponent =
+  Category { _edit :: E.Editor Name
+           , _list :: Name
+           , _suggestions :: [String]
+           }
+
+makeLenses ''CategoriseComponent
+
+
+
 -- Don't need much more than a dumb list.
 data MyList = List Name [String]
 
 data St m =
   St { _modalState :: ModalState
-     , _edit1 :: E.Editor Name
-     , _list1 :: MyList
-     , _edit2 :: E.Editor Name
-     , _list2 :: MyList
-     , _prompt :: CategorisePrompt
+     , _categorise1 :: CategoriseComponent
+     , _categorise2 :: CategoriseComponent
+     , _promptStr :: String
      , _updatePrompt :: m -> [String] -> IO (m, CategorisePrompt)
      , _promptState :: m
      }
@@ -139,11 +150,17 @@ initialState prompt updateFn initState =
                             , NamedB ConfirmBtn Nothing
                             ])
            -- ASSUMPTION: For now, assume `prompt` contains at-least 2 suggestions
-           , _edit1        = E.editor Edit1 (str . unlines) (Just 1) ""
-           , _list1        = List List1 []
-           , _edit2        = E.editor Edit2 (str . unlines) (Just 1) ""
-           , _list2        = List List2 []
-           , _prompt       = prompt
+           , _categorise1  =
+               Category { _edit = E.editor Edit1 (str . unlines) (Just 1) ""
+                        , _list = List1
+                        , _suggestions = []
+                        }
+           , _categorise2  =
+               Category { _edit = E.editor Edit2 (str . unlines) (Just 1) ""
+                        , _list = List2
+                        , _suggestions = []
+                        }
+           , _promptStr    = ""
            , _updatePrompt = updateFn
            , _promptState  = initState
            }
@@ -152,15 +169,18 @@ initialState prompt updateFn initState =
 
 
 stateWithPrompt :: St m -> CategorisePrompt -> St m
-stateWithPrompt st prompt@(_,(initText1,sg1):(initText2,sg2):_) =
+stateWithPrompt st (promptStr,(initText1,sg1):(initText2,sg2):_) =
    let setTextZipper ms =
          Z.stringZipper (maybeToList ms) (Just 1)
+       sugCompWith catComp initText sg =
+          catComp { _edit = E.applyEdit (\z -> setTextZipper initText) (_edit catComp)
+                  , _suggestions = sg
+                  }
    in
-     st { _list1       = List Edit1 sg1
-        , _edit1       = E.applyEdit (\z -> setTextZipper initText1) (_edit1 st)
-        , _list2       = List Edit2 sg2
-        , _edit2       = E.applyEdit (\z -> setTextZipper initText2) (_edit2 st)
-        , _prompt      = prompt
+     -- XXX:Lens
+     st { _categorise1 = sugCompWith (_categorise1 st) initText1 sg1
+        , _categorise2 = sugCompWith (_categorise2 st) initText2 sg2
+        , _promptStr   = promptStr
         }
 
 
@@ -185,19 +205,23 @@ drawUI st = [ui]
     -- TODO: This pattern-match is dangerous and a kludge.
     (modalIdx, NamedB _ (Just b1):NamedB _ (Just b2):_) = _modalState st
 
-    (promptStr, _) = _prompt st -- XXX use of prompt here, for the promptStr
-
     -- renderEditor  :: Bool -> Editor n -> Widget n
-    e1  = E.renderEditor (modalIdx == 0 && b1)     (_edit1 st)
-    l1  = renderList     (modalIdx == 0 && not b1) (_list1 st)
-    e2  = E.renderEditor (modalIdx == 1 && b2)     (_edit2 st)
-    l2  = renderList     (modalIdx == 1 && not b2) (_list2 st)
+    ed1 = st ^. categorise1 . edit
+    ls1 = st ^. categorise1 . list
+    sug1 = st ^. categorise1 . suggestions
+    e1  = E.renderEditor (modalIdx == 0 && b1)     ed1
+    l1  = renderList     (modalIdx == 0 && not b1) sug1
+    ed2 = st ^. categorise2 . edit
+    ls2 = st ^. categorise2 . list
+    sug2 = st ^. categorise2 . suggestions
+    e2  = E.renderEditor (modalIdx == 1 && b2)     ed2
+    l2  = renderList     (modalIdx == 1 && not b2) sug2
 
     cfm = renderConfirm (modalIdx == 2)
 
     -- Render our list widgets
-    renderList :: Bool -> MyList -> T.Widget Name
-    renderList isFocused (List _ ls) =
+    renderList :: Bool -> [String] -> T.Widget Name
+    renderList isFocused ls =
       let items =
             map (\(i,s) -> show i ++ ". " ++ s)
                 (zip [1..] $ take 5 ls)
@@ -214,7 +238,7 @@ drawUI st = [ui]
 
     ui =
       (str "Categorise" <=>
-       (withAttr expenseStrAttr $ str promptStr))
+       (withAttr expenseStrAttr $ str (_promptStr st)))
       <=>
       B.hBorder
       <=>
@@ -242,7 +266,8 @@ appEvent st ev =
   let modalSt@(modalIdx,_) = _modalState st
       isEdit = isEditing modalSt
 
-      (_,suggestions) = _prompt st -- XXX use of prompt here, to get suggestions
+      suggestions =
+        map _suggestions [_categorise1 st, _categorise2 st]
 
       -- XXX Strictly, this should only work for if the list has than idx..
       acceptsHotkey :: Char -> Bool
@@ -251,7 +276,7 @@ appEvent st ev =
       stringForHotkey :: Char -> Maybe String
       stringForHotkey c =
         -- Unsafe assumption that |suggestions| > |modalIdx|
-        lookup c $ zip ['1'..] (snd (suggestions !! modalIdx))
+        lookup c $ zip ['1'..] (suggestions !! modalIdx)
   in case ev of
     -- Esc Quits the App
     V.EvKey V.KEsc         [] -> M.halt st
@@ -271,8 +296,8 @@ appEvent st ev =
       --   - clear the Edits,
       --   - refresh the suggestions
       let getFirstLine ed = fromMaybe "" . listToMaybe $ E.getEditContents ed
-          txt1 = getFirstLine $ st ^. edit1
-          txt2 = getFirstLine $ st ^. edit2
+          txt1 = getFirstLine $ st ^. categorise1 . edit -- XXX:LENS Not Idiomatic
+          txt2 = getFirstLine $ st ^. categorise2 . edit
       in M.suspendAndResume $ do
         -- Filthy pattern match, ASSUMPTION of size 2
         (m', prompt') <- _updatePrompt st (_promptState st) [txt1, txt2]
@@ -289,10 +314,10 @@ appEvent st ev =
     V.EvKey (V.KChar n)   [] | not isEdit && acceptsHotkey n -> do
       -- TODO:LENS: I don't understand lenses enough to know the idiomatic case here
       let str  = fromMaybe "" $ stringForHotkey n
-          edit = if modalIdx == 0 then edit1 else edit2
+          categorise = if modalIdx == 0 then categorise1 else categorise2
           setTextZipper =
             Z.stringZipper [str] (Just 1)
-          st'  = st & edit %~ E.applyEdit (\z -> setTextZipper)
+          st'  = st & (categorise . edit) %~ E.applyEdit (\z -> setTextZipper)
       M.continue $ st' & modalState %~ incrModalState
 
     V.EvKey (V.KChar 'e') [] | not (isEditing $ _modalState st) ->
@@ -301,9 +326,9 @@ appEvent st ev =
 
     _ -> M.continue =<< case _modalState st of
            (0, _) | isEdit ->
-             T.handleEventLensed st edit1 E.handleEditorEvent ev
+             T.handleEventLensed st (categorise1 . edit) E.handleEditorEvent ev
            (1, _) | isEdit ->
-             T.handleEventLensed st edit2 E.handleEditorEvent ev
+             T.handleEventLensed st (categorise2 . edit) E.handleEditorEvent ev
            _ -> return st
 
 
