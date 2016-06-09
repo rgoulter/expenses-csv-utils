@@ -309,11 +309,15 @@ appEvent st ev =
 
 
     _ -> M.continue =<< case _modalState st of
-           -- XXX Why doesn't this work??
-           -- (idx, _) | isEdit &&
-           --            idx < length (st ^. categorisers) ->
-           --   T.handleEventLensed st (categorisers . (ix idx) . edit) E.handleEditorEvent ev
-           _ -> return st
+           (idx, _) | isEdit &&
+                      idx < length (st ^. categorisers) -> do
+             let ed :: Applicative f => (E.Editor Name -> f (E.Editor Name)) -> St m -> f (St m)
+                 ed =  categorisers . ix idx . edit
+             newVal <- E.handleEditorEvent ev (st ^?! ed)
+             return $ st & ed .~ newVal
+             -- T.handleEventLensed st (categorisers . ix idx . _Just . edit) E.handleEditorEvent ev
+           _ ->
+             return st
 
 
 
