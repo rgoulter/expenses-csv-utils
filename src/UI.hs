@@ -64,21 +64,21 @@ type ModalState = MS.ModalState Name
 
 
 -- Would this benefit from being a record, lens access?
-data CategoriseComponent =
+data CategoriseComponent s =
   Category { _edit :: E.Editor Name
            , _list :: Name
-           , _suggestions :: [String]
+           , _suggestions :: [s]
            }
 
 makeLenses ''CategoriseComponent
 
 
 
-data St m =
+data St s m =
   St { _modalState :: ModalState
-     , _categorisers :: [CategoriseComponent]
+     , _categorisers :: [CategoriseComponent s]
      , _promptStr :: String
-     , _updatePrompt :: m -> [String] -> IO (m, CategorisePrompt)
+     , _updatePrompt :: m -> [String] -> IO (m, CategorisePrompt s)
      , _promptState :: m
      }
 
@@ -86,10 +86,10 @@ makeLenses ''St
 
 
 
-initialState :: CategorisePrompt
-             -> (m -> [String] -> IO (m, CategorisePrompt))
+initialState :: CategorisePrompt s
+             -> (m -> [String] -> IO (m, CategorisePrompt s))
              -> m
-             -> St m
+             -> St s m
 initialState prompt updateFn initState =
   let initModalStateFor :: [(Name, Name)] -> ModalState
       initModalStateFor names =
@@ -119,7 +119,7 @@ initialState prompt updateFn initState =
 
 
 
-stateWithPrompt :: St m -> CategorisePrompt -> St m
+stateWithPrompt :: St s m -> CategorisePrompt s -> St s m
 stateWithPrompt st (nPromptStr,catSuggestions) =
    let setTextZipper ms =
          Z.stringZipper (maybeToList ms) (Just 1)
@@ -146,7 +146,7 @@ theMap = A.attrMap V.defAttr
 
 -- <=> is "put on top",
 -- <+> is "put beside"
-drawUI :: St m -> [T.Widget Name]
+drawUI :: Suggestion s => St s m -> [T.Widget Name]
 drawUI st = [ui]
   where
     focusName = st ^. modalState . to MS.currentName
@@ -159,10 +159,11 @@ drawUI st = [ui]
                 cfm
                 (zip (st ^. categorisers) [1..])
 
-    renderCategory :: CategoriseComponent -> Int -> T.Widget Name
+    renderCategory :: Suggestion s => CategoriseComponent s -> Int -> T.Widget Name
     renderCategory c idx =
       let ed = E.renderEditor (focusName == getName (c ^. edit)) (c ^. edit)
-          ls = renderList (focusName == (c ^. list)) (c ^. suggestions)
+          ls = renderList (focusName == (c ^. list))
+                          (c ^.. suggestions . traverse . to (displaySuggestion 30))
       in padAll 1 $
         str ("Category " ++ show idx ++ ":") <=>
         hLimit 30 (vLimit 1 ed) <=>
@@ -200,22 +201,22 @@ drawUI st = [ui]
 
 
 
-appEvent :: St m -> V.Event -> T.EventM Name (T.Next (St m))
+appEvent :: Suggestion s => St s m -> V.Event -> T.EventM Name (T.Next (St s m))
 appEvent st ev =
   let modalSt@(modalIdx,modes) = st ^. modalState
       isEdit = MS.isEditing modalSt
 
-      sugs :: [[String]]
+      -- sugs :: [[s]]
       sugs = st ^.. (categorisers . traverse . suggestions)
 
       -- XXX Strictly, this should only work for if the list has than idx..
       acceptsHotkey :: Char -> Bool
       acceptsHotkey c =
         c `elem` ['1'..'5']
-      stringForHotkey :: Char -> Maybe String
+      stringForHotkey :: Char -> Maybe String -- XXX Suggestion
       stringForHotkey c =
         -- Unsafe assumption that |sugs| > |modalIdx|
-        lookup c $ zip ['1'..] (sugs !! modalIdx)
+        lookup c $ zip ['1'..] (map contentOfSuggestion $ sugs !! modalIdx)
   in case ev of
     -- Esc Quits the App
     V.EvKey V.KEsc         [] -> M.halt st
@@ -263,9 +264,9 @@ appEvent st ev =
                       idx < length (st ^. categorisers) ->
              -- Can't use T.handleEventLensed out-of-the-box with the
              -- following lens.
-             let ed :: Applicative f => (E.Editor Name -> f (E.Editor Name)) -> St m -> f (St m)
+             let ed :: Applicative f => (E.Editor Name -> f (E.Editor Name)) -> St s m -> f (St s m)
                  ed =  categorisers . ix idx . edit
-                 edLens :: Lens' (St m) (E.Editor Name)
+                 edLens :: Lens' (St s m) (E.Editor Name)
                  edLens =
                    lens (^?! ed)
                         (\st newVal -> st & ed .~ newVal)
@@ -276,14 +277,14 @@ appEvent st ev =
 
 
 
-appCursor :: St m -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
+appCursor :: St s m -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
 appCursor st locs =
   let mn = st ^. modalState . to MS.currentName . to Just
   in listToMaybe $ filter (\cl -> mn == T.cursorLocationName cl) locs
 
 
 
-theApp :: M.App (St m) V.Event Name
+theApp :: Suggestion s => M.App (St s m) V.Event Name
 theApp =
   M.App { M.appDraw = drawUI
         , M.appChooseCursor = appCursor

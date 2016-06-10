@@ -3,6 +3,23 @@ module UI.Types where
 
 
 -- INTERFACE TYPE
+
+
+
+-- Because I want to show probabilities with suggestions
+-- (& perhaps other things),
+-- use a typeclass to model this.
+class Suggestion s where
+  -- Render suggestion as a string, trying to keep
+  -- within a given width.
+  displaySuggestion :: Int -> s -> String
+
+  -- What gets put in the Editor field when
+  -- selected.
+  contentOfSuggestion :: s -> String
+
+
+
 {-
 In order to be useful, we need:
   * Prompt
@@ -14,5 +31,5 @@ In order to be useful, we need:
       (IO, b/c presumably this func. writes to file).
 -}
 
-type CategorisePrompt = (String, [(Maybe String, [String])])
+type CategorisePrompt s = (String, [(Maybe String, [s])])
 

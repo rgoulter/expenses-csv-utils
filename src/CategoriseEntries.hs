@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 module CategoriseEntries where
 
 import Text.CSV (CSV, printCSV, parseCSVFromFile)
@@ -7,11 +9,22 @@ import Control.Monad (void)
 import qualified Categorise as M
 import qualified ParseExpensesDoc as D
 
-import UI.Types (CategorisePrompt)
+import UI.Types (CategorisePrompt, Suggestion(..))
+-- import qualified UI.Types as T
 
 
 
 type ProcessModel = ([D.Entry], [D.Entry], [M.Model D.Category])
+
+-- type Suggestion = (D.Category, M.Probability)
+type Sug = String
+
+instance Suggestion Sug where
+  -- displaySuggestion :: Int -> Sug -> String
+  displaySuggestion w s = s
+
+  -- contentOfSuggestion :: Suggestion -> String
+  contentOfSuggestion s = s
 
 
 
@@ -38,12 +51,12 @@ nextModel (toProcess, processed, models) =
 
 
 
-emptyPrompt :: CategorisePrompt
+emptyPrompt :: CategorisePrompt Sug
 emptyPrompt = ("", [(Nothing, []), (Nothing, [])])
 
 
 
-promptFromEntry :: D.Entry -> [M.Model D.Category] -> CategorisePrompt
+promptFromEntry :: D.Entry -> [M.Model D.Category] -> CategorisePrompt Sug
 promptFromEntry e models =
   let remark = D.entryRemark e
       suggestionsFromCategory (c, model) =
@@ -61,7 +74,7 @@ promptFromEntry e models =
 
 
 
-promptFromModel :: ProcessModel -> CategorisePrompt
+promptFromModel :: ProcessModel -> CategorisePrompt Sug
 promptFromModel (todo,_,models) =
   case todo of
     []  -> emptyPrompt
@@ -69,7 +82,7 @@ promptFromModel (todo,_,models) =
 
 
 
-initFromCSV :: CSV -> (ProcessModel, CategorisePrompt)
+initFromCSV :: CSV -> (ProcessModel, CategorisePrompt Sug)
 initFromCSV csv =
   let entries = D.entriesFromCSV csv
       -- ASSUMPTION: 2 categories
@@ -89,7 +102,7 @@ updateModelWith (e:es,done,m) newCategories =
 
 -- `m`, some model for computing the results,
 -- `res`, the values of edit.
-nextPrompt :: ProcessModel -> [String] -> IO (ProcessModel, CategorisePrompt)
+nextPrompt :: ProcessModel -> [String] -> IO (ProcessModel, CategorisePrompt Sug)
 nextPrompt ([],  done,m) newCategories = return (([],done,m), emptyPrompt)
 nextPrompt model newCategories =
   -- call nextModel, updating the head of "to-process" entries w/ the cats.,
