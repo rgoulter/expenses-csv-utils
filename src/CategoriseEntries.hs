@@ -3,6 +3,7 @@
 module CategoriseEntries where
 
 import Text.CSV (CSV, printCSV, parseCSVFromFile)
+import Text.Printf (printf)
 
 import Control.Monad (void)
 
@@ -17,14 +18,19 @@ import UI.Types (CategorisePrompt, Suggestion(..))
 type ProcessModel = ([D.Entry], [D.Entry], [M.Model D.Category])
 
 -- type Suggestion = (D.Category, M.Probability)
-type Sug = String
+type Sug = (D.Category, M.Probability)
 
 instance Suggestion Sug where
   -- displaySuggestion :: Int -> Sug -> String
-  displaySuggestion w s = s
+  displaySuggestion width (cat, prob) =
+    let precision = 2
+        fmt = printf "%%-%ds(%%.%df)" (width - precision - 4) precision
+        s = D.stringFromCategory cat
+        p = fromRational prob :: Double
+    in  printf fmt s p
 
   -- contentOfSuggestion :: Suggestion -> String
-  contentOfSuggestion s = s
+  contentOfSuggestion (cat,_) = D.stringFromCategory cat
 
 
 
@@ -62,7 +68,7 @@ promptFromEntry e models =
       suggestionsFromCategory (c, model) =
         let probable = M.probableCategories model remark
             -- MAGIC assumption that UI has only 5.
-            sug = take 5 $ (map (\(c,_) -> D.stringFromCategory c) probable)
+            sug = take 5 probable
             mt =
               case c of
                 D.Uncategorised -> Nothing

@@ -163,7 +163,7 @@ drawUI st = [ui]
     renderCategory c idx =
       let ed = E.renderEditor (focusName == getName (c ^. edit)) (c ^. edit)
           ls = renderList (focusName == (c ^. list))
-                          (c ^.. suggestions . traverse . to (displaySuggestion 30))
+                          (c ^.. suggestions . traverse . to (displaySuggestion 27))
       in padAll 1 $
         str ("Category " ++ show idx ++ ":") <=>
         hLimit 30 (vLimit 1 ed) <=>
