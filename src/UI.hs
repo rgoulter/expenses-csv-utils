@@ -35,6 +35,7 @@ import Brick.Util (on, fg)
 import Brick.Markup (markup, (@?))
 
 import UI.Types
+import qualified UI.ModalState as MS
 
 
 
@@ -56,55 +57,9 @@ data Name = Edit Int
           | ConfirmBtn
           deriving (Ord, Show, Eq)
 
--- Use this for keeping track of modes/focus
-data NamedBool = NamedB Name Name Bool
-               | NamedN Name
+type NamedBool = MS.NamedBool Name
 
-type ModalState = (Int, [NamedBool])
-
-clearNamedBools :: [NamedBool] -> [NamedBool]
-clearNamedBools =
-  map (\nb ->
-         case nb of
-           NamedB n1 n2 _ -> NamedB n1 n2 False
-           NamedN n -> NamedN n)
-
-enableIdx :: Int -> [NamedBool] -> [NamedBool]
-enableIdx idx namedBools =
-  map (\(b, nb) ->
-         case nb of
-           NamedB n1 n2 _ -> NamedB n1 n2 b
-           NamedN n -> NamedN n)
-      (zip (map (idx ==) [0..]) -- Sequence of [True at idx, False otherwise]
-           namedBools)
-
-incrModalState :: ModalState -> ModalState
-incrModalState (idx, namedBools) =
-  ((idx + 1) `mod` length namedBools,
-   clearNamedBools namedBools)
-
-
-decrModalState :: ModalState -> ModalState
-decrModalState (idx, namedBools) =
-  ((idx - 1) `mod` length namedBools,
-   clearNamedBools namedBools)
-
-editModalState :: ModalState -> ModalState
-editModalState (idx, namedBools) =
-  (idx, enableIdx idx namedBools)
-
-isEditing :: ModalState -> Bool
-isEditing (idx, namedBools) =
-  case namedBools !! idx of
-    NamedB _ _ b -> b
-    NamedN _ -> False
-
-currentName :: ModalState -> Name
-currentName (idx, namedBools) =
-  case namedBools !! idx of
-    NamedB n _ False -> n
-    NamedB _ n True  -> n
-    NamedN n -> n
+type ModalState = MS.ModalState Name
 
 
 
@@ -136,12 +91,16 @@ initialState :: CategorisePrompt
              -> m
              -> St m
 initialState prompt updateFn initState =
-  let st =
-        St { _modalState = (0,
-                            [ NamedB (List 1) (Edit 1) False
-                            , NamedB (List 2) (Edit 2) False
-                            , NamedN ConfirmBtn
-                            ])
+  let initModalStateFor :: [(Name, Name)] -> ModalState
+      initModalStateFor names =
+        let modes =
+              foldr (\(listName,editName) nbs ->
+                          MS.NamedB listName editName False : nbs)
+                       [MS.NamedN ConfirmBtn]
+                       names
+        in (0, modes)
+      st =
+        St { _modalState = initModalStateFor [(List 1, Edit 1), (List 2, Edit 2)]
            , _categorisers =
                [ Category { _edit = E.editor (Edit 1) (str . unlines) (Just 1) ""
                           , _list = List 1
@@ -190,7 +149,7 @@ theMap = A.attrMap V.defAttr
 drawUI :: St m -> [T.Widget Name]
 drawUI st = [ui]
   where
-    focusName = st ^. modalState . to currentName
+    focusName = st ^. modalState . to MS.currentName
 
     cfm = renderConfirm (focusName == ConfirmBtn)
 
@@ -244,7 +203,7 @@ drawUI st = [ui]
 appEvent :: St m -> V.Event -> T.EventM Name (T.Next (St m))
 appEvent st ev =
   let modalSt@(modalIdx,modes) = st ^. modalState
-      isEdit = isEditing modalSt
+      isEdit = MS.isEditing modalSt
 
       sugs :: [[String]]
       sugs = st ^.. (categorisers . traverse . suggestions)
@@ -266,7 +225,7 @@ appEvent st ev =
     -- If user accidentally presses 'i', they have to type what they want anyway.
     -- ie. no way to un-edit other than to press ENTER.
     V.EvKey (V.KChar 'i') [] | not isEdit ->
-      M.continue $ st & modalState %~ editModalState
+      M.continue $ st & modalState %~ MS.editModalState
 
 
     -- Cycle between "Focus Rings" (Col1, Col2, Cfm)
@@ -279,12 +238,12 @@ appEvent st ev =
           txt = map getFirstLine $ st ^.. (categorisers . traverse . edit)
       in M.suspendAndResume $ do
         (m', prompt') <- (st ^. updatePrompt) (st ^. promptState) txt
-        let st' = st & modalState %~ incrModalState
+        let st' = st & modalState %~ MS.incrModalState
                      & promptState .~ m'
         return $ stateWithPrompt st' prompt'
 
     V.EvKey V.KEnter      [] ->
-      M.continue $ st & modalState %~ incrModalState
+      M.continue $ st & modalState %~ MS.incrModalState
 
     V.EvKey (V.KChar n)   [] | not isEdit && acceptsHotkey n ->
       let str = fromMaybe "" $ stringForHotkey n
@@ -293,13 +252,13 @@ appEvent st ev =
             Z.stringZipper [str] (Just 1)
       in
         M.continue $ st & ed . E.editContentsL .~ setTextZipper
-                        & modalState %~ incrModalState
+                        & modalState %~ MS.incrModalState
 
     V.EvKey (V.KChar 'e') [] | not isEdit ->
-      M.continue $ st & modalState %~ decrModalState
+      M.continue $ st & modalState %~ MS.decrModalState
 
 
-    _ -> M.continue =<< case (st ^. modalState) of
+    _ -> M.continue =<< case st ^. modalState of
            (idx, _) | isEdit &&
                       idx < length (st ^. categorisers) ->
              -- Can't use T.handleEventLensed out-of-the-box with the
@@ -319,7 +278,7 @@ appEvent st ev =
 
 appCursor :: St m -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
 appCursor st locs =
-  let mn = st ^. modalState . to currentName . to Just
+  let mn = st ^. modalState . to MS.currentName . to Just
   in listToMaybe $ filter (\cl -> mn == T.cursorLocationName cl) locs
 
 
