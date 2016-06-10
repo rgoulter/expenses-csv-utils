@@ -161,18 +161,15 @@ initialState prompt updateFn initState =
 
 
 stateWithPrompt :: St m -> CategorisePrompt -> St m
-stateWithPrompt st (promptStr,catSuggestions) =
+stateWithPrompt st (nPromptStr,catSuggestions) =
    let setTextZipper ms =
          Z.stringZipper (maybeToList ms) (Just 1)
-       sugCompWith catComp (initText, sg) =
-          catComp { _edit = E.applyEdit (\z -> setTextZipper initText) (_edit catComp)
-                  , _suggestions = sg
-                  }
+       sugCompWith (initText, sg) catComp =
+         catComp & edit . E.editContentsL .~ setTextZipper initText
+                 & suggestions .~ sg
    in
-     -- XXX:LENS
-     st { _categorisers = zipWith sugCompWith (_categorisers st) catSuggestions
-        , _promptStr   = promptStr
-        }
+     st & categorisers %~ zipWith sugCompWith catSuggestions
+        & promptStr .~ nPromptStr
 
 
 
@@ -193,7 +190,7 @@ theMap = A.attrMap V.defAttr
 drawUI :: St m -> [T.Widget Name]
 drawUI st = [ui]
   where
-    focusName = currentName $ _modalState st
+    focusName = st ^. modalState . to currentName
 
     cfm = renderConfirm (focusName == ConfirmBtn)
 
@@ -231,7 +228,7 @@ drawUI st = [ui]
 
     ui =
       (str "Categorise" <=>
-       (withAttr expenseStrAttr $ str (_promptStr st)))
+       withAttr expenseStrAttr (str (st ^. promptStr)))
       <=>
       B.hBorder
       <=>
@@ -239,18 +236,18 @@ drawUI st = [ui]
       <=>
       B.hBorder
       <=>
-      (withAttr helpBarAttr $ padRight T.Max $
+      withAttr helpBarAttr (padRight T.Max $
          str "Press Tab to switch between editors, Esc to quit.")
 
 
 
 appEvent :: St m -> V.Event -> T.EventM Name (T.Next (St m))
 appEvent st ev =
-  let modalSt@(modalIdx,modes) = _modalState st
+  let modalSt@(modalIdx,modes) = st ^. modalState
       isEdit = isEditing modalSt
 
-      suggestions =
-        map _suggestions $ _categorisers st
+      sugs :: [[String]]
+      sugs = st ^.. (categorisers . traverse . suggestions)
 
       -- XXX Strictly, this should only work for if the list has than idx..
       acceptsHotkey :: Char -> Bool
@@ -258,8 +255,8 @@ appEvent st ev =
         c `elem` ['1'..'5']
       stringForHotkey :: Char -> Maybe String
       stringForHotkey c =
-        -- Unsafe assumption that |suggestions| > |modalIdx|
-        lookup c $ zip ['1'..] (suggestions !! modalIdx)
+        -- Unsafe assumption that |sugs| > |modalIdx|
+        lookup c $ zip ['1'..] (sugs !! modalIdx)
   in case ev of
     -- Esc Quits the App
     V.EvKey V.KEsc         [] -> M.halt st
@@ -273,49 +270,48 @@ appEvent st ev =
 
 
     -- Cycle between "Focus Rings" (Col1, Col2, Cfm)
-    V.EvKey V.KEnter      [] | modalIdx == length modes ->
-      -- ASSUMPTION only 3x modal states; coupled that incrMS touches modalIdx
+    V.EvKey V.KEnter      [] | modalIdx == length modes - 1 ->
       -- If we're going back to 1st, need to:
       --   - clear the Edits,
       --   - refresh the suggestions
       let getFirstLine ed = fromMaybe "" . listToMaybe $ E.getEditContents ed
-          -- txt = map getFirstLine $ st ^. categorisers . traverse . edit
           txt :: [String]
           txt = map getFirstLine $ st ^.. (categorisers . traverse . edit)
       in M.suspendAndResume $ do
-        -- Filthy pattern match, ASSUMPTION of size 2
-        (m', prompt') <- _updatePrompt st (_promptState st) txt
-        let setTextZipper ms =
-              Z.stringZipper (maybeToList ms) (Just 1)
-            st' = st { _modalState  = incrModalState (_modalState st)
-                     , _promptState = m'
-                     }
+        (m', prompt') <- (st ^. updatePrompt) (st ^. promptState) txt
+        let st' = st & modalState %~ incrModalState
+                     & promptState .~ m'
         return $ stateWithPrompt st' prompt'
 
     V.EvKey V.KEnter      [] ->
       M.continue $ st & modalState %~ incrModalState
 
-    V.EvKey (V.KChar n)   [] | not isEdit && acceptsHotkey n -> do
-      -- TODO:LENS: I don't understand lenses enough to know the idiomatic case here
+    V.EvKey (V.KChar n)   [] | not isEdit && acceptsHotkey n ->
       let str = fromMaybe "" $ stringForHotkey n
           ed = categorisers . ix modalIdx . edit
           setTextZipper =
             Z.stringZipper [str] (Just 1)
-          st'  = st & ed %~ E.applyEdit (\z -> setTextZipper)
-      M.continue $ st' & modalState %~ incrModalState
+      in
+        M.continue $ st & ed . E.editContentsL .~ setTextZipper
+                        & modalState %~ incrModalState
 
-    V.EvKey (V.KChar 'e') [] | not (isEditing $ _modalState st) ->
+    V.EvKey (V.KChar 'e') [] | not isEdit ->
       M.continue $ st & modalState %~ decrModalState
 
 
-    _ -> M.continue =<< case _modalState st of
+    _ -> M.continue =<< case (st ^. modalState) of
            (idx, _) | isEdit &&
-                      idx < length (st ^. categorisers) -> do
+                      idx < length (st ^. categorisers) ->
+             -- Can't use T.handleEventLensed out-of-the-box with the
+             -- following lens.
              let ed :: Applicative f => (E.Editor Name -> f (E.Editor Name)) -> St m -> f (St m)
                  ed =  categorisers . ix idx . edit
-             newVal <- E.handleEditorEvent ev (st ^?! ed)
-             return $ st & ed .~ newVal
-             -- T.handleEventLensed st (categorisers . ix idx . _Just . edit) E.handleEditorEvent ev
+                 edLens :: Lens' (St m) (E.Editor Name)
+                 edLens =
+                   lens (^?! ed)
+                        (\st newVal -> st & ed .~ newVal)
+             in
+               T.handleEventLensed st edLens E.handleEditorEvent ev
            _ ->
              return st
 
@@ -323,10 +319,7 @@ appEvent st ev =
 
 appCursor :: St m -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
 appCursor st locs =
-  let mn = Just $ currentName (_modalState st)
-  -- in case mn of
-  --      Nothing -> Nothing
-  --      Just n ->
+  let mn = st ^. modalState . to currentName . to Just
   in listToMaybe $ filter (\cl -> mn == T.cursorLocationName cl) locs
 
 
