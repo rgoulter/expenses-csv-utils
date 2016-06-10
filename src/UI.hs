@@ -51,35 +51,30 @@ listUnfocusAttr = "myApp" <> "listUnfocus"
 helpBarAttr     :: A.AttrName
 helpBarAttr     = "myApp" <> "helpBar"
 
-data Name = Edit1
-          | List1
-          | Edit2
-          | List2
+data Name = Edit Int
+          | List Int
           | ConfirmBtn
           deriving (Ord, Show, Eq)
 
 -- Use this for keeping track of modes/focus
-data NamedBool = NamedB Name (Maybe Bool)
+data NamedBool = NamedB Name Name Bool
+               | NamedN Name
 
 type ModalState = (Int, [NamedBool])
 
 clearNamedBools :: [NamedBool] -> [NamedBool]
 clearNamedBools =
-  map (\(NamedB n b) ->
-         let b' =
-               case b of
-                 Nothing -> Nothing
-                 Just _ -> Just False
-         in NamedB n b')
+  map (\nb ->
+         case nb of
+           NamedB n1 n2 _ -> NamedB n1 n2 False
+           NamedN n -> NamedN n)
 
 enableIdx :: Int -> [NamedBool] -> [NamedBool]
 enableIdx idx namedBools =
-  map (\(b, NamedB n mb) ->
-         let mb' =
-              case mb of
-                Nothing -> Nothing
-                Just bool -> Just b
-         in NamedB n mb')
+  map (\(b, nb) ->
+         case nb of
+           NamedB n1 n2 _ -> NamedB n1 n2 b
+           NamedN n -> NamedN n)
       (zip (map (idx ==) [0..]) -- Sequence of [True at idx, False otherwise]
            namedBools)
 
@@ -100,25 +95,34 @@ editModalState (idx, namedBools) =
 
 isEditing :: ModalState -> Bool
 isEditing (idx, namedBools) =
-  let (NamedB _ m) = namedBools !! idx
-  in fromMaybe False m
+  case namedBools !! idx of
+    NamedB _ _ b -> b
+    NamedN _ -> False
 
--- "Maybe Name",
-currentName :: ModalState -> Maybe Name
+currentName :: ModalState -> Name
 currentName (idx, namedBools) =
-  let NamedB n _ = namedBools !! idx
-  in  Just n
+  case namedBools !! idx of
+    NamedB n _ False -> n
+    NamedB _ n True  -> n
+    NamedN n -> n
 
--- Don't need much more than a dumb list.
-data MyList = List Name [String]
+
+
+-- Would this benefit from being a record, lens access?
+data CategoriseComponent =
+  Category { _edit :: E.Editor Name
+           , _list :: Name
+           , _suggestions :: [String]
+           }
+
+makeLenses ''CategoriseComponent
+
+
 
 data St m =
   St { _modalState :: ModalState
-     , _edit1 :: E.Editor Name
-     , _list1 :: MyList
-     , _edit2 :: E.Editor Name
-     , _list2 :: MyList
-     , _prompt :: CategorisePrompt
+     , _categorisers :: [CategoriseComponent]
+     , _promptStr :: String
      , _updatePrompt :: m -> [String] -> IO (m, CategorisePrompt)
      , _promptState :: m
      }
@@ -131,24 +135,41 @@ initialState :: CategorisePrompt
              -> (m -> [String] -> IO (m, CategorisePrompt))
              -> m
              -> St m
-initialState prompt@(s,(mt1,sg1):(mt2,sg2):_) updateFn initState =
-     -- I'm thinking this mightn't be the right model for our modal focus,
-     -- don't need to know name of ConfirmBtn;
-     -- & want to know to switch between Edit1/List1, etc.
-  St { _modalState = (0,
-                      [ NamedB Edit1 (Just False)
-                      , NamedB Edit2 (Just False)
-                      , NamedB ConfirmBtn Nothing
-                      ])
-     -- ASSUMPTION: For now, assume `prompt` contains at-least 2 suggestions
-     , _edit1      = E.editor Edit1 (str . unlines) (Just 1) (fromMaybe "" mt1)
-     , _list1      = List List1 sg1
-     , _edit2      = E.editor Edit2 (str . unlines) (Just 1) (fromMaybe "" mt2)
-     , _list2      = List List2 sg2
-     , _prompt     = prompt
-     , _updatePrompt = updateFn
-     , _promptState = initState
-     }
+initialState prompt updateFn initState =
+  let st =
+        St { _modalState = (0,
+                            [ NamedB (List 1) (Edit 1) False
+                            , NamedB (List 2) (Edit 2) False
+                            , NamedN ConfirmBtn
+                            ])
+           , _categorisers =
+               [ Category { _edit = E.editor (Edit 1) (str . unlines) (Just 1) ""
+                          , _list = List 1
+                          , _suggestions = []
+                          }
+               , Category { _edit = E.editor (Edit 2) (str . unlines) (Just 1) ""
+                          , _list = List 2
+                          , _suggestions = []
+                          }
+               ]
+           , _promptStr    = ""
+           , _updatePrompt = updateFn
+           , _promptState  = initState
+           }
+  in stateWithPrompt st prompt
+
+
+
+stateWithPrompt :: St m -> CategorisePrompt -> St m
+stateWithPrompt st (nPromptStr,catSuggestions) =
+   let setTextZipper ms =
+         Z.stringZipper (maybeToList ms) (Just 1)
+       sugCompWith (initText, sg) catComp =
+         catComp & edit . E.editContentsL .~ setTextZipper initText
+                 & suggestions .~ sg
+   in
+     st & categorisers %~ zipWith sugCompWith catSuggestions
+        & promptStr .~ nPromptStr
 
 
 
@@ -169,22 +190,28 @@ theMap = A.attrMap V.defAttr
 drawUI :: St m -> [T.Widget Name]
 drawUI st = [ui]
   where
-    -- TODO: This pattern-match is dangerous and a kludge.
-    (modalIdx, NamedB _ (Just b1):NamedB _ (Just b2):_) = _modalState st
+    focusName = st ^. modalState . to currentName
 
-    (promptStr, _) = _prompt st
+    cfm = renderConfirm (focusName == ConfirmBtn)
 
-    -- renderEditor  :: Bool -> Editor n -> Widget n
-    e1  = E.renderEditor (modalIdx == 0 && b1)     (_edit1 st)
-    l1  = renderList     (modalIdx == 0 && not b1) (_list1 st)
-    e2  = E.renderEditor (modalIdx == 1 && b2)     (_edit2 st)
-    l2  = renderList     (modalIdx == 1 && not b2) (_list2 st)
+    -- Combine the categorisers,
+    mid = foldr (\(cat, idx) accum ->
+                   renderCategory cat idx <+> accum)
+                cfm
+                (zip (st ^. categorisers) [1..])
 
-    cfm = renderConfirm (modalIdx == 2)
+    renderCategory :: CategoriseComponent -> Int -> T.Widget Name
+    renderCategory c idx =
+      let ed = E.renderEditor (focusName == getName (c ^. edit)) (c ^. edit)
+          ls = renderList (focusName == (c ^. list)) (c ^. suggestions)
+      in padAll 1 $
+        str ("Category " ++ show idx ++ ":") <=>
+        hLimit 30 (vLimit 1 ed) <=>
+        ls
 
     -- Render our list widgets
-    renderList :: Bool -> MyList -> T.Widget Name
-    renderList isFocused (List _ ls) =
+    renderList :: Bool -> [String] -> T.Widget Name
+    renderList isFocused ls =
       let items =
             map (\(i,s) -> show i ++ ". " ++ s)
                 (zip [1..] $ take 5 ls)
@@ -201,35 +228,26 @@ drawUI st = [ui]
 
     ui =
       (str "Categorise" <=>
-       (withAttr expenseStrAttr $ str promptStr))
+       withAttr expenseStrAttr (str (st ^. promptStr)))
       <=>
       B.hBorder
       <=>
-      ((padAll 1 $
-        str "Category 1:" <=>
-        hLimit 30 (vLimit 1 e1) <=>
-        l1)
-       <+>
-       (padAll 1 $
-        str "Category 2: " <=>
-        hLimit 30 (vLimit 1 e2) <=>
-        l2)
-       <+>
-       cfm)
+      mid
       <=>
       B.hBorder
       <=>
-      (withAttr helpBarAttr $ padRight T.Max $
+      withAttr helpBarAttr (padRight T.Max $
          str "Press Tab to switch between editors, Esc to quit.")
 
 
 
 appEvent :: St m -> V.Event -> T.EventM Name (T.Next (St m))
 appEvent st ev =
-  let modalSt@(modalIdx,_) = _modalState st
+  let modalSt@(modalIdx,modes) = st ^. modalState
       isEdit = isEditing modalSt
 
-      (_,suggestions) = _prompt st
+      sugs :: [[String]]
+      sugs = st ^.. (categorisers . traverse . suggestions)
 
       -- XXX Strictly, this should only work for if the list has than idx..
       acceptsHotkey :: Char -> Bool
@@ -237,8 +255,8 @@ appEvent st ev =
         c `elem` ['1'..'5']
       stringForHotkey :: Char -> Maybe String
       stringForHotkey c =
-        -- Unsafe assumption that |suggestions| > |modalIdx|
-        lookup c $ zip ['1'..] (snd (suggestions !! modalIdx))
+        -- Unsafe assumption that |sugs| > |modalIdx|
+        lookup c $ zip ['1'..] (sugs !! modalIdx)
   in case ev of
     -- Esc Quits the App
     V.EvKey V.KEsc         [] -> M.halt st
@@ -252,61 +270,56 @@ appEvent st ev =
 
 
     -- Cycle between "Focus Rings" (Col1, Col2, Cfm)
-    V.EvKey V.KEnter      [] | modalIdx == 2 ->
-      -- ASSUMPTION only 3x modal states; coupled that incrMS touches modalIdx
+    V.EvKey V.KEnter      [] | modalIdx == length modes - 1 ->
       -- If we're going back to 1st, need to:
       --   - clear the Edits,
       --   - refresh the suggestions
       let getFirstLine ed = fromMaybe "" . listToMaybe $ E.getEditContents ed
-          txt1 = getFirstLine $ st ^. edit1
-          txt2 = getFirstLine $ st ^. edit2
+          txt :: [String]
+          txt = map getFirstLine $ st ^.. (categorisers . traverse . edit)
       in M.suspendAndResume $ do
-        -- Filthy pattern match, ASSUMPTION of size 2
-        (m', prompt'@(_,(initText1,sg1):(initText2,sg2):_)) <- _updatePrompt st (_promptState st) [txt1, txt2]
-        let setTextZipper ms =
-              Z.stringZipper (maybeToList ms) (Just 1)
-            st' = st { _modalState  = incrModalState (_modalState st)
-                     -- So .. this is the only place we update _list1, _prompt right?
-                     , _list1       = List Edit1 sg1
-                     , _edit1       = E.applyEdit (\z -> setTextZipper initText1) (_edit1 st)
-                     , _list2       = List Edit2 sg2
-                     , _edit2       = E.applyEdit (\z -> setTextZipper initText2) (_edit2 st)
-                     , _prompt      = prompt'
-                     , _promptState = m'
-                     }
-        return $ st'
+        (m', prompt') <- (st ^. updatePrompt) (st ^. promptState) txt
+        let st' = st & modalState %~ incrModalState
+                     & promptState .~ m'
+        return $ stateWithPrompt st' prompt'
 
     V.EvKey V.KEnter      [] ->
       M.continue $ st & modalState %~ incrModalState
 
-    V.EvKey (V.KChar n)   [] | not isEdit && acceptsHotkey n -> do
-      -- TODO:LENS: I don't understand lenses enough to know the idiomatic case here
-      let str  = fromMaybe "" $ stringForHotkey n
-          edit = if modalIdx == 0 then edit1 else edit2
+    V.EvKey (V.KChar n)   [] | not isEdit && acceptsHotkey n ->
+      let str = fromMaybe "" $ stringForHotkey n
+          ed = categorisers . ix modalIdx . edit
           setTextZipper =
             Z.stringZipper [str] (Just 1)
-          st'  = st & edit %~ E.applyEdit (\z -> setTextZipper)
-      M.continue $ st' & modalState %~ incrModalState
+      in
+        M.continue $ st & ed . E.editContentsL .~ setTextZipper
+                        & modalState %~ incrModalState
 
-    V.EvKey (V.KChar 'e') [] | not (isEditing $ _modalState st) ->
+    V.EvKey (V.KChar 'e') [] | not isEdit ->
       M.continue $ st & modalState %~ decrModalState
 
 
-    _ -> M.continue =<< case _modalState st of
-           (0, _) | isEdit ->
-             T.handleEventLensed st edit1 E.handleEditorEvent ev
-           (1, _) | isEdit ->
-             T.handleEventLensed st edit2 E.handleEditorEvent ev
-           _ -> return st
+    _ -> M.continue =<< case (st ^. modalState) of
+           (idx, _) | isEdit &&
+                      idx < length (st ^. categorisers) ->
+             -- Can't use T.handleEventLensed out-of-the-box with the
+             -- following lens.
+             let ed :: Applicative f => (E.Editor Name -> f (E.Editor Name)) -> St m -> f (St m)
+                 ed =  categorisers . ix idx . edit
+                 edLens :: Lens' (St m) (E.Editor Name)
+                 edLens =
+                   lens (^?! ed)
+                        (\st newVal -> st & ed .~ newVal)
+             in
+               T.handleEventLensed st edLens E.handleEditorEvent ev
+           _ ->
+             return st
 
 
 
 appCursor :: St m -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
 appCursor st locs =
-  let mn = currentName (_modalState st)
-  -- in case mn of
-  --      Nothing -> Nothing
-  --      Just n ->
+  let mn = st ^. modalState . to currentName . to Just
   in listToMaybe $ filter (\cl -> mn == T.cursorLocationName cl) locs
 
 
