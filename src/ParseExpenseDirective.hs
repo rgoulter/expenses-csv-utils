@@ -50,13 +50,19 @@ direction =
 
 
 
+currency :: Parser String
+currency =
+  lexeme $ count 3 upperChar
+
+
+
 amount :: Parser Money
 amount =
   do approx <- optional $ symbol "~"
      dollars <- read <$> some C.digitChar
      -- XXX cents shouldn't be more than two digits
      cents <- fromIntegral <$> try (C.char '.' *> integer) <|> (pure 0 <* sc)
-     cur <- optional (string "USD") -- XXX various currencies
+     cur <- optional currency
      void sc
      return $ Amount dollars cents cur (isJust approx)
 

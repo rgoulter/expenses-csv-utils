@@ -39,8 +39,10 @@ parseExpenseDirectiveSpec =
       parse PE.amount "" "~1.23"  `shouldParse` E.Amount 1 23 Nothing True
       parse PE.amount ""  "1"     `shouldParse` E.Amount 1  0 Nothing False
       -- Note that, if we test for currencies other than USD,
-      -- it'll fail. Should remedy that..
       parse PE.amount ""  "1 USD" `shouldParse` E.Amount 1  0 (Just "USD") False
+      parse PE.amount ""  "1 NZD" `shouldParse` E.Amount 1  0 (Just "NZD") False
+      parse PE.amount ""  "1 SGD" `shouldParse` E.Amount 1  0 (Just "SGD") False
+      parse PE.amount ""  "1 MYR" `shouldParse` E.Amount 1  0 (Just "MYR") False
     it "should not parse not-amount" $ do
       parse PE.amount "" `shouldFailOn` "NotAnAmount"
       parse PE.amount "" `shouldFailOn` "S$123"
