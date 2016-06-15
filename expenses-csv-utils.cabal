@@ -26,11 +26,14 @@ library
                      , hashable
                      , split
   hs-source-dirs:    src/
-  exposed-modules:     ParseDateDirective
+  exposed-modules:     Categorise
+                     , CategoriseEntries
+                     , Entry
+                     , Expense
+                     , Expenses.Merge.Constructive
+                     , ParseDateDirective
                      , ParseExpenseDirective
                      , ParseExpensesDoc
-                     , Categorise
-                     , CategoriseEntries
                      , UI.Types
   default-language:    Haskell2010
 

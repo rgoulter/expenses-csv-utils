@@ -19,23 +19,9 @@ import Text.Megaparsec.String -- input stream is of type ‘String’
 import qualified Text.Megaparsec.Lexer as L
 import qualified Text.Megaparsec.Char as C
 
-
-
--- ~ 1234.12 CUR
-data Money = Amount {
-               moneyDollar   :: Int,
-               moneyCents    :: Int,
-               moneyCurrency :: Maybe String,
-               moneyIsApprox :: Bool
-             } deriving (Show, Eq)
-
-data Direction = Spent | Received deriving (Show, Eq)
-
-data Expense = Expense {
-                 expenseDirection :: Direction,
-                 expenseAmount    :: Money,
-                 expenseRemark    :: String
-               } deriving (Show, Eq)
+import Expense (Money(..),
+                Direction(..),
+                Expense(..))
 
 
 

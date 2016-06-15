@@ -5,9 +5,9 @@ import Test.Hspec
 import qualified Data.Set as E
 import Text.Heredoc (here)
 
-import qualified ParseExpensesDoc  as ED
 import qualified Categorise        as C
 import qualified CategoriseEntries as CE
+import qualified Entry             as E
 
 
 
@@ -15,21 +15,21 @@ import qualified CategoriseEntries as CE
 
 
 
-mkEntry :: String -> [ED.Category] -> ED.Entry
+mkEntry :: String -> [E.Category] -> E.Entry
 mkEntry remark cat =
   -- use arbitrary (but constant) date, price;
   -- so the remark keys the entries
-  ED.Entry (2000,1,1) (1,0,"USD") remark cat
+  E.Entry (2000,1,1) (1,0,"USD") remark cat
 
 
 
-category1 = ED.Category "C1"
-category2 = ED.Category "C2"
+category1 = E.Category "C1"
+category2 = E.Category "C2"
 
 remark1 = "this is a remark"
 
 entry1 = mkEntry remark1 [category1, category2]
-entry2 = mkEntry remark1 [ED.Uncategorised, ED.Uncategorised]
+entry2 = mkEntry remark1 [E.Uncategorised, E.Uncategorised]
 
 model1 = ( [entry1, entry2]
          , []
@@ -58,7 +58,7 @@ categoriseExpensesSpec =
     --   -- then should predict.
     --   let model = CE.nextModel model1
     --       (s, (_,xs1):(_,xs2):_) = CE.promptFromModel model
-    --   -- XXX xs1 :: [CE.Sug] == [(ED.Category, C.Probability)]
+    --   -- XXX xs1 :: [CE.Sug] == [(E.Category, C.Probability)]
     --   xs1 `shouldBe` ["C1"]
     --   xs2 `shouldBe` ["C2"]
 

@@ -10,9 +10,7 @@ import Text.Megaparsec.String
 import qualified Data.Set as E
 import Text.Heredoc (here)
 
-import ParseDateDirective as D
-import ParseExpenseDirective as E
-import ParseExpensesDoc as ED
+import qualified ParseExpensesDoc as PED
 
 
 
@@ -65,5 +63,5 @@ parseExpensesFileSpec =
     it "should not parse malformed doc" $ do
       parse docParser "" `shouldFailOn` badExpensesDoc
   where
-    docParser = ED.parseExpensesFile <* eof
+    docParser = PED.parseExpensesFile <* eof
 
