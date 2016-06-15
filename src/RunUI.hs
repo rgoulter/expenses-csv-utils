@@ -28,6 +28,9 @@ main = do
           Right csv ->
             let (initModel, initPrompt) = CE.initFromCSV csv
                 initState = initialState initPrompt CE.nextPrompt initModel
-            in  void $ defaultMain theApp initState
+            in do -- Run the UI, save only on exiting UI.
+                 st <- defaultMain theApp initState
+                 let processModel = _promptState st
+                 CE.writeModelToFile csvFilename processModel
   else
     putStrLn "Please run with <csvfile.csv>"

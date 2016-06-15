@@ -2,6 +2,8 @@
 
 module CategoriseEntries where
 
+import System.IO (FilePath)
+
 import Text.CSV (CSV, printCSV, parseCSVFromFile)
 import Text.Printf (printf)
 
@@ -103,6 +105,17 @@ updateModelWith :: ProcessModel -> [String] -> ProcessModel
 updateModelWith (e:es,done,m) newCategories =
   let e' = e { D.entryCategories = map D.categoryFromString newCategories }
   in  nextModel (e':es,done,m)
+
+
+
+writeModelToFile :: FilePath -> ProcessModel -> IO ()
+writeModelToFile filename (todo,done,m) = do
+  -- Need to reverse Done,
+  putStrLn "Save to file..."
+  let entries = reverse done ++ todo
+      records = map D.recordFromEntry entries
+      outp = printCSV records
+  writeFile filename outp
 
 
 
