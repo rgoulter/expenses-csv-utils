@@ -15,18 +15,18 @@ import Text.Megaparsec
 
 import ParseDateDirective (Parser)
 import TestDateParser
+import TestExpense
 import TestExpenseParser
 import TestExpenseDocParser
 
 -- Adapted from
 -- https://raw.githubusercontent.com/mrkkrp/hspec-megaparsec/0.2.0/tests/Main.hs
 
-
-
 -- hspec :: Spec -> IO ()
 
 main :: IO ()
 main = hspec $ do
+  expenseSpec
   parseDateDirectiveSpec
   parseExpenseDirectiveSpec
   parseExpensesFileSpec
