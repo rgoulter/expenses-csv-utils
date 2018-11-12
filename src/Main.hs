@@ -1,10 +1,10 @@
 module Main where
 
 import System.Environment (getArgs)
+
 import Text.CSV (printCSV)
 
 import Text.Megaparsec
-import Text.Megaparsec.String -- input stream is of type ‘String’
 
 import ParseExpensesDoc
 

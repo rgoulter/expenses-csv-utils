@@ -18,13 +18,14 @@ cabal-version:       >=1.10
 library
   -- other-modules:
   -- other-extensions:
-  build-depends:       base >=4.8 && <4.9
-                     , megaparsec >= 5.0.0
-                     , time >=1.6 && <1.7
+  build-depends:       base >=4.8 && <4.12
+                     , megaparsec >= 6.0
+                     , time >=1.6 && <1.9
                      , csv >=0.1 && <0.2
                      , unordered-containers
                      , hashable
                      , split
+                     , void
   hs-source-dirs:    src/
   exposed-modules:     Entry
                      , Expense
@@ -37,16 +38,19 @@ library
 test-suite tests
   main-is:             TestSpec.hs
   type: exitcode-stdio-1.0
-  -- other-modules:
+  other-modules:       TestDateParser
+                     , TestExpenseDocParser
+                     , TestExpenseParser
+
   -- other-extensions:
-  build-depends:       base >=4.8 && <4.9
-                     , megaparsec >= 5.0.0
-                     , time >=1.6 && <1.7
+  build-depends:       base >=4.8 && <4.12
+                     , megaparsec >= 6.0
+                     , time >=1.6 && <1.9
                      , csv >=0.1 && <0.2
                      , expenses-csv-utils
                      , hspec              >= 2.0
                      , hspec-expectations >= 0.5
-                     , hspec-megaparsec == 0.2.0
+                     , hspec-megaparsec == 1.0.0
                      , containers         >= 0.5 && < 0.6
                      , heredoc >= 0.2
                      , hashable
@@ -58,12 +62,16 @@ test-suite tests
 
 executable expenses-csv-utils
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:       Entry
+                     , Expense
+                     , ParseDateDirective
+                     , ParseExpenseDirective
+                     , ParseExpensesDoc
   -- other-extensions:
-  build-depends:       base >=4.8 && <4.9
+  build-depends:       base >=4.8 && <4.12
                      , expenses-csv-utils
-                     , megaparsec >= 5.0.0
-                     , time >=1.6 && <1.7
+                     , megaparsec >= 6.0
+                     , time >=1.6 && <1.9
                      , csv >=0.1 && <0.2
                      , hashable
   hs-source-dirs:      src/

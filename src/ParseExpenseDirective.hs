@@ -12,16 +12,21 @@
 module ParseExpenseDirective where
 
 import Control.Monad (void)
+
 import Data.Maybe (isJust)
+
 import Text.Megaparsec
+import Text.Megaparsec.Char (noneOf)
+import Text.Megaparsec.Char (spaceChar, string)
+import Text.Megaparsec.Char (upperChar)
 import Text.Megaparsec.Expr
-import Text.Megaparsec.String -- input stream is of type ‘String’
-import qualified Text.Megaparsec.Lexer as L
 import qualified Text.Megaparsec.Char as C
+import qualified Text.Megaparsec.Char.Lexer as L
 
 import Expense (Money(..),
                 Direction(..),
                 Expense(..))
+import ParseDateDirective (Parser)
 
 
 
@@ -38,7 +43,7 @@ symbol = L.symbol sc
 
 
 integer :: Parser Integer
-integer = lexeme L.integer
+integer = lexeme L.decimal
 
 
 

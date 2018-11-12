@@ -12,13 +12,19 @@
 module ParseDateDirective where
 
 import Control.Monad (void)
+
+import Data.Void (Void)
+
 import Text.Megaparsec
+import Text.Megaparsec.Char (noneOf)
+import Text.Megaparsec.Char (spaceChar, string)
 import Text.Megaparsec.Expr
-import Text.Megaparsec.String -- input stream is of type ‘String’
-import qualified Text.Megaparsec.Lexer as L
+import qualified Text.Megaparsec.Char.Lexer as L
 
 import Expense (Day(..), DateDirective(..))
 
+
+type Parser = Parsec Void String
 
 
 sc :: Parser ()
@@ -34,7 +40,7 @@ symbol = L.symbol sc
 
 
 integer :: Parser Integer
-integer = lexeme L.integer
+integer = lexeme L.decimal
 
 dash :: Parser String
 dash = symbol "-"

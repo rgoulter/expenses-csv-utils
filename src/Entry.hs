@@ -1,6 +1,7 @@
 module Entry where
 
 import Data.Hashable (Hashable(..))
+
 import Data.Maybe (fromMaybe)
 
 import Expense (DateDirective, Expense(..),

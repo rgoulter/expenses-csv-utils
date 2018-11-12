@@ -1,12 +1,17 @@
 module TestExpenseParser where
 
 import Data.List.NonEmpty (NonEmpty (..))
-import Test.Hspec
-import Test.Hspec.Megaparsec
-import Text.Megaparsec
-import Text.Megaparsec.String
+
 import qualified Data.Set as E
+
 import Text.Heredoc (here)
+
+import Test.Hspec
+
+import Test.Hspec.Megaparsec
+
+import Text.Megaparsec
+
 
 import qualified ParseExpenseDirective as PE
 import qualified Expense as E

@@ -1,24 +1,29 @@
 module ParseExpensesDoc where
 
-import Text.Printf (printf)
-import Data.Maybe (fromMaybe, mapMaybe)
 
 import Control.Monad (void, forM_)
+
+import Data.Maybe (fromMaybe, mapMaybe)
+
+import Text.CSV as CSV
+
 import Text.Megaparsec
 import Text.Megaparsec.Expr
-import Text.Megaparsec.String -- input stream is of type ‘String’
-import qualified Text.Megaparsec.Lexer as L
+import Text.Megaparsec.Char (eol, spaceChar)
 import qualified Text.Megaparsec.Char as C
+import qualified Text.Megaparsec.Char.Lexer as L
 
-import qualified ParseDateDirective as PD
-import qualified ParseExpenseDirective as PE
+import Text.Printf (printf)
+
 import Expense (DateDirective, Expense(..),
                 Day(Mon), nextDate,
                 Direction(..))
-import qualified Expense as E
 import Entry
+import ParseDateDirective (Parser)
+import qualified ParseDateDirective as PD
+import qualified ParseExpenseDirective as PE
+import qualified Expense as E
 
-import Text.CSV as CSV
 
 
 
