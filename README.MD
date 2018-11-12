@@ -1,20 +1,11 @@
-Translates from some "expenses file" format, to CSV file.  
-Uses Haskell's MegaParsec to parse the input file.
+For personal accounting in plain text,
+tools like ledger-cli are excellent.
 
-The CSV it outputs is of form:
+My personal accounting workflow currently involves
+an intermediate format for recording transactions,
+and then translating this to a ledger-cli journal.
 
-```
-date, amount, currency, remark, category
-```
-
-## "Expenses" File
-
-I've found apps on my phone where I enter in what expenses I've made
-to be too cumbersome. But I want to be aware of how I'm spending my money.
-
-It's much easier for me to type into a textfile, & keep this file in a VCS
-repository somewhere.  
-So, I can keep track of expenses in a format something like:
+e.g. I prefer to initially describe transactions like:
 
 ```
 2016-01-01 MON
@@ -25,21 +16,27 @@ TUE
 Spent 2 on breakfast
 ```
 
-Where:
+# Alternative Solutions
 
-* I don't worry about categorisation when recording this.  
-    (Intention is to categorise it at a later stage,
-     hopefully with some kind of automation/assistance).
+## ledger-cli's xact
 
-* Use a natural-language-ish format, rather than CSV.  
-    (So it's easier to read, write).
+https://www.ledger-cli.org/3.0/doc/ledger3.html#xact
 
-* Since I spent money at least two days a week, it's easier
-  (for recording) to only explicity date the Monday,
-  and distinguish other days spending by name-of-day.
+> The xact command simplifies the creation of new transactions. It works on the
+> principle that 80% of all postings are variants of earlier postings.
 
-* The 'remark' is natural language (ish); although I prefer to use
-  phrases like "on X at Y", "on X (a, b, c)", etc.
+An example of invoking the `xact` command:
+
+> $ ledger xact 2004/4/9 viva food 11 tips 2.50
+
+As far as I can tell, `xact` offers a much more comprehensive
+way to add a new transaction than this project.
+
+# Implementation
+
+Uses Haskell's MegaParsec to parse the input file.
+
+# Building
 
 ## Running in a Cabal Sandbox
 
