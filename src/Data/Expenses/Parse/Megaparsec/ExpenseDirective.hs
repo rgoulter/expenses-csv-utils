@@ -65,7 +65,6 @@ amount :: Parser Money
 amount =
   do approx <- optional $ symbol "~"
      dollars <- read <$> some C.digitChar
-     -- XXX cents shouldn't be more than two digits
      cents <- fromIntegral <$> try (C.char '.' *> integer) <|> (0 <$ sc)
      cur <- optional currency
      void sc

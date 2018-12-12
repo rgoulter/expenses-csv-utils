@@ -56,8 +56,6 @@ Spent 2 on thing
 
 
 
--- XXX do a couple of working examples,
--- XXX and, like. do some 'failed' examples, which prev. failed.
 parseExpensesFileSpec :: Spec
 parseExpensesFileSpec =
   describe "Parse Expenses File" $ do
