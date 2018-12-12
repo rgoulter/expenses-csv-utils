@@ -5,17 +5,14 @@ import Control.Monad (void, forM_)
 
 import Data.Maybe (fromMaybe, mapMaybe)
 
-import Text.CSV as CSV
+import qualified Text.CSV as CSV
 
-import Text.Megaparsec
-import Text.Megaparsec.Expr
+import Text.Megaparsec (choice, hidden, skipMany, some, (<?>), (<|>))
 import Text.Megaparsec.Char (eol, spaceChar)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Expense (DateDirective, Expense(..),
-                Day(Mon), nextDate,
-                Direction(..))
+import Expense (DateDirective, Day(Mon), Direction(..), Expense(..), nextDate)
 import Entry
 import ParseDateDirective (Parser)
 import qualified ParseDateDirective as PD

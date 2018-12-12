@@ -17,9 +17,8 @@ import Data.Functor (($>))
 
 import Data.Void (Void)
 
-import Text.Megaparsec
+import Text.Megaparsec (Parsec, hidden, optional, skipMany, (<|>))
 import Text.Megaparsec.Char (noneOf, spaceChar, string)
-import Text.Megaparsec.Expr
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import Expense (Day(..), DateDirective(..))

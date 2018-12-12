@@ -17,7 +17,7 @@ import Data.Functor (($>))
 
 import Data.Maybe (isJust)
 
-import Text.Megaparsec
+import Text.Megaparsec (count, hidden, many, optional, skipMany, some, try, (<|>))
 import Text.Megaparsec.Char (noneOf, spaceChar, string, upperChar)
 import Text.Megaparsec.Expr
 import qualified Text.Megaparsec.Char as C

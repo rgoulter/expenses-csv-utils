@@ -4,7 +4,7 @@ import System.Environment (getArgs)
 
 import Text.CSV (printCSV)
 
-import Text.Megaparsec
+import Text.Megaparsec (eof, parseErrorPretty, runParser)
 
 import ParseExpensesDoc (LineDirective, parseExpensesFile)
 import ToCSV (recordsFromDirectives)
