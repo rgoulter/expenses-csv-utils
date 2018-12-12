@@ -2,7 +2,7 @@ module TestExpense where
 
 import Test.Hspec (Spec, describe, it, shouldBe)
 
-import qualified Expense as E
+import qualified Data.Expenses.Expense as E
 
 expenseSpec :: Spec
 expenseSpec =

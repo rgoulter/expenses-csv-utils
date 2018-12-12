@@ -27,12 +27,12 @@ library
                      , split
                      , void
   hs-source-dirs:    src/
-  exposed-modules:     Entry
-                     , Expense
-                     , ParseDateDirective
-                     , ParseExpenseDirective
-                     , ParseExpensesDoc
-                     , ToCSV
+  exposed-modules:     Data.Expenses.Parse.Megaparsec.DateDirective
+                     , Data.Expenses.Parse.Megaparsec.Entry
+                     , Data.Expenses.Parse.Megaparsec.ExpenseDirective
+                     , Data.Expenses.Parse.Megaparsec.ExpensesDoc
+                     , Data.Expenses.Expense
+                     , Data.Expenses.ToCSV
   default-language:    Haskell2010
 
 
@@ -64,12 +64,12 @@ test-suite tests
 
 executable expenses-csv-utils
   main-is:             Main.hs
-  other-modules:       Entry
-                     , Expense
-                     , ParseDateDirective
-                     , ParseExpenseDirective
-                     , ParseExpensesDoc
-                     , ToCSV
+  other-modules:     Data.Expenses.Parse.Megaparsec.DateDirective
+                   , Data.Expenses.Parse.Megaparsec.Entry
+                   , Data.Expenses.Parse.Megaparsec.ExpenseDirective
+                   , Data.Expenses.Parse.Megaparsec.ExpensesDoc
+                   , Data.Expenses.Expense
+                   , Data.Expenses.ToCSV
   -- other-extensions:
   build-depends:       base >=4.8 && <4.12
                      , expenses-csv-utils

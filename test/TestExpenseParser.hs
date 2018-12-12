@@ -13,8 +13,8 @@ import Test.Hspec.Megaparsec (failsLeaving, initialState, shouldFailOn, shouldPa
 import Text.Megaparsec (parse, runParser')
 
 
-import qualified ParseExpenseDirective as PE
-import qualified Expense as E
+import qualified Data.Expenses.Parse.Megaparsec.ExpenseDirective as PE
+import qualified Data.Expenses.Expense as E
 
 
 

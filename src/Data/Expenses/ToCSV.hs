@@ -1,12 +1,12 @@
-module ToCSV where
+module Data.Expenses.ToCSV where
 
 
 import Text.CSV as CSV
 
 import Text.Printf (printf)
 
-import Entry
-import ParseExpensesDoc (LineDirective, entriesFromDirectives)
+import Data.Expenses.Parse.Megaparsec.Entry (Entry, stringFromCategory, entryCategories, entryDate, entryPrice, entryRemark)
+import Data.Expenses.Parse.Megaparsec.ExpensesDoc (LineDirective, entriesFromDirectives)
 
 
 

@@ -1,13 +1,13 @@
-module Entry where
+module Data.Expenses.Parse.Megaparsec.Entry where
 
 import Data.Hashable (Hashable(..))
 
 import Data.Maybe (fromMaybe)
 
-import Expense (DateDirective, Expense(..),
+import Data.Expenses.Expense(DateDirective, Expense(..),
                 Day(Mon), nextDate,
                 Direction(..))
-import qualified Expense as E
+import qualified Data.Expenses.Expense as E
 
 
 

@@ -13,9 +13,9 @@ import Test.Hspec.Megaparsec (failsLeaving, initialState, shouldFailOn, shouldPa
 import Text.Megaparsec (parse, runParser')
 
 
-import ParseDateDirective (Parser)
-import qualified ParseDateDirective as PD
-import qualified Expense as D
+import Data.Expenses.Parse.Megaparsec.DateDirective (Parser)
+import qualified Data.Expenses.Parse.Megaparsec.DateDirective as PD
+import qualified Data.Expenses.Expense as D
 
 
 

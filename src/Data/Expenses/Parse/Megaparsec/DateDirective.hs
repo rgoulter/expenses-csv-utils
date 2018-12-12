@@ -9,7 +9,7 @@
 -- MON, TUE, WED, THURS, FRI, SAT, SUN
 --  (also TUES, WEDS)
 
-module ParseDateDirective where
+module Data.Expenses.Parse.Megaparsec.DateDirective where
 
 import Control.Monad (void)
 
@@ -21,7 +21,7 @@ import Text.Megaparsec (Parsec, hidden, optional, skipMany, (<|>))
 import Text.Megaparsec.Char (noneOf, spaceChar, string)
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Expense (Day(..), DateDirective(..))
+import Data.Expenses.Expense (Day(..), DateDirective(..))
 
 
 type Parser = Parsec Void String
@@ -76,4 +76,3 @@ dateDirective :: Parser DateDirective
 dateDirective =
   do dt <- optional date
      DateDir dt <$> day
-

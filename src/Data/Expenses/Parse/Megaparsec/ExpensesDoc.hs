@@ -1,4 +1,4 @@
-module ParseExpensesDoc where
+module Data.Expenses.Parse.Megaparsec.ExpensesDoc where
 
 
 import Control.Monad (void, forM_)
@@ -12,12 +12,12 @@ import Text.Megaparsec.Char (eol, spaceChar)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Expense (DateDirective, Day(Mon), Direction(..), Expense(..), nextDate)
-import Entry
-import ParseDateDirective (Parser)
-import qualified ParseDateDirective as PD
-import qualified ParseExpenseDirective as PE
-import qualified Expense as E
+import Data.Expenses.Expense (DateDirective, Day(Mon), Direction(..), Expense(..), nextDate)
+import Data.Expenses.Parse.Megaparsec.Entry
+import Data.Expenses.Parse.Megaparsec.DateDirective (Parser)
+import qualified Data.Expenses.Parse.Megaparsec.DateDirective as PD
+import qualified Data.Expenses.Parse.Megaparsec.ExpenseDirective as PE
+import qualified Data.Expenses.Expense as E
 
 
 

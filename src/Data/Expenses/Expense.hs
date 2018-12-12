@@ -1,4 +1,4 @@
-module Expense where
+module Data.Expenses.Expense where
 
 import qualified Data.Time.Calendar as DT
 

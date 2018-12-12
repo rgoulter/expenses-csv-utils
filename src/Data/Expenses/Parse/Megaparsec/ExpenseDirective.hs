@@ -9,7 +9,7 @@
 -- No real value in distinguishing various details in the remark
 -- at this point. (e.g. "location").
 
-module ParseExpenseDirective where
+module Data.Expenses.Parse.Megaparsec.ExpenseDirective where
 
 import Control.Monad (void)
 
@@ -23,10 +23,10 @@ import Text.Megaparsec.Expr
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Expense (Money(..),
+import Data.Expenses.Expense (Money(..),
                 Direction(..),
                 Expense(..))
-import ParseDateDirective (Parser)
+import Data.Expenses.Parse.Megaparsec.DateDirective (Parser)
 
 
 

@@ -15,7 +15,7 @@ import Test.Hspec.Megaparsec (initialState, shouldSucceedOn, shouldFailOn, shoul
 import Text.Megaparsec (eof, parse)
 
 
-import qualified ParseExpensesDoc as PED
+import qualified Data.Expenses.Parse.Megaparsec.ExpensesDoc as PED
 
 
 

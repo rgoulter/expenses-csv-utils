@@ -6,8 +6,8 @@ import Text.CSV (printCSV)
 
 import Text.Megaparsec (eof, parseErrorPretty, runParser)
 
-import ParseExpensesDoc (LineDirective, parseExpensesFile)
-import ToCSV (recordsFromDirectives)
+import Data.Expenses.Parse.Megaparsec.ExpensesDoc (LineDirective, parseExpensesFile)
+import Data.Expenses.ToCSV (recordsFromDirectives)
 
 
 
