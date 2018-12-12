@@ -6,11 +6,11 @@ import qualified Data.Set as E
 
 import Text.Heredoc (here)
 
-import Test.Hspec
+import Test.Hspec (Spec, describe, it)
 
-import Test.Hspec.Megaparsec
+import Test.Hspec.Megaparsec (failsLeaving, initialState, shouldFailOn, shouldParse, succeedsLeaving)
 
-import Text.Megaparsec
+import Text.Megaparsec (parse, runParser')
 
 
 import qualified ParseExpenseDirective as PE

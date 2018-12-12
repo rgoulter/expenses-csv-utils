@@ -1,28 +1,14 @@
 module Main (main) where
 
-import Data.List.NonEmpty (NonEmpty (..))
-
-import qualified Data.Set as E
-
-import Text.Heredoc (here)
-
-import Test.Hspec
-
-import Test.Hspec.Megaparsec
-
-import Text.Megaparsec
-
+import Test.Hspec (hspec)
 
 import ParseDateDirective (Parser)
-import TestDateParser
-import TestExpense
-import TestExpenseParser
-import TestExpenseDocParser
+import TestDateParser (parseDateDirectiveSpec)
+import TestExpense (expenseSpec)
+import TestExpenseParser (parseExpenseDirectiveSpec)
+import TestExpenseDocParser (parseExpensesFileSpec)
 
--- Adapted from
--- https://raw.githubusercontent.com/mrkkrp/hspec-megaparsec/0.2.0/tests/Main.hs
 
--- hspec :: Spec -> IO ()
 
 main :: IO ()
 main = hspec $ do

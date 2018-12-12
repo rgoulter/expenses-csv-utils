@@ -1,6 +1,6 @@
 module TestExpense where
 
-import Test.Hspec
+import Test.Hspec (Spec, describe, it, shouldBe)
 
 import qualified Expense as E
 

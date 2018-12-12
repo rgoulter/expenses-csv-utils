@@ -8,11 +8,11 @@ import qualified Data.Set as E
 
 import Text.Heredoc (here)
 
-import Test.Hspec
+import Test.Hspec (Spec, describe, it)
 
-import Test.Hspec.Megaparsec
+import Test.Hspec.Megaparsec (initialState, shouldSucceedOn, shouldFailOn, shouldParse)
 
-import Text.Megaparsec
+import Text.Megaparsec (eof, parse)
 
 
 import qualified ParseExpensesDoc as PED
