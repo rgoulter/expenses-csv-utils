@@ -6,7 +6,8 @@ import Text.CSV (printCSV)
 
 import Text.Megaparsec
 
-import ParseExpensesDoc
+import ParseExpensesDoc (LineDirective, parseExpensesFile)
+import ToCSV (recordsFromDirectives)
 
 
 
@@ -30,7 +31,14 @@ process inputF outputF = do
     Left err ->
       putStrLn $ parseErrorPretty err
     Right directives ->
-      let rows = recordsFromDirectives directives
-          outp = printCSV rows
-      in  writeFile outputF outp
+      outputCSVFromDirectives outputF directives
+
+
+
+outputCSVFromDirectives :: String -> [LineDirective] -> IO ()
+outputCSVFromDirectives outputF directives =
+  let rows = recordsFromDirectives directives
+      outp = printCSV rows
+  in  writeFile outputF outp
+
 
