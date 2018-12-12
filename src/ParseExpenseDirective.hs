@@ -13,12 +13,12 @@ module ParseExpenseDirective where
 
 import Control.Monad (void)
 
+import Data.Functor (($>))
+
 import Data.Maybe (isJust)
 
 import Text.Megaparsec
-import Text.Megaparsec.Char (noneOf)
-import Text.Megaparsec.Char (spaceChar, string)
-import Text.Megaparsec.Char (upperChar)
+import Text.Megaparsec.Char (noneOf, spaceChar, string, upperChar)
 import Text.Megaparsec.Expr
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
@@ -50,8 +50,8 @@ integer = lexeme L.decimal
 -- TODO: No benefit to case-sensitivity here?
 direction :: Parser Direction
 direction =
-  ((string "Spent" *> pure Spent) <|>
-   (string "Received" *> pure Received)) <* sc
+  ((string "Spent" $> Spent) <|>
+   (string "Received" $> Received)) <* sc
 
 
 
@@ -66,7 +66,7 @@ amount =
   do approx <- optional $ symbol "~"
      dollars <- read <$> some C.digitChar
      -- XXX cents shouldn't be more than two digits
-     cents <- fromIntegral <$> try (C.char '.' *> integer) <|> (pure 0 <* sc)
+     cents <- fromIntegral <$> try (C.char '.' *> integer) <|> (0 <$ sc)
      cur <- optional currency
      void sc
      return $ Amount dollars cents cur (isJust approx)

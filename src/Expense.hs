@@ -2,8 +2,6 @@ module Expense where
 
 import qualified Data.Time.Calendar as DT
 
-
-
 data Day = Mon | Tue | Wed | Thu | Fri | Sat | Sun deriving (Show, Eq)
 
 
@@ -26,9 +24,10 @@ dayOfWeek Sun = 6
 
 
 
+-- d1 + (numDaysAfter d1 d2) = d2
 -- e.g. "Tue is 1 day after Mon; the next Mon is 6 days after Tue".
 numDaysAfter :: Day -> Day -> Int
-numDaysAfter d1 d2 = (7 + (dayOfWeek d2) - (dayOfWeek d1)) `mod` 7
+numDaysAfter d1 d2 = (7 + dayOfWeek d2 - dayOfWeek d1) `mod` 7
 
 
 

@@ -44,8 +44,9 @@ sc = hidden . skipMany $ choice [void spaceChar,
 
 parseExpensesFile :: Parser [LineDirective]
 parseExpensesFile =
-  some $ (sc *> (DateCmd <$> PD.dateDirective <* sc <?> "Date directive") <|>
-                (ExpCmd  <$> PE.expense <* sc <?> "Expense directive"))
+  some
+    (sc *> (DateCmd <$> PD.dateDirective <* sc <?> "Date directive") <|>
+           (ExpCmd  <$> PE.expense <* sc <?> "Expense directive"))
 
 
 
