@@ -1,17 +1,22 @@
-module Data.Expenses.Expense where
+module Data.Expenses.Expense
+  ( DateDirective(DateDir)
+  , Day(Mon, Tue, Wed, Thu, Fri, Sat, Sun)
+  , Direction(..)
+  , Expense(..)
+  , Money(..)
+  , dayOfWeek
+  , numDaysAfter
+  , addDays
+  , nextDate )
+where
 
 import qualified Data.Time.Calendar as DT
 
-data Day = Mon | Tue | Wed | Thu | Fri | Sat | Sun deriving (Show, Eq)
-
-
-
-data DateDirective = DateDir {
-                       dateDirDate :: Maybe (Int, Int, Int),
-                       dateDirDay  :: Day
-                     } deriving (Show, Eq)
-
-
+import Data.Expenses.Types (DateDirective(DateDir)
+                           , Day(Mon, Tue, Wed, Thu, Fri, Sat, Sun)
+                           , Direction(..)
+                           , Expense(..)
+                           , Money(..))
 
 dayOfWeek :: Day -> Int
 dayOfWeek Mon = 0
@@ -50,28 +55,3 @@ nextDate ((y,m,d), dy) (DateDir Nothing dy') =
 nextDate ((y,m,d), dy) (DateDir (Just (y',m',d')) dy') =
   -- Simply just use the new date/day
   ((y', m', d'), dy')
-
-
-
--- ~ 1234.12 CUR
-data Money = Amount {
-               moneyDollar   :: Int,
-               moneyCents    :: Int,
-               moneyCurrency :: Maybe String,
-               moneyIsApprox :: Bool
-             } deriving (Show, Eq)
-
-
-
-data Direction = Spent | Received deriving (Show, Eq)
-
-
-
-data Expense = Expense {
-                 expenseDirection :: Direction,
-                 expenseAmount    :: Money,
-                 expenseRemark    :: String
-               } deriving (Show, Eq)
-
-
-

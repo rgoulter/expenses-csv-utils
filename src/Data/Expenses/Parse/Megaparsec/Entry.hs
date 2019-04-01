@@ -1,6 +1,8 @@
-module Data.Expenses.Parse.Megaparsec.Entry where
-
-import Data.Hashable (Hashable(..))
+module Data.Expenses.Parse.Megaparsec.Entry
+  ( Entry(..)
+  , entryFromExpense
+  , categoryFromString)
+where
 
 import Data.Maybe (fromMaybe)
 
@@ -9,22 +11,7 @@ import Data.Expenses.Expense(DateDirective, Expense(..),
                 Direction(..))
 import qualified Data.Expenses.Expense as E
 
-
-
-
--- For now, we'll just have categories as strings
-data Category = Uncategorised
-              | Category String
-              deriving (Eq)
-
-
-
-data Entry = Entry
-  { entryDate       :: (Int, Int, Int)    -- (y,m,d)
-  , entryPrice      :: (Int, Int, String) -- (dlr,cents,cur)
-  , entryRemark     :: String
-  , entryCategories :: [Category]
-  } deriving (Show, Eq)
+import Data.Expenses.Types(Category(..), Entry(..))
 
 
 
@@ -51,27 +38,7 @@ entryFromExpense (y,m,d) exp =
 
 
 
-stringFromCategory :: Category -> String
-stringFromCategory Uncategorised = "Uncategorised"
-stringFromCategory (Category c) = c
-
-
-
 categoryFromString :: String -> Category
 categoryFromString "Uncategorised" = Uncategorised
 categoryFromString "" = Uncategorised
 categoryFromString s = Category s
-
-
-
-instance Hashable Category where
-  hashWithSalt s Uncategorised = s
-  hashWithSalt s (Category c) = hashWithSalt s c
-
-
-
-instance Show Category where
-  show = stringFromCategory
-
-
-

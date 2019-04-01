@@ -33,6 +33,7 @@ library
                      , Data.Expenses.Parse.Megaparsec.ExpensesDoc
                      , Data.Expenses.Expense
                      , Data.Expenses.ToCSV
+                     , Data.Expenses.Types
   default-language:    Haskell2010
 
 
@@ -70,6 +71,7 @@ executable expenses-csv-utils
                    , Data.Expenses.Parse.Megaparsec.ExpensesDoc
                    , Data.Expenses.Expense
                    , Data.Expenses.ToCSV
+                   , Data.Expenses.Types
   -- other-extensions:
   build-depends:       base >=4.8 && <4.12
                      , expenses-csv-utils
