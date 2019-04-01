@@ -1,7 +1,6 @@
 module Data.Expenses.Parse.Megaparsec.Entry
   ( Entry(..)
-  , entryFromExpense
-  , categoryFromString)
+  , entryFromExpense)
 where
 
 import Data.Maybe (fromMaybe)
@@ -11,7 +10,7 @@ import Data.Expenses.Expense(DateDirective, Expense(..),
                 Direction(..))
 import qualified Data.Expenses.Expense as E
 
-import Data.Expenses.Types(Category(..), Entry(..))
+import Data.Expenses.Types(Entry(..))
 
 
 
@@ -20,10 +19,6 @@ entryFromExpense (y,m,d) exp =
   Entry { entryDate       = (y,m,d)
         , entryPrice      = (dollars, cents, cur)
         , entryRemark     = E.expenseRemark exp
-        -- MAGIC: 2x categories.
-        , entryCategories = [ Uncategorised
-                            , Uncategorised
-                            ]
         }
   where
     amount  = E.expenseAmount exp
@@ -35,10 +30,3 @@ entryFromExpense (y,m,d) exp =
 
     -- MAGIC: Implicit currency is SGD if not given.
     cur     = fromMaybe "SGD" (E.moneyCurrency amount)
-
-
-
-categoryFromString :: String -> Category
-categoryFromString "Uncategorised" = Uncategorised
-categoryFromString "" = Uncategorised
-categoryFromString s = Category s
