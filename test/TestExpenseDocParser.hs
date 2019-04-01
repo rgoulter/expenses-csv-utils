@@ -58,13 +58,14 @@ Spent 2 on thing
 
 parseExpensesFileSpec :: Spec
 parseExpensesFileSpec =
-  describe "Parse Expenses File" $ do
-    -- direction Spent/Rcv
-    it "should parse well-formed doc" $ do
-      parse docParser "" `shouldSucceedOn` goodExpensesDoc
-      parse docParser "" `shouldSucceedOn` goodExpensesDocWithCmts
-    it "should not parse malformed doc" $ do
-      parse docParser "" `shouldFailOn` badExpensesDoc
-  where
-    docParser = PED.parseExpensesFile <* eof
+  describe "Data.Expenses.Parse.Megaparsec.ExpensesDoc" $ do
+    describe "parseExpensesFile" $ do
+      -- direction Spent/Rcv
+      it "should successfully parse well-formed doc" $ do
+        parse docParser "" `shouldSucceedOn` goodExpensesDoc
+        parse docParser "" `shouldSucceedOn` goodExpensesDocWithCmts
+      it "should fail to pass malformed doc" $ do
+        parse docParser "" `shouldFailOn` badExpensesDoc
+    where
+      docParser = PED.parseExpensesFile <* eof
 
