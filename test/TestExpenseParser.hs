@@ -49,6 +49,16 @@ parseExpenseDirectiveSpec =
         parse PE.direction "" `shouldFailOn` "2016-02-01 MON"
         parse PE.direction "" `shouldFailOn` "Sent"
 
+      it "parse errors should be the first word" $ do
+        parse PE.direction "" "Sent 100 SGD on blah"
+          `shouldFailWith` err posI (utoks "Sent" <>
+                                     etoks "Spent" <>
+                                     etoks "Received")
+        -- parse PE.direction "" "Recieved 100 SGD on blah"
+        --   `shouldFailWith` err posI (utoks "Recieved" <>
+        --                              etoks "Spent" <>
+        --                              etoks "Received")
+
     describe "amount" $ do
       -- amount [~] 1[.23] [CUR]
       it "should parse cases like '1', '~1', '1.23', '1 NZD', etc." $ do
@@ -98,9 +108,9 @@ parseExpenseDirectiveSpec =
           `failsLeaving` "#cmt\nnext"
 
       describe "parse error for \"Sent 100 SGD blah\"" $ do
-        it "(Bad UX!) should show unexpected \"Sent 100\", expected \"Spent\" or \"Received\"" $ do
+        it "should show unexpected \"Sent\", expected \"Spent\" or \"Received\"" $ do
           -- TBH, it's a bit strange that it's "unexpected Sent 100"
           parse PE.expense "" "Sent 100 SGD blah"
-          `shouldFailWith` err posI (utoks "Sent 100" <>
+          `shouldFailWith` err posI (utoks "Sent" <>
                                      etoks "Spent" <>
                                      etoks "Received")

@@ -15,10 +15,27 @@ import Control.Monad (void)
 
 import Data.Functor (($>))
 
+import qualified Data.List.NonEmpty as NE
+
+import qualified Data.Set as Set
+
+
 import Data.Maybe (isJust)
 
-import Text.Megaparsec (count, hidden, many, optional, skipMany, some, try, (<|>))
-import Text.Megaparsec.Char (noneOf, spaceChar, string, upperChar)
+import Text.Megaparsec
+  ( ErrorItem(Tokens)
+  , lookAhead
+  , failure
+  , count
+  , hidden
+  , many
+  , optional
+  , skipMany
+  , some
+  , try
+  , unexpected
+  , (<|>))
+import Text.Megaparsec.Char (noneOf, letterChar, spaceChar, string, upperChar)
 import Text.Megaparsec.Expr
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
@@ -49,9 +66,15 @@ integer = lexeme L.decimal
 
 -- TODO: No benefit to case-sensitivity here?
 direction :: Parser Direction
-direction =
-  ((string "Spent" $> Spent) <|>
-   (string "Received" $> Received)) <* sc
+direction = do
+  word <- lookAhead $ many letterChar :: Parser String
+  case word of
+    "Spent" -> (string "Spent" :: Parser String) *> sc *> return Spent
+    "Received" -> (string "Received" :: Parser String) *> sc *> return Received
+    _ -> failure (Just $ Tokens $ NE.fromList word)
+                 (Set.fromList [ Tokens (NE.fromList "Spent")
+                               , Tokens (NE.fromList "Received")
+                               ])
 
 
 
@@ -68,6 +91,7 @@ amount =
      cents <- fromIntegral <$> try (C.char '.' *> integer) <|> (0 <$ sc)
      cur <- optional currency
      void sc
+     -- return $ Amount dollars cents cur (isJust approx)
      return $ Amount dollars cents cur (isJust approx)
 
 -- n.b. this doesn't allow for comments at the end-of-line

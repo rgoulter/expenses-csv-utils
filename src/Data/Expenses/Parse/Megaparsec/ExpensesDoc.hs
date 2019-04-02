@@ -7,8 +7,9 @@ import Data.Maybe (fromMaybe, mapMaybe)
 
 import qualified Text.CSV as CSV
 
-import Text.Megaparsec (choice, hidden, skipMany, some, (<?>), (<|>))
-import Text.Megaparsec.Char (eol, spaceChar)
+import Text.Megaparsec (choice, eof, hidden, skipMany, some, (<?>), (<|>))
+import Text.Megaparsec (dbg)
+import Text.Megaparsec.Char (eol, space, spaceChar, tab)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -33,17 +34,31 @@ data LineDirective = DateCmd DateDirective
 
 
 sc :: Parser ()
-sc = hidden . skipMany $ choice [void spaceChar,
-                                 void eol,
+sc = hidden . skipMany $ choice [void space,
+                                 void tab,
                                  L.skipLineComment "#"]
+
+
+
+scn :: Parser ()
+scn = hidden . skipMany $ choice [void spaceChar,
+                                  L.skipLineComment "#"]
 
 
 
 parseExpensesFile :: Parser [LineDirective]
 parseExpensesFile =
-  some
-    (sc *> (DateCmd <$> PD.dateDirective <* sc <?> "Date directive") <|>
-           (ExpCmd  <$> PE.expense <* sc <?> "Expense directive"))
+  scn *> lines
+    where
+  lines = (eof *> return []) <|>
+          ((:) <$>
+           ((DateCmd
+             <$> PD.dateDirective <* scn
+             <?> "Date directive") <|>
+            (ExpCmd
+             <$> PE.expense <* scn
+             <?> "Expense directive")) <*>
+           lines)
 
 
 
@@ -71,4 +86,3 @@ entriesFromDirectives directives =
               directives
       rows' = reverse rows
   in  rows'
-

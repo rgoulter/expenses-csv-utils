@@ -13,6 +13,7 @@ import Test.Hspec (Spec, describe, it)
 import Test.Hspec.Megaparsec
   ( err
   , utok
+  , utoks
   , eeof
   , elabel
   , initialState
@@ -89,22 +90,22 @@ parseExpensesFileSpec =
         parse docParser "" `shouldFailOn` badExpensesDoc
 
       describe "parse error for 1x error (typo 'Sent')" $ do
-        it "(BAD UX!) should show unexpected \"S\", expected \"Spent\" or \"Received\"" $ do
+        it "should show unexpected \"Sent\", expected \"Spent\" or \"Received\"" $ do
           parse docParser "" badExpensesDoc
           `shouldFailWith` err (mkSrcPos 4 1)
-                               (utok 'S' <>
+                               (utoks "Sent" <>
                                 elabel "Date directive" <>
                                 elabel "Expense directive" <>
                                 eeof)
 
       describe "parse error for 2x error (typos: 'Sent', 'spent')" $ do
-        it "(BAD UX!) should show unexpected \"S\", expected \"Spent\" or \"Received\"" $ do
+        it "should show unexpected \"Sent\", expected \"Spent\" or \"Received\"" $ do
           parse docParser "" badExpensesDocWithMultipleTypos
           `shouldFailWith` err (mkSrcPos 4 1)
-                               (utok 'S' <>
+                               (utoks "Sent" <>
                                 elabel "Date directive" <>
                                 elabel "Expense directive" <>
                                 eeof)
     where
-      docParser = PED.parseExpensesFile <* eof
+      docParser = PED.parseExpensesFile
       mkSrcPos r c = (SourcePos "" (mkPos r) (mkPos c)) :| []

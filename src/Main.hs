@@ -25,7 +25,7 @@ main = do
 process :: String -> String -> IO ()
 process inputF outputF = do
   -- Parse the input file to list of [DateDir | ExpDir]
-  result <- runParser (parseExpensesFile <* eof) inputF <$> readFile inputF
+  result <- runParser parseExpensesFile inputF <$> readFile inputF
 
   case result of
     Left err ->
