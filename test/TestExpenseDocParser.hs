@@ -65,6 +65,18 @@ Spent 2 on thing
 
 
 
+badExpensesDocWithMultipleTypos :: String
+badExpensesDocWithMultipleTypos = [here|
+2016-01-01 MON
+Spent 1 on stuff
+Sent 1.5 on stuff
+
+TUE
+spent 2 on thing
+|]
+
+
+
 parseExpensesFileSpec :: Spec
 parseExpensesFileSpec =
   describe "Data.Expenses.Parse.Megaparsec.ExpensesDoc" $ do
@@ -79,10 +91,20 @@ parseExpensesFileSpec =
       describe "parse error for 1x error (typo 'Sent')" $ do
         it "(BAD UX!) should show unexpected \"S\", expected \"Spent\" or \"Received\"" $ do
           parse docParser "" badExpensesDoc
-          `shouldFailWith` err ((SourcePos "" (mkPos 4) (mkPos 1)) :| [])
+          `shouldFailWith` err (mkSrcPos 4 1)
+                               (utok 'S' <>
+                                elabel "Date directive" <>
+                                elabel "Expense directive" <>
+                                eeof)
+
+      describe "parse error for 2x error (typos: 'Sent', 'spent')" $ do
+        it "(BAD UX!) should show unexpected \"S\", expected \"Spent\" or \"Received\"" $ do
+          parse docParser "" badExpensesDocWithMultipleTypos
+          `shouldFailWith` err (mkSrcPos 4 1)
                                (utok 'S' <>
                                 elabel "Date directive" <>
                                 elabel "Expense directive" <>
                                 eeof)
     where
       docParser = PED.parseExpensesFile <* eof
+      mkSrcPos r c = (SourcePos "" (mkPos r) (mkPos c)) :| []
