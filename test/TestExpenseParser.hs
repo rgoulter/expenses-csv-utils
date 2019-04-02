@@ -8,7 +8,17 @@ import Text.Heredoc (here)
 
 import Test.Hspec (Spec, describe, it)
 
-import Test.Hspec.Megaparsec (failsLeaving, initialState, shouldFailOn, shouldParse, succeedsLeaving)
+import Test.Hspec.Megaparsec
+  ( err
+  , etoks
+  , utoks
+  , posI
+  , failsLeaving
+  , initialState
+  , shouldFailOn
+  , shouldFailWith
+  , shouldParse
+  , succeedsLeaving)
 
 import Text.Megaparsec (parse, runParser')
 
@@ -86,3 +96,11 @@ parseExpenseDirectiveSpec =
         -- Comments are taken care of in main
         runParser' PE.expense (initialState "#cmt\nnext")
           `failsLeaving` "#cmt\nnext"
+
+      describe "parse error for \"Sent 100 SGD blah\"" $ do
+        it "should show unexpected \"Sent 100\", expected \"Spent\" or \"Received\"" $ do
+          -- TBH, it's a bit strange that it's "unexpected Sent 100"
+          parse PE.expense "" "Sent 100 SGD blah"
+          `shouldFailWith` err posI (utoks "Sent 100" <>
+                                     etoks "Spent" <>
+                                     etoks "Received")
