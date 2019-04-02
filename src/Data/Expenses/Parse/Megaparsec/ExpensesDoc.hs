@@ -1,6 +1,5 @@
 module Data.Expenses.Parse.Megaparsec.ExpensesDoc where
 
-
 import Control.Monad (void, forM_)
 
 import Data.Maybe (fromMaybe, mapMaybe)
@@ -13,7 +12,8 @@ import Text.Megaparsec.Char (eol, space, spaceChar, tab)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Data.Expenses.Expense (DateDirective, Day(Mon), Direction(..), Expense(..), nextDate)
+import Data.Expenses.Expense
+  (DateDirective, Day(Mon), Direction(..), Expense(..), nextDate)
 import Data.Expenses.Parse.Megaparsec.Entry
 import Data.Expenses.Parse.Megaparsec.DateDirective (Parser)
 import qualified Data.Expenses.Parse.Megaparsec.DateDirective as PD
@@ -34,15 +34,17 @@ data LineDirective = DateCmd DateDirective
 
 
 sc :: Parser ()
-sc = hidden . skipMany $ choice [void space,
-                                 void tab,
-                                 L.skipLineComment "#"]
+sc = hidden . skipMany $ choice [ void space
+                                , void tab
+                                , L.skipLineComment "#"
+                                ]
 
 
 
 scn :: Parser ()
-scn = hidden . skipMany $ choice [void spaceChar,
-                                  L.skipLineComment "#"]
+scn = hidden . skipMany $ choice [ void spaceChar
+                                 , L.skipLineComment "#"
+                                 ]
 
 
 

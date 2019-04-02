@@ -6,7 +6,8 @@ import Text.CSV (printCSV)
 
 import Text.Megaparsec (eof, parseErrorPretty, runParser)
 
-import Data.Expenses.Parse.Megaparsec.ExpensesDoc (LineDirective, parseExpensesFile)
+import Data.Expenses.Parse.Megaparsec.ExpensesDoc
+  (LineDirective, parseExpensesFile)
 import Data.Expenses.ToCSV (recordsFromDirectives)
 
 
@@ -40,5 +41,3 @@ outputCSVFromDirectives outputF directives =
   let rows = recordsFromDirectives directives
       outp = printCSV rows
   in  writeFile outputF outp
-
-

@@ -4,19 +4,24 @@ module Data.Expenses.Expense
   , Direction(..)
   , Expense(..)
   , Money(..)
+  , addDays
   , dayOfWeek
   , numDaysAfter
-  , addDays
-  , nextDate )
+  , nextDate
+  )
 where
 
 import qualified Data.Time.Calendar as DT
 
-import Data.Expenses.Types (DateDirective(DateDir)
-                           , Day(Mon, Tue, Wed, Thu, Fri, Sat, Sun)
-                           , Direction(..)
-                           , Expense(..)
-                           , Money(..))
+import Data.Expenses.Types
+  ( DateDirective(DateDir)
+  , Day(Mon, Tue, Wed, Thu, Fri, Sat, Sun)
+  , Direction(..)
+  , Expense(..)
+  , Money(..)
+  )
+
+
 
 dayOfWeek :: Day -> Int
 dayOfWeek Mon = 0
@@ -51,6 +56,8 @@ nextDate ((y,m,d), dy) (DateDir Nothing dy') =
   let diff = numDaysAfter dy dy'
       (y', m', d') = addDays (y, m, d) diff
   in ((y', m', d'), dy')
+
+
 
 nextDate ((y,m,d), dy) (DateDir (Just (y',m',d')) dy') =
   -- Simply just use the new date/day

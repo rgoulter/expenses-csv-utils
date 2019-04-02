@@ -16,4 +16,3 @@ main = hspec $ do
   parseDateDirectiveSpec
   parseExpenseDirectiveSpec
   parseExpensesFileSpec
-

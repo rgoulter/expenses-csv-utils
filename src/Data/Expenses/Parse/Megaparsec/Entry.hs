@@ -1,13 +1,13 @@
 module Data.Expenses.Parse.Megaparsec.Entry
   ( Entry(..)
-  , entryFromExpense)
+  , entryFromExpense
+  )
 where
 
 import Data.Maybe (fromMaybe)
 
-import Data.Expenses.Expense(DateDirective, Expense(..),
-                Day(Mon), nextDate,
-                Direction(..))
+import Data.Expenses.Expense
+  (DateDirective, Expense(..), Direction(..), nextDate)
 import qualified Data.Expenses.Expense as E
 
 import Data.Expenses.Types(Entry(..))

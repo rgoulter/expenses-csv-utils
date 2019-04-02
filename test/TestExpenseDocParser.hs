@@ -11,16 +11,17 @@ import Text.Heredoc (here)
 import Test.Hspec (Spec, describe, it)
 
 import Test.Hspec.Megaparsec
-  ( err
-  , utok
-  , utoks
-  , eeof
+  ( eeof
+  , err
   , elabel
   , initialState
   , shouldSucceedOn
   , shouldFailOn
   , shouldFailWith
-  , shouldParse)
+  , shouldParse
+  , utok
+  , utoks
+  )
 
 import Text.Megaparsec (SourcePos(..), eof, mkPos, parse)
 

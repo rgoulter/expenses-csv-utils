@@ -11,14 +11,15 @@ import Test.Hspec (Spec, describe, it)
 import Test.Hspec.Megaparsec
   ( err
   , etoks
-  , utoks
-  , posI
   , failsLeaving
   , initialState
+  , posI
   , shouldFailOn
   , shouldFailWith
   , shouldParse
-  , succeedsLeaving)
+  , succeedsLeaving
+  , utoks
+  )
 
 import Text.Megaparsec (parse, runParser')
 
@@ -85,7 +86,8 @@ parseExpenseDirectiveSpec =
       -- expense (dir, amt, remark)
       it "should parse expense directive (working cases)" $ do
         parse PE.expense "" "Spent 1.23 on food"
-          `shouldParse` E.Expense E.Spent (E.Amount 1 23 Nothing False) "on food"
+          `shouldParse`
+            E.Expense E.Spent (E.Amount 1 23 Nothing False) "on food"
       it "should not parse not expense directive" $ do
         parse PE.expense "" `shouldFailOn` "NotAnExpenseDirective"
 

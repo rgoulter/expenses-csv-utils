@@ -24,25 +24,24 @@ import Data.Maybe (isJust)
 
 import Text.Megaparsec
   ( ErrorItem(Tokens)
-  , lookAhead
-  , failure
   , count
+  , failure
   , hidden
+  , lookAhead
   , many
   , optional
   , skipMany
   , some
   , try
   , unexpected
-  , (<|>))
+  , (<|>)
+  )
 import Text.Megaparsec.Char (noneOf, letterChar, spaceChar, string, upperChar)
 import Text.Megaparsec.Expr
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Data.Expenses.Expense (Money(..),
-                Direction(..),
-                Expense(..))
+import Data.Expenses.Expense (Money(..), Direction(..), Expense(..))
 import Data.Expenses.Parse.Megaparsec.DateDirective (Parser)
 
 
@@ -64,7 +63,6 @@ integer = lexeme L.decimal
 
 
 
--- TODO: No benefit to case-sensitivity here?
 direction :: Parser Direction
 direction = do
   word <- lookAhead $ many letterChar :: Parser String
