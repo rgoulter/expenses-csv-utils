@@ -10,9 +10,18 @@ import Text.Heredoc (here)
 
 import Test.Hspec (Spec, describe, it)
 
-import Test.Hspec.Megaparsec (initialState, shouldSucceedOn, shouldFailOn, shouldParse)
+import Test.Hspec.Megaparsec
+  ( err
+  , utok
+  , eeof
+  , elabel
+  , initialState
+  , shouldSucceedOn
+  , shouldFailOn
+  , shouldFailWith
+  , shouldParse)
 
-import Text.Megaparsec (eof, parse)
+import Text.Megaparsec (SourcePos(..), eof, mkPos, parse)
 
 
 import qualified Data.Expenses.Parse.Megaparsec.ExpensesDoc as PED
@@ -66,6 +75,14 @@ parseExpensesFileSpec =
         parse docParser "" `shouldSucceedOn` goodExpensesDocWithCmts
       it "should fail to pass malformed doc" $ do
         parse docParser "" `shouldFailOn` badExpensesDoc
+
+      describe "parse error for 1x error (typo 'Sent')" $ do
+        it "(BAD UX!) should show unexpected \"S\", expected \"Spent\" or \"Received\"" $ do
+          parse docParser "" badExpensesDoc
+          `shouldFailWith` err ((SourcePos "" (mkPos 4) (mkPos 1)) :| [])
+                               (utok 'S' <>
+                                elabel "Date directive" <>
+                                elabel "Expense directive" <>
+                                eeof)
     where
       docParser = PED.parseExpensesFile <* eof
-
