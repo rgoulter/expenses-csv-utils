@@ -15,17 +15,11 @@ import qualified Text.Megaparsec.Char.Lexer as L
 import Data.Expenses.Expense
   (DateDirective, Day(Mon), Direction(..), Expense(..), nextDate)
 import Data.Expenses.Parse.Megaparsec.Entry
-import Data.Expenses.Parse.Megaparsec.DateDirective (Parser)
+import Data.Expenses.Parse.Megaparsec.Types (LineDirective(..), Parser)
 import qualified Data.Expenses.Parse.Megaparsec.DateDirective as PD
 import qualified Data.Expenses.Parse.Megaparsec.ExpenseDirective as PE
 import qualified Data.Expenses.Expense as E
 
-
-
--- LineDirective serves as the "AST" of an Expenses document
-data LineDirective = DateCmd DateDirective
-                   | ExpCmd Expense
-                   deriving (Show, Eq)
 
 
 

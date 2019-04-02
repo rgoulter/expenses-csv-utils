@@ -32,6 +32,7 @@ library
                      , Data.Expenses.Parse.Megaparsec.Entry
                      , Data.Expenses.Parse.Megaparsec.ExpenseDirective
                      , Data.Expenses.Parse.Megaparsec.ExpensesDoc
+                     , Data.Expenses.Parse.Megaparsec.Types
                      , Data.Expenses.Expense
                      , Data.Expenses.ToCSV
                      , Data.Expenses.Types
@@ -70,6 +71,7 @@ executable expenses-csv-utils
                    , Data.Expenses.Parse.Megaparsec.Entry
                    , Data.Expenses.Parse.Megaparsec.ExpenseDirective
                    , Data.Expenses.Parse.Megaparsec.ExpensesDoc
+                   , Data.Expenses.Parse.Megaparsec.Types
                    , Data.Expenses.Expense
                    , Data.Expenses.ToCSV
                    , Data.Expenses.Types

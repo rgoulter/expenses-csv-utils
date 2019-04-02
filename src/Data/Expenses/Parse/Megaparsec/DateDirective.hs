@@ -21,10 +21,8 @@ import Text.Megaparsec (Parsec, hidden, optional, skipMany, (<|>))
 import Text.Megaparsec.Char (noneOf, spaceChar, string)
 import qualified Text.Megaparsec.Char.Lexer as L
 
+import Data.Expenses.Parse.Megaparsec.Types (Parser)
 import Data.Expenses.Expense (Day(..), DateDirective(..))
-
-
-type Parser = Parsec Void String
 
 
 sc :: Parser ()

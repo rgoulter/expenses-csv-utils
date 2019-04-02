@@ -14,7 +14,7 @@ import Test.Hspec.Megaparsec
 import Text.Megaparsec (parse, runParser')
 
 
-import Data.Expenses.Parse.Megaparsec.DateDirective (Parser)
+import Data.Expenses.Parse.Megaparsec.Types (Parser)
 import qualified Data.Expenses.Parse.Megaparsec.DateDirective as PD
 import qualified Data.Expenses.Expense as D
 

@@ -10,6 +10,7 @@ import Data.Expenses.Expense
   (DateDirective, Expense(..), Direction(..), nextDate)
 import qualified Data.Expenses.Expense as E
 
+import Data.Expenses.Parse.Megaparsec.Types (Parser)
 import Data.Expenses.Types(Entry(..))
 
 

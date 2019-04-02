@@ -6,8 +6,8 @@ import Text.Printf (printf)
 
 import Data.Expenses.Parse.Megaparsec.Entry
   (Entry, entryDate, entryPrice, entryRemark)
-import Data.Expenses.Parse.Megaparsec.ExpensesDoc
-  (LineDirective, entriesFromDirectives)
+import Data.Expenses.Parse.Megaparsec.ExpensesDoc (entriesFromDirectives)
+import Data.Expenses.Parse.Megaparsec.Types (LineDirective)
 
 
 
