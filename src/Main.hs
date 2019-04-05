@@ -1,12 +1,15 @@
 module Main where
 
+import Control.Monad (forM_)
+
 import System.Environment (getArgs)
 
 import Text.CSV (printCSV)
 
 import Text.Megaparsec (eof, parseErrorPretty, runParser)
 
-import Data.Expenses.Parse.Megaparsec.ExpensesDoc (parseExpensesFile)
+import Data.Expenses.Parse.Megaparsec.ExpensesDoc
+  (eitherOfLists, parseExpensesFile)
 import Data.Expenses.Parse.Megaparsec.Types (LineDirective)
 import Data.Expenses.ToCSV (recordsFromDirectives)
 
@@ -26,13 +29,17 @@ main = do
 process :: String -> String -> IO ()
 process inputF outputF = do
   -- Parse the input file to list of [DateDir | ExpDir]
-  result <- runParser parseExpensesFile inputF <$> readFile inputF
+  rawResult <- runParser parseExpensesFile inputF <$> readFile inputF
 
-  case result of
+  case rawResult of
     Left err ->
       putStrLn $ parseErrorPretty err
-    Right directives ->
-      outputCSVFromDirectives outputF directives
+    Right result ->
+      case eitherOfLists result of
+        Left errors ->
+          forM_ errors $ putStrLn . parseErrorPretty
+        Right directives ->
+          outputCSVFromDirectives outputF directives
 
 
 

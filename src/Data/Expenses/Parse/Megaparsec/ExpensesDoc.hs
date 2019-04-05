@@ -1,21 +1,38 @@
 module Data.Expenses.Parse.Megaparsec.ExpensesDoc where
 
+import Data.Void (Void)
+
 import Control.Monad (void, forM_)
 
+import Data.Either (Either(..), partitionEithers)
 import Data.Maybe (fromMaybe, mapMaybe)
 
 import qualified Text.CSV as CSV
 
-import Text.Megaparsec (choice, eof, hidden, skipMany, some, (<?>), (<|>))
+import Text.Megaparsec
+  ( ParseError
+  , between
+  , choice
+  , eof
+  , hidden
+  , manyTill
+  , sepEndBy
+  , skipMany
+  , some
+  , withRecovery
+  , (<?>)
+  , (<|>)
+  )
 import Text.Megaparsec (dbg)
-import Text.Megaparsec.Char (eol, space, spaceChar, tab)
+import Text.Megaparsec.Char (anyChar, eol, space, spaceChar, tab)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import Data.Expenses.Expense
   (DateDirective, Day(Mon), Direction(..), Expense(..), nextDate)
 import Data.Expenses.Parse.Megaparsec.Entry
-import Data.Expenses.Parse.Megaparsec.Types (LineDirective(..), Parser)
+import Data.Expenses.Parse.Megaparsec.Types
+  (LineDirective(..), Parser, RawLineDirective)
 import qualified Data.Expenses.Parse.Megaparsec.DateDirective as PD
 import qualified Data.Expenses.Parse.Megaparsec.ExpenseDirective as PE
 import qualified Data.Expenses.Expense as E
@@ -42,19 +59,37 @@ scn = hidden . skipMany $ choice [ void spaceChar
 
 
 
-parseExpensesFile :: Parser [LineDirective]
-parseExpensesFile =
-  scn *> lines
+eitherOfLists :: [Either a b] -> Either [a] [b]
+eitherOfLists xs =
+  f pxs
     where
-  lines = (eof *> return []) <|>
-          ((:) <$>
-           ((DateCmd
-             <$> PD.dateDirective <* scn
-             <?> "Date directive") <|>
-            (ExpCmd
-             <$> PE.expense <* scn
-             <?> "Expense directive")) <*>
-           lines)
+  f ([], xs) = Right xs
+  f (xs, _) = Left xs
+  pxs = partitionEithers xs
+
+
+
+lineDirective :: Parser LineDirective
+lineDirective =
+  (DateCmd
+   <$> PD.dateDirective <* scn
+   <?> "Date directive") <|>
+  (ExpCmd
+   <$> PE.expense <* scn
+   <?> "Expense directive")
+
+
+
+recover :: ParseError Char Void -> Parser RawLineDirective
+recover err = Left err <$ manyTill anyChar eol
+
+
+
+parseExpensesFile :: Parser [RawLineDirective]
+parseExpensesFile =
+  between scn eof (sepEndBy rawLine scn)
+   where
+     rawLine = withRecovery recover (Right <$> lineDirective)
 
 
 

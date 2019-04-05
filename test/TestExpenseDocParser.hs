@@ -8,7 +8,7 @@ import qualified Data.Set as E
 
 import Text.Heredoc (here)
 
-import Test.Hspec (Spec, describe, it)
+import Test.Hspec (Spec, describe, expectationFailure, it, shouldBe)
 
 import Test.Hspec.Megaparsec
   ( eeof
@@ -27,6 +27,7 @@ import Text.Megaparsec (SourcePos(..), eof, mkPos, parse)
 
 
 import qualified Data.Expenses.Parse.Megaparsec.ExpensesDoc as PED
+import Data.Expenses.Parse.Megaparsec.ExpensesDoc (eitherOfLists)
 
 
 
@@ -87,26 +88,53 @@ parseExpensesFileSpec =
       it "should successfully parse well-formed doc" $ do
         parse docParser "" `shouldSucceedOn` goodExpensesDoc
         parse docParser "" `shouldSucceedOn` goodExpensesDocWithCmts
-      it "should fail to pass malformed doc" $ do
-        parse docParser "" `shouldFailOn` badExpensesDoc
+      it "does not fail to parse malformed doc" $ do
+        -- n.b. it should successfully return a list with at least one Left.
+        parse docParser "" `shouldSucceedOn` badExpensesDoc
 
+      -- XXX: need to update these to assert that the Lefts of the
+      -- raw result are as asserted!
       describe "parse error for 1x error (typo 'Sent')" $ do
         it "should show unexpected \"Sent\", expected \"Spent\" or \"Received\"" $ do
-          parse docParser "" badExpensesDoc
-          `shouldFailWith` err (mkSrcPos 4 1)
-                               (utoks "Sent" <>
-                                elabel "Date directive" <>
-                                elabel "Expense directive" <>
-                                eeof)
+          let rawResult = parse docParser "" badExpensesDoc
+
+          case rawResult of
+            Left _ -> expectationFailure "parser shouldn't fail"
+            Right rawDirectives ->
+              case eitherOfLists rawDirectives of
+                Left errors ->
+                  errors
+                    `shouldBe`
+                      [ err (mkSrcPos 4 1)
+                        (utoks "Sent" <>
+                         elabel "Date directive" <>
+                         elabel "Expense directive")
+                      ]
+                Right _ ->
+                  expectationFailure "should have recovered from an error"
 
       describe "parse error for 2x error (typos: 'Sent', 'spent')" $ do
-        it "should show unexpected \"Sent\", expected \"Spent\" or \"Received\"" $ do
-          parse docParser "" badExpensesDocWithMultipleTypos
-          `shouldFailWith` err (mkSrcPos 4 1)
-                               (utoks "Sent" <>
-                                elabel "Date directive" <>
-                                elabel "Expense directive" <>
-                                eeof)
+        it "should show unexpected \"Sent\" and \"spent\", expected \"Spent\" or \"Received\"" $ do
+          let rawResult = parse docParser "" badExpensesDocWithMultipleTypos
+
+          case rawResult of
+            Left _ -> expectationFailure "parser shouldn't fail"
+            Right rawDirectives ->
+              case eitherOfLists rawDirectives of
+                Left errors ->
+                  errors
+                    `shouldBe`
+                      [ err (mkSrcPos 4 1)
+                        (utoks "Sent" <>
+                         elabel "Date directive" <>
+                         elabel "Expense directive")
+                      , err (mkSrcPos 7 1)
+                        (utoks "spent" <>
+                         elabel "Date directive" <>
+                         elabel "Expense directive")
+                      ]
+                Right _ ->
+                  expectationFailure "should have recovered from an error"
     where
       docParser = PED.parseExpensesFile
       mkSrcPos r c = (SourcePos "" (mkPos r) (mkPos c)) :| []

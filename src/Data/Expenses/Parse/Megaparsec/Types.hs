@@ -2,7 +2,7 @@ module Data.Expenses.Parse.Megaparsec.Types where
 
 import Data.Void (Void)
 
-import Text.Megaparsec (Parsec, hidden, optional, skipMany, (<|>))
+import Text.Megaparsec (ParseError, Parsec, hidden, optional, skipMany, (<|>))
 
 import Data.Expenses.Expense (DateDirective, Expense)
 
@@ -17,3 +17,7 @@ type Parser = Parsec Void String
 data LineDirective = DateCmd DateDirective
                    | ExpCmd Expense
                    deriving (Show, Eq)
+
+
+
+type RawLineDirective = Either (ParseError Char Void) LineDirective
