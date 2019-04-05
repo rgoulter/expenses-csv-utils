@@ -17,8 +17,8 @@ import Data.Functor (($>))
 
 import Data.Void (Void)
 
-import Text.Megaparsec (Parsec, hidden, optional, skipMany, (<|>))
-import Text.Megaparsec.Char (noneOf, spaceChar, string)
+import Text.Megaparsec (Parsec, hidden, noneOf, optional, skipMany, (<|>))
+import Text.Megaparsec.Char (spaceChar, string)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import Data.Expenses.Parse.Megaparsec.Types (Parser)

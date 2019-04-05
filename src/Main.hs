@@ -6,7 +6,7 @@ import System.Environment (getArgs)
 
 import Text.CSV (printCSV)
 
-import Text.Megaparsec (eof, parseErrorPretty, runParser)
+import Text.Megaparsec (eof, errorBundlePretty, parseErrorPretty, runParser)
 
 import Data.Expenses.Parse.Megaparsec.ExpensesDoc
   (eitherOfLists, parseExpensesFile)
@@ -33,7 +33,7 @@ process inputF outputF = do
 
   case rawResult of
     Left err ->
-      putStrLn $ parseErrorPretty err
+      putStrLn $ errorBundlePretty err
     Right result ->
       case eitherOfLists result of
         Left errors ->

@@ -11,6 +11,7 @@ import qualified Text.CSV as CSV
 
 import Text.Megaparsec
   ( ParseError
+  , anySingle
   , between
   , choice
   , eof
@@ -23,8 +24,7 @@ import Text.Megaparsec
   , (<?>)
   , (<|>)
   )
-import Text.Megaparsec (dbg)
-import Text.Megaparsec.Char (anyChar, eol, space, spaceChar, tab)
+import Text.Megaparsec.Char (eol, space, spaceChar, tab)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -80,8 +80,8 @@ lineDirective =
 
 
 
-recover :: ParseError Char Void -> Parser RawLineDirective
-recover err = Left err <$ manyTill anyChar eol
+recover :: ParseError String Void -> Parser RawLineDirective
+recover err = Left err <$ manyTill anySingle eol
 
 
 

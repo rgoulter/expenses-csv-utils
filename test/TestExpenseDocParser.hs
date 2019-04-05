@@ -105,7 +105,7 @@ parseExpensesFileSpec =
                 Left errors ->
                   errors
                     `shouldBe`
-                      [ err (mkSrcPos 4 1)
+                      [ err 33    -- row 4, col 1
                         (utoks "Sent" <>
                          elabel "Date directive" <>
                          elabel "Expense directive")
@@ -124,11 +124,11 @@ parseExpensesFileSpec =
                 Left errors ->
                   errors
                     `shouldBe`
-                      [ err (mkSrcPos 4 1)
+                      [ err 33    -- row 4, col 1
                         (utoks "Sent" <>
                          elabel "Date directive" <>
                          elabel "Expense directive")
-                      , err (mkSrcPos 7 1)
+                      , err 56    -- row 7, col 1
                         (utoks "spent" <>
                          elabel "Date directive" <>
                          elabel "Expense directive")
@@ -137,4 +137,3 @@ parseExpensesFileSpec =
                   expectationFailure "should have recovered from an error"
     where
       docParser = PED.parseExpensesFile
-      mkSrcPos r c = (SourcePos "" (mkPos r) (mkPos c)) :| []

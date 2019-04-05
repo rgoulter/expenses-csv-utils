@@ -11,6 +11,8 @@
 
 module Data.Expenses.Parse.Megaparsec.ExpenseDirective where
 
+import Control.Monad.Combinators.Expr
+
 import Control.Monad (void)
 
 import Data.Functor (($>))
@@ -29,6 +31,7 @@ import Text.Megaparsec
   , hidden
   , lookAhead
   , many
+  , noneOf
   , optional
   , skipMany
   , some
@@ -36,8 +39,7 @@ import Text.Megaparsec
   , unexpected
   , (<|>)
   )
-import Text.Megaparsec.Char (noneOf, letterChar, spaceChar, string, upperChar)
-import Text.Megaparsec.Expr
+import Text.Megaparsec.Char (letterChar, spaceChar, string, upperChar)
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 

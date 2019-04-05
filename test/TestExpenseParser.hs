@@ -13,7 +13,6 @@ import Test.Hspec.Megaparsec
   , etoks
   , failsLeaving
   , initialState
-  , posI
   , shouldFailOn
   , shouldFailWith
   , shouldParse
@@ -52,13 +51,13 @@ parseExpenseDirectiveSpec =
 
       it "parse errors should be the first word" $ do
         parse PE.direction "" "Sent 100 SGD on blah"
-          `shouldFailWith` err posI (utoks "Sent" <>
-                                     etoks "Spent" <>
-                                     etoks "Received")
+          `shouldFailWith` err 0 (utoks "Sent" <>
+                                  etoks "Spent" <>
+                                  etoks "Received")
         -- parse PE.direction "" "Recieved 100 SGD on blah"
-        --   `shouldFailWith` err posI (utoks "Recieved" <>
-        --                              etoks "Spent" <>
-        --                              etoks "Received")
+        --   `shouldFailWith` err 0 (utoks "Recieved" <>
+        --                           etoks "Spent" <>
+        --                           etoks "Received")
 
     describe "amount" $ do
       -- amount [~] 1[.23] [CUR]
@@ -113,6 +112,6 @@ parseExpenseDirectiveSpec =
         it "should show unexpected \"Sent\", expected \"Spent\" or \"Received\"" $ do
           -- TBH, it's a bit strange that it's "unexpected Sent 100"
           parse PE.expense "" "Sent 100 SGD blah"
-          `shouldFailWith` err posI (utoks "Sent" <>
-                                     etoks "Spent" <>
-                                     etoks "Received")
+          `shouldFailWith` err 0 (utoks "Sent" <>
+                                  etoks "Spent" <>
+                                  etoks "Received")

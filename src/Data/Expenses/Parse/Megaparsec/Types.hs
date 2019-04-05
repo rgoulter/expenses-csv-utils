@@ -20,4 +20,4 @@ data LineDirective = DateCmd DateDirective
 
 
 
-type RawLineDirective = Either (ParseError Char Void) LineDirective
+type RawLineDirective = Either (ParseError String Void) LineDirective
