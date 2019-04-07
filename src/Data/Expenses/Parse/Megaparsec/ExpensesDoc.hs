@@ -20,6 +20,8 @@ import Text.Megaparsec
   , sepEndBy
   , skipMany
   , some
+  , someTill
+  , try
   , withRecovery
   , (<?>)
   , (<|>)
@@ -81,7 +83,11 @@ lineDirective =
 
 
 recover :: ParseError String Void -> Parser RawLineDirective
-recover err = Left err <$ manyTill anySingle eol
+recover err =
+  Left err <$ (try restOfLine <|> lastLine)
+    where
+      restOfLine = void $ manyTill anySingle eol
+      lastLine = void $ someTill (void anySingle) eof
 
 
 

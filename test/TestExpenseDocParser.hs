@@ -80,6 +80,14 @@ spent 2 on thing
 
 
 
+badExpensesDocTypoLastLine :: String
+badExpensesDocTypoLastLine = [here|
+2016-01-01 MON
+Spent 1 on stuff
+Sent 1.5 on stuff|]
+
+
+
 parseExpensesFileSpec :: Spec
 parseExpensesFileSpec =
   describe "Data.Expenses.Parse.Megaparsec.ExpensesDoc" $ do
@@ -91,6 +99,9 @@ parseExpensesFileSpec =
       it "does not fail to parse malformed doc" $ do
         -- n.b. it should successfully return a list with at least one Left.
         parse docParser "" `shouldSucceedOn` badExpensesDoc
+      it "does not fail to parse malformed doc, typo on last line (no EOL)" $ do
+        -- n.b. it should successfully return a list with at least one Left.
+        parse docParser "" `shouldSucceedOn` badExpensesDocTypoLastLine
 
       -- XXX: need to update these to assert that the Lefts of the
       -- raw result are as asserted!

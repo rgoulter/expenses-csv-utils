@@ -16,11 +16,9 @@ Feature: Translate Expenses File to CSV Format
 
   Scenario: Outputs error for malformed file
     Given an expenses file "expenses.txt"
-      # NOTE: currently, program can't handle typo on last line?!
       """
       2018-01-01 MON
       Sent 5 SGD on McDonalds
-      
       """
      When I run the command "expenses-csv-utils" with "expenses.txt" and "output.csv"
      Then the standard output should be
