@@ -1,4 +1,5 @@
+import Control.Monad (void, forM_)
+import Data.Void
 import Text.Megaparsec
 import Text.Megaparsec.Char
-import Data.Void
 :set prompt "> "
