@@ -59,6 +59,13 @@ parseExpenseDirectiveSpec =
         --                           etoks "Spent" <>
         --                           etoks "Received")
 
+    describe "dollarsAndCents" $ do
+      it "should parse cases '1', '1.23', etc." $ do
+        parse PE.dollarsAndCents ""  "1"  `shouldParse` (1, 0)
+        parse PE.dollarsAndCents ""  "1.23"  `shouldParse` (1, 23)
+      it "should ignore commas; e.g. '1,234.0', etc." $ do
+        parse PE.dollarsAndCents ""  "1,234"  `shouldParse` (1234, 0)
+
     describe "amount" $ do
       -- amount [~] 1[.23] [CUR]
       it "should parse cases like '1', '~1', '1.23', '1 NZD', etc." $ do

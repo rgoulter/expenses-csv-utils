@@ -101,7 +101,7 @@ modifyDollarsAndCents mul (dollars, cents) =
 
 dollarsAndCents :: Parser (Int, Int)
 dollarsAndCents =
-  do dollars <- read <$> some C.digitChar
+  do dollars <- read <$> some (skipMany (C.char ',') *> C.digitChar)
      cents <- fromIntegral <$> try (C.char '.' *> integer) <|> (0 <$ sc)
      return (dollars, cents)
 
@@ -123,6 +123,8 @@ amount =
          let (dollars', cents') = modifyDollarsAndCents mul (dollars, cents)
          in
            Amount dollars' cents' cur (isJust approx)
+
+
 
 -- n.b. this doesn't allow for comments at the end-of-line
 expense :: Parser Expense
