@@ -84,15 +84,45 @@ currency =
 
 
 
+modifyDollarsAndCents :: Int -> (Int, Int) -> (Int, Int)
+modifyDollarsAndCents mul (dollars, cents) =
+  let len :: Int -> Int
+      len n =
+        if n == 0 then
+          0
+        else
+          1 + floor(logBase 10 (fromIntegral n :: Double))
+      modifiedDollars = mul * dollars
+      modifiedCents = mul * cents `div` (10 ^ len cents)
+  in
+    (modifiedDollars + modifiedCents, 0)
+
+
+
+dollarsAndCents :: Parser (Int, Int)
+dollarsAndCents =
+  do dollars <- read <$> some C.digitChar
+     cents <- fromIntegral <$> try (C.char '.' *> integer) <|> (0 <$ sc)
+     return (dollars, cents)
+
+
+
 amount :: Parser Money
 amount =
   do approx <- optional $ symbol "~"
-     dollars <- read <$> some C.digitChar
-     cents <- fromIntegral <$> try (C.char '.' *> integer) <|> (0 <$ sc)
+     (dollars, cents) <- dollarsAndCents
+     let kModifier = 1000 <$ C.char 'k'
+         mModifier = 1000000 <$ C.char 'm'
+     modifier <- optional $ (kModifier <|> mModifier) <* sc
      cur <- optional currency
      void sc
      -- return $ Amount dollars cents cur (isJust approx)
-     return $ Amount dollars cents cur (isJust approx)
+     return $ case modifier of
+       Nothing -> Amount dollars cents cur (isJust approx)
+       Just mul ->
+         let (dollars', cents') = modifyDollarsAndCents mul (dollars, cents)
+         in
+           Amount dollars' cents' cur (isJust approx)
 
 -- n.b. this doesn't allow for comments at the end-of-line
 expense :: Parser Expense

@@ -74,6 +74,14 @@ parseExpenseDirectiveSpec =
           `shouldParse` E.Amount 1  0 (Just "SGD") False
         parse PE.amount ""  "1 MYR"
           `shouldParse` E.Amount 1  0 (Just "MYR") False
+      it "should allow a suffix of 'k' for 1,000x" $ do
+        parse PE.amount ""  "1k "  `shouldParse` E.Amount 1000 0 Nothing False
+        parse PE.amount ""  "1 k"  `shouldParse` E.Amount 1000 0 Nothing False
+        parse PE.amount ""  "1.23k "  `shouldParse` E.Amount 1230 0 Nothing False
+        parse PE.amount ""  "1.23 k"  `shouldParse` E.Amount 1230 0 Nothing False
+      it "should allow a suffix of 'm' for 1,000,000x" $ do
+        parse PE.amount ""  "1.23m "  `shouldParse` E.Amount 1230000 0 Nothing False
+        parse PE.amount ""  "1.234 m"  `shouldParse` E.Amount 1234000 0 Nothing False
       it "should fail to parse not-amount (e.g. S$123, $123, MON, etc.)" $ do
         parse PE.amount "" `shouldFailOn` "NotAnAmount"
         parse PE.amount "" `shouldFailOn` "S$123"
