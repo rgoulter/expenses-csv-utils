@@ -5,7 +5,7 @@ Feature: Translate Expenses File to CSV Format
       2018-01-01 MON
       Spent 5 SGD on McDonalds
       """
-     When I run the command "expenses-csv-utils" with "expenses.txt" and "output.csv"
+     When I run the command "expenses-utils" with "expenses.txt" and "output.csv"
      Then the standard output should be
        """
        """
@@ -20,7 +20,7 @@ Feature: Translate Expenses File to CSV Format
       2018-01-01 MON
       Sent 5 SGD on McDonalds
       """
-     When I run the command "expenses-csv-utils" with "expenses.txt" and "output.csv"
+     When I run the command "expenses-utils" with "expenses.txt" and "output.csv"
      Then the standard output should be
        """
        offset=15:

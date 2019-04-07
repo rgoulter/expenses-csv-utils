@@ -1,8 +1,25 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Main where
 
 import Control.Monad (forM_)
 
+import Data.Data (Data)
+import Data.Typeable (Typeable)
+
 import System.Environment (getArgs)
+
+import System.Console.CmdArgs
+   ( (&=)
+   , argPos
+   , cmdArgsMode
+   , cmdArgsRun
+   , help
+   , modes
+   , program
+   , summary
+   , typ
+   )
 
 import Text.CSV (printCSV)
 
@@ -15,14 +32,31 @@ import Data.Expenses.ToCSV (recordsFromDirectives)
 
 
 
+data ExpensesCmd = CSV {src :: FilePath, out :: FilePath}
+  deriving (Data,Typeable,Show,Eq)
+
+
+
+csv = CSV
+    { src = "expenses.txt" &= typ "EXPENSES.TXT" &= argPos 0
+    , out = "output.csv" &= typ "OUT.CSV" &= argPos 1
+    } &= help "Output to CSV"
+
+
+
+mode =
+  cmdArgsMode $ modes [csv]
+    &= help "Utils for expenses file format"
+    &= program "expenses-utils"
+    &= summary "Expenses Utils v0.2.1"
+
+
+
 main :: IO ()
 main = do
-  args <- getArgs
-  if length args == 2 then
-    let [inputF, outputF] = args in
-    process inputF outputF
-  else
-    putStrLn "Please run with <input.txt> <output.csv>"
+  expensesArgs <- cmdArgsRun mode
+  case expensesArgs of
+    CSV inputF outputF -> process inputF outputF
 
 
 
