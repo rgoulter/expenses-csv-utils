@@ -10,7 +10,7 @@ end
 When("I run the command {string} with {string} and {string}") do |command, inputf, outputf|
   input_path = File.join(@tmpdir, inputf)
   output_path = File.join(@tmpdir, outputf)
-  @output = `stack exec #{command} #{input_path} #{output_path}`
+  @output = `stack exec -- #{command} #{input_path} #{output_path}`
 end
 
 Then("the standard output should be") do |expected_output|
