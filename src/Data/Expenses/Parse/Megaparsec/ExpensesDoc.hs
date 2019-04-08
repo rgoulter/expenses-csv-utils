@@ -7,6 +7,8 @@ import Control.Monad (void, forM_)
 import Data.Either (Either(..), partitionEithers)
 import Data.Maybe (fromMaybe, mapMaybe)
 
+import qualified Data.Time.Calendar as DT
+
 import qualified Text.CSV as CSV
 
 import Text.Megaparsec
@@ -31,7 +33,7 @@ import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import Data.Expenses.Expense
-  (DateDirective, Day(Mon), Direction(..), Expense(..), nextDate)
+  (DateDirective, Direction(..), Expense(..), nextDate)
 import Data.Expenses.Parse.Megaparsec.Entry
 import Data.Expenses.Parse.Megaparsec.Types
   (LineDirective(..), Parser, RawLineDirective)
@@ -105,7 +107,7 @@ parseExpensesFile =
 
 entriesFromDirectives :: [LineDirective] -> [Entry]
 entriesFromDirectives directives =
-  let init = ((-1, -1, -1), Mon, [])
+  let init = ((-1, -1, -1), DT.Monday, [])
 
       -- Fold over a (Date, Day, GatheredRows)
       (_, _, rows) =

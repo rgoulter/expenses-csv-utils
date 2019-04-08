@@ -2,6 +2,8 @@ module TestExpense where
 
 import Test.Hspec (Spec, describe, it, shouldBe)
 
+import qualified Data.Time.Calendar as DT
+
 import qualified Data.Expenses.Expense as E
 
 expenseSpec :: Spec
@@ -9,9 +11,9 @@ expenseSpec =
   describe "Data.Expenses.Expense" $ do
     describe "numDaysAfter" $ do
       it "should compute Tue is 1 day after Mon" $ do
-        (E.numDaysAfter E.Mon E.Tue) `shouldBe` (1 :: Int)
+        (E.numDaysAfter DT.Monday DT.Tuesday) `shouldBe` (1 :: Int)
       it "should compute Mon is 6 days after Tue" $ do
-        (E.numDaysAfter E.Tue E.Mon) `shouldBe` (6 :: Int)
+        (E.numDaysAfter DT.Tuesday DT.Monday) `shouldBe` (6 :: Int)
     describe "addDays" $ do
       it "should compute 2000-01-02 is 1 day after 2000-01-01" $ do
         (E.addDays (2000, 01, 01) 1)

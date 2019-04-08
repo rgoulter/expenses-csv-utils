@@ -4,6 +4,8 @@ import Data.List.NonEmpty (NonEmpty (..))
 
 import qualified Data.Set as E
 
+import qualified Data.Time.Calendar as DT
+
 import Text.Heredoc (here)
 
 import Test.Hspec (Spec, describe, it)
@@ -31,24 +33,24 @@ parseDateDirectiveSpec =
   describe "Data.Expenses.Parse.Megaparsec.DateDirective" $ do
     describe "day" $ do
       it "should parse cases like MON, TUE, etc." $ do
-        parse PD.day "" "MON"   `shouldParse` D.Mon
-        parse PD.day "" "TUE"   `shouldParse` D.Tue
-        parse PD.day "" "TUES"  `shouldParse` D.Tue
-        parse PD.day "" "WED"   `shouldParse` D.Wed
-        parse PD.day "" "THU"   `shouldParse` D.Thu
-        parse PD.day "" "THURS" `shouldParse` D.Thu
-        parse PD.day "" "FRI"   `shouldParse` D.Fri
-        parse PD.day "" "SAT"   `shouldParse` D.Sat
-        parse PD.day "" "SUN"   `shouldParse` D.Sun
+        parse PD.dayOfWeek "" "MON"   `shouldParse` DT.Monday
+        parse PD.dayOfWeek "" "TUE"   `shouldParse` DT.Tuesday
+        parse PD.dayOfWeek "" "TUES"  `shouldParse` DT.Tuesday
+        parse PD.dayOfWeek "" "WED"   `shouldParse` DT.Wednesday
+        parse PD.dayOfWeek "" "THU"   `shouldParse` DT.Thursday
+        parse PD.dayOfWeek "" "THURS" `shouldParse` DT.Thursday
+        parse PD.dayOfWeek "" "FRI"   `shouldParse` DT.Friday
+        parse PD.dayOfWeek "" "SAT"   `shouldParse` DT.Saturday
+        parse PD.dayOfWeek "" "SUN"   `shouldParse` DT.Sunday
       it "should fail to parse non-days (Spent, 2016, etc.)" $ do
-        parse PD.day "" `shouldFailOn` "NotADay"
-        parse PD.day "" `shouldFailOn` "2016"
-        parse PD.day "" `shouldFailOn` "Spent"
-        parse PD.day "" `shouldFailOn` "Received"
+        parse PD.dayOfWeek "" `shouldFailOn` "NotADay"
+        parse PD.dayOfWeek "" `shouldFailOn` "2016"
+        parse PD.dayOfWeek "" `shouldFailOn` "Spent"
+        parse PD.dayOfWeek "" `shouldFailOn` "Received"
 
     describe "date" $ do
       it "should parse cases like yyyy-mm-dd" $ do
-        parse PD.date "" "1234-56-78"   `shouldParse` (1234,56,78)
+        parse PD.date "" "1234-56-78"   `shouldParse` (DT.fromGregorian 1234 56 78)
       it "should fail on non-functional cases" $ do
         parse PD.date "" `shouldFailOn` "NotADate"
         parse PD.date "" `shouldFailOn` "1234"
@@ -59,9 +61,9 @@ parseDateDirectiveSpec =
 
     describe "dateDirective" $ do
       it "should handle cases like 'yyyy-mm-dd SUN', 'SUN', etc." $ do
-        parse PD.dateDirective "" "SUN" `shouldParse` D.DateDir Nothing D.Sun
+        parse PD.dateDirective "" "SUN" `shouldParse` D.DateDir Nothing DT.Sunday
         parse PD.dateDirective "" "1234-56-78 SUN"
-          `shouldParse` D.DateDir (Just (1234,56,78)) D.Sun
+          `shouldParse` D.DateDir (Just (DT.fromGregorian 1234 56 78)) DT.Sunday
       it "should fail to parse not-dateDirective" $ do
         parse PD.dateDirective "" `shouldFailOn` "NotADateDirective"
         parse PD.dateDirective "" `shouldFailOn` "Spent"

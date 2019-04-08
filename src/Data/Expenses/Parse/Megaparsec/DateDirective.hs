@@ -17,12 +17,14 @@ import Data.Functor (($>))
 
 import Data.Void (Void)
 
+import qualified Data.Time.Calendar as DT
+
 import Text.Megaparsec (Parsec, hidden, noneOf, optional, skipMany, (<|>))
 import Text.Megaparsec.Char (spaceChar, string)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import Data.Expenses.Parse.Megaparsec.Types (Parser)
-import Data.Expenses.Expense (Day(..), DateDirective(..))
+import Data.Expenses.Expense (DateDirective(..))
 
 
 sc :: Parser ()
@@ -45,32 +47,30 @@ dash = symbol "-"
 
 
 
--- TODO: No need to be case-sensitive here.
-day :: Parser Day
-day =
-  (string "MON" $> Mon) <|>
-  ((string "TUE" <* skipMany (noneOf "\n\r\0")) $> Tue) <|>
-  ((string "WED" <* skipMany (noneOf "\n\r\0")) $> Wed) <|>
-  ((string "THU" <* skipMany (noneOf "\n\r\0")) $> Thu) <|>
-  (string "FRI" $> Fri) <|>
-  (string "SAT" $> Sat) <|>
-  (string "SUN" $> Sun)
+dayOfWeek :: Parser DT.DayOfWeek
+dayOfWeek =
+  (string "MON" $> DT.Monday) <|>
+  ((string "TUE" <* skipMany (noneOf "\n\r\0")) $> DT.Tuesday) <|>
+  ((string "WED" <* skipMany (noneOf "\n\r\0")) $> DT.Wednesday) <|>
+  ((string "THU" <* skipMany (noneOf "\n\r\0")) $> DT.Thursday) <|>
+  (string "FRI" $> DT.Friday) <|>
+  (string "SAT" $> DT.Saturday) <|>
+  (string "SUN" $> DT.Sunday)
 
 
 
--- TODO: at the moment, not strict about `yyyy-mm-dd`
-date :: Parser (Int, Int, Int)
+date :: Parser DT.Day
 date =
   do yyyy <- fromIntegral <$> integer
      void  dash
      mm <- fromIntegral <$> integer
      void  dash
      dd <- fromIntegral <$> integer
-     return (yyyy, mm, dd)
+     return $ DT.fromGregorian yyyy mm dd
 
 
 
 dateDirective :: Parser DateDirective
 dateDirective =
   do dt <- optional date
-     DateDir dt <$> day
+     DateDir dt <$> dayOfWeek

@@ -1,10 +1,10 @@
 module Data.Expenses.Types where
 
-data Day = Mon | Tue | Wed | Thu | Fri | Sat | Sun deriving (Show, Eq)
+import Data.Time.Calendar (Day, DayOfWeek)
 
 data DateDirective = DateDir
-    {dateDirDate :: Maybe (Int, Int, Int)
-    , dateDirDay  :: Day
+    { dateDirDate :: Maybe Day
+    , dateDirDay  :: DayOfWeek
     } deriving (Show, Eq)
 
 -- ~ 1234.12 CUR
