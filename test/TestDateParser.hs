@@ -60,10 +60,16 @@ parseDateDirectiveSpec =
         parse PD.date "" `shouldFailOn` "MON"
 
     describe "dateDirective" $ do
-      it "should handle cases like 'yyyy-mm-dd SUN', 'SUN', etc." $ do
+      it "should handle cases like 'SUN', etc." $ do
         parse PD.dateDirective "" "SUN" `shouldParse` D.DateDir Nothing DT.Sunday
+      it "should handle cases like 'yyyy-mm-dd SUN', etc." $ do
         parse PD.dateDirective "" "1234-56-78 SUN"
           `shouldParse` D.DateDir (Just (DT.fromGregorian 1234 56 78)) DT.Sunday
+      it "should handle cases like 'yyyy-mm-dd', etc." $ do
+        parse PD.dateDirective "" "2018-01-01"
+          `shouldParse` D.DateDir (Just (DT.fromGregorian 2018 01 01)) DT.Monday
+        parse PD.dateDirective "" "2019-01-01"
+          `shouldParse` D.DateDir (Just (DT.fromGregorian 2019 01 01)) DT.Tuesday
       it "should fail to parse not-dateDirective" $ do
         parse PD.dateDirective "" `shouldFailOn` "NotADateDirective"
         parse PD.dateDirective "" `shouldFailOn` "Spent"

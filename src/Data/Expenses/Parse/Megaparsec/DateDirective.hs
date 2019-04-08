@@ -20,7 +20,7 @@ import Data.Void (Void)
 import qualified Data.Time.Calendar as DT
 
 import Text.Megaparsec
-  (Parsec, choice, hidden, noneOf, optional, skipMany, (<|>))
+  (Parsec, choice, hidden, noneOf, option, optional, skipMany, (<|>))
 import Text.Megaparsec.Char (spaceChar, string)
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -76,4 +76,9 @@ date =
 dateDirective :: Parser DateDirective
 dateDirective =
   do dt <- optional date
-     DateDir dt <$> dayOfWeek
+     case dt of
+       Just day -> do
+         dow <- option (DT.dayOfWeek day) dayOfWeek
+         return $ DateDir dt dow
+       Nothing ->
+         DateDir dt <$> dayOfWeek
