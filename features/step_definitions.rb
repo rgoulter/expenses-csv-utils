@@ -7,6 +7,11 @@ Given("an expenses file {string}") do |filename, file_content|
   IO.write(@input_filename, file_content)
 end
 
+When("I run the command {string} with {string}") do |command, inputf|
+  input_path = File.join(@tmpdir, inputf)
+  @output = `stack exec -- #{command} #{input_path}`
+end
+
 When("I run the command {string} with {string} and {string}") do |command, inputf, outputf|
   input_path = File.join(@tmpdir, inputf)
   output_path = File.join(@tmpdir, outputf)
