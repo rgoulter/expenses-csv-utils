@@ -28,3 +28,8 @@ data Entry = Entry
   , entryPrice      :: (Int, Int, String) -- (dlr,cents,cur)
   , entryRemark     :: String
   } deriving (Show, Eq)
+
+data QueryAttribute
+  = Earliest
+  | Latest
+  deriving (Show, Eq)

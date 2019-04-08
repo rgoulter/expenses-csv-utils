@@ -35,6 +35,7 @@ library
                      , Data.Expenses.Parse.Megaparsec.ExpensesDoc
                      , Data.Expenses.Parse.Megaparsec.Types
                      , Data.Expenses.Expense
+                     , Data.Expenses.Query
                      , Data.Expenses.ToCSV
                      , Data.Expenses.Types
   default-language:    Haskell2010
@@ -47,6 +48,7 @@ test-suite tests
                      , TestExpense
                      , TestExpenseDocParser
                      , TestExpenseParser
+                     , TestQuery
 
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
@@ -75,6 +77,7 @@ executable expenses-utils
                    , Data.Expenses.Parse.Megaparsec.ExpensesDoc
                    , Data.Expenses.Parse.Megaparsec.Types
                    , Data.Expenses.Expense
+                   , Data.Expenses.Query
                    , Data.Expenses.ToCSV
                    , Data.Expenses.Types
   -- other-extensions:
