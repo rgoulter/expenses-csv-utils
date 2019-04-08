@@ -19,7 +19,8 @@ import Data.Void (Void)
 
 import qualified Data.Time.Calendar as DT
 
-import Text.Megaparsec (Parsec, hidden, noneOf, optional, skipMany, (<|>))
+import Text.Megaparsec
+  (Parsec, choice, hidden, noneOf, optional, skipMany, (<|>))
 import Text.Megaparsec.Char (spaceChar, string)
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -49,13 +50,15 @@ dash = symbol "-"
 
 dayOfWeek :: Parser DT.DayOfWeek
 dayOfWeek =
-  (string "MON" $> DT.Monday) <|>
-  ((string "TUE" <* skipMany (noneOf "\n\r\0")) $> DT.Tuesday) <|>
-  ((string "WED" <* skipMany (noneOf "\n\r\0")) $> DT.Wednesday) <|>
-  ((string "THU" <* skipMany (noneOf "\n\r\0")) $> DT.Thursday) <|>
-  (string "FRI" $> DT.Friday) <|>
-  (string "SAT" $> DT.Saturday) <|>
-  (string "SUN" $> DT.Sunday)
+  choice
+    [ string "MON" $> DT.Monday
+    , (string "TUE" <* skipMany (noneOf "\n\r\0")) $> DT.Tuesday
+    , (string "WED" <* skipMany (noneOf "\n\r\0")) $> DT.Wednesday
+    , (string "THU" <* skipMany (noneOf "\n\r\0")) $> DT.Thursday
+    , string "FRI" $> DT.Friday
+    , string "SAT" $> DT.Saturday
+    , string "SUN" $> DT.Sunday
+    ]
 
 
 
