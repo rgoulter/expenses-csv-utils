@@ -3,7 +3,6 @@ module Data.Expenses.Expense
   , Direction(..)
   , Expense(..)
   , Money(..)
-  , addDays
   , dayOfWeek
   , numDaysAfter
   , nextDate
@@ -32,7 +31,6 @@ dayOfWeek DT.Sunday = 6
 
 
 
--- XXX: surely Data.Time.Calendar has this?
 -- d1 + (numDaysAfter d1 d2) = d2
 -- e.g. "Tue is 1 day after Mon; the next Mon is 6 days after Tue".
 numDaysAfter :: DT.DayOfWeek -> DT.DayOfWeek -> Int
@@ -40,28 +38,21 @@ numDaysAfter d1 d2 = (7 + dayOfWeek d2 - dayOfWeek d1) `mod` 7
 
 
 
-addDays :: (Int, Int, Int) -> Int -> (Int, Int, Int)
-addDays (y, m, d) dd =
-  (fromIntegral y', m', d')
-  where day = DT.fromGregorian (fromIntegral y) m d
-        day' = DT.addDays (fromIntegral dd) day
-        (y', m', d') = DT.toGregorian day'
-
-
-
 nextDate
   :: ((Int, Int, Int), DT.DayOfWeek)
   -> DateDirective
   -> ((Int, Int, Int), DT.DayOfWeek)
-nextDate ((y,m,d), dy) (DateDir Nothing dy') =
+nextDate ((y, m, d), dy) (DateDir Nothing dy') =
   -- Need to calculate how many days dy' is after dy.
   let diff = numDaysAfter dy dy'
-      (y', m', d') = addDays (y, m, d) diff
-  in ((y', m', d'), dy')
+      day = DT.fromGregorian (fromIntegral y) m d
+      day' = DT.addDays (fromIntegral diff) day
+      (y', m', d') = DT.toGregorian day'
+  in ((fromIntegral y', m', d'), dy')
 
 
 
-nextDate ((y,m,d), dy) (DateDir (Just day') dy') =
+nextDate ((y, m, d), dy) (DateDir (Just day') dy') =
   -- Simply just use the new date/day
   ((fromIntegral y', m', d'), dy')
     where
