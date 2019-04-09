@@ -22,9 +22,11 @@ library
                      , containers >=0.5 && <0.7
                      , csv >=0.1 && <0.2
                      , hashable
+                     , hledger-lib
                      , megaparsec >=7.0
                      , parser-combinators >=1.0
                      , split
+                     , text
                      , time >=1.9 && <2.0
                      , unordered-containers
                      , void
@@ -56,12 +58,14 @@ test-suite tests
                      , csv >=0.1 && <0.2
                      , expenses-csv-utils
                      , hashable
+                     , hledger-lib
                      , heredoc >=0.2
                      , hspec >=2.0
                      , hspec-expectations >=0.5
                      , hspec-megaparsec ==2.0.0
                      , megaparsec >=7.0
                      , parser-combinators >=1.0
+                     , text
                      , time >=1.9 && <2.0
   if !impl(ghc >= 8.0)
     build-depends:     semigroups         == 0.18.*
@@ -86,8 +90,10 @@ executable expenses-utils
                      , containers >=0.5 && <0.7
                      , csv >=0.1 && <0.2
                      , hashable
+                     , hledger-lib
                      , megaparsec >=7.0
                      , parser-combinators >=1.0
+                     , text
                      , time >=1.9 && <2.0
                      , expenses-csv-utils
   hs-source-dirs:      src/
