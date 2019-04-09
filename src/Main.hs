@@ -34,14 +34,15 @@ import Data.Expenses.ToCSV (recordsFromDirectives)
 
 
 
-data ExpensesCmd = CSV {src :: FilePath, out :: FilePath}
-                 | Check {src :: FilePath}
-                 | Query {attribute :: String, src :: FilePath}
+data ExpensesCmd
+  = CSV {src :: FilePath, out :: FilePath}
+  | Check {src :: FilePath}
+  | Query {attribute :: String, src :: FilePath}
   deriving (Data,Typeable,Show,Eq)
 
 
 
-csv = CSV
+csvMode = CSV
   { src = def &= typ "EXPENSES.TXT" &= argPos 1
   , out = def &= typ "OUT.CSV" &= argPos 2
   } &= help "Output to CSV"
@@ -49,13 +50,13 @@ csv = CSV
 
 
 -- why is argPos 0 here, when it's 1 2 above?
-check = Check
+checkMode = Check
   { src = def &= typ "EXPENSES.TXT" &= argPos 0
   } &= help "Check expenses file"
 
 
 
-query = Query
+queryMode = Query
   { attribute = def &= typ "earliest|latest" &= argPos 1
   , src = def &= typ "EXPENSES.TXT" &= argPos 2
   } &= help "Check expenses file"
@@ -63,7 +64,7 @@ query = Query
 
 
 mode =
-  cmdArgsMode $ modes [check, csv, query]
+  cmdArgsMode $ modes [checkMode, csvMode, queryMode]
     &= help "Utils for expenses file format"
     &= program "expenses-utils"
     &= summary "Expenses Utils v0.2.1"
@@ -74,9 +75,9 @@ main :: IO ()
 main = do
   expensesArgs <- cmdArgsRun mode
   case expensesArgs of
-    Check inputF -> checkSyntax inputF
-    CSV inputF outputF -> process inputF outputF
-    Query attribute inputF -> queryFile attribute inputF
+    CSV inputF outputF -> runCsvMode inputF outputF
+    Check inputF -> runCheckMode inputF
+    Query attribute inputF -> runQueryMode attribute inputF
 
 
 
@@ -97,8 +98,8 @@ withFile inputF f = do
 
 
 
-process :: String -> String -> IO ()
-process inputF outputF =
+runCsvMode :: String -> String -> IO ()
+runCsvMode inputF outputF =
   withFile inputF $ \directives ->
     outputCSVFromDirectives outputF directives
 
@@ -112,14 +113,14 @@ outputCSVFromDirectives outputF directives =
 
 
 
-checkSyntax :: String -> IO ()
-checkSyntax inputF =
+runCheckMode :: String -> IO ()
+runCheckMode inputF =
   withFile inputF $ \_directives -> return ()
 
 
 
-queryFile :: String -> FilePath -> IO ()
-queryFile attribute inputF = do
+runQueryMode :: String -> FilePath -> IO ()
+runQueryMode attribute inputF = do
   case attr attribute of
     Nothing -> putStrLn $ "unknown attribute: " ++ attribute
     Just attr' ->
