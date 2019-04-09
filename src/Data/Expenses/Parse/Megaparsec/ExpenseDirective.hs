@@ -17,6 +17,8 @@ import Control.Monad (void)
 
 import Data.Functor (($>))
 
+import Data.List (intercalate)
+
 import qualified Data.List.NonEmpty as NE
 
 import qualified Data.Set as Set
@@ -26,7 +28,10 @@ import Data.Maybe (isJust)
 
 import Text.Megaparsec
   ( ErrorItem(Tokens)
+  , anySingle
+  , choice
   , count
+  , eof
   , failure
   , hidden
   , lookAhead
@@ -35,11 +40,19 @@ import Text.Megaparsec
   , optional
   , skipMany
   , some
+  , someTill
   , try
   , unexpected
   , (<|>)
   )
-import Text.Megaparsec.Char (letterChar, spaceChar, string, upperChar)
+import Text.Megaparsec.Char
+  ( char
+  , letterChar
+  , space
+  , string
+  , tab
+  , upperChar
+  )
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
@@ -48,12 +61,15 @@ import Data.Expenses.Expense (Money(..), Direction(..), Expense(..))
 import Data.Expenses.Parse.Megaparsec.Types (Parser)
 
 
+
 sc :: Parser ()
-sc = hidden . skipMany $ void spaceChar
+sc = hidden . skipMany . void $ choice [char ' ', tab]
 
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc
+
+
 
 symbol :: String -> Parser String
 symbol = L.symbol sc
@@ -126,10 +142,27 @@ amount =
 
 
 
+commentOnNextLine :: Parser String
+commentOnNextLine = do
+  sc
+  C.newline
+  c <- C.char '#'
+  s <- someTill anySingle (lookAhead (void C.eol <|> eof))
+  return (c:s)
+
+
+
+commentsOnFollowingLines :: Parser String
+commentsOnFollowingLines =
+  intercalate "\n" <$> some (try commentOnNextLine)
+
+
+
 -- n.b. this doesn't allow for comments at the end-of-line
 expense :: Parser Expense
 expense =
   do dir <- direction
      am  <- amount
      remark <- many (noneOf "\n\r\0")
-     return $ Expense dir am remark
+     comment <- optional $ commentsOnFollowingLines
+     return $ Expense dir am remark comment

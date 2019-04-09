@@ -1,8 +1,13 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module TestExpenseParser where
 
 import Data.List.NonEmpty (NonEmpty (..))
 
 import qualified Data.Set as E
+
+import Data.String.Interpolate (i)
+import Data.String.Interpolate.Util (unindent)
 
 import Text.Heredoc (here)
 
@@ -101,11 +106,12 @@ parseExpenseDirectiveSpec =
       it "should parse expense directive (working cases)" $ do
         parse PE.expense "" "Spent 1.23 on food"
           `shouldParse`
-            E.Expense E.Spent (E.Amount 1 23 Nothing False) "on food"
+            E.Expense E.Spent (E.Amount 1 23 Nothing False) "on food" Nothing
+
       it "should not parse not expense directive" $ do
         parse PE.expense "" `shouldFailOn` "NotAnExpenseDirective"
 
-      it "doesn't parse beyond EOL" $ do
+      it "doesn't parse beyond EOL (when there are no comments)" $ do
         -- consume everything until the newline, for the 'remark'
         runParser' PE.expense (initialState "Spent 1 on x\nnext")
           `succeedsLeaving` "\nnext"
@@ -122,6 +128,31 @@ parseExpenseDirectiveSpec =
         -- Comments are taken care of in main
         runParser' PE.expense (initialState "#cmt\nnext")
           `failsLeaving` "#cmt\nnext"
+
+      describe "expense directive comments" $ do
+        it "should parse a comment that starts at the beginning of the following line" $ do
+          parse PE.expense
+                ""
+                (unindent [i|
+                   Spent 1.23 on food
+                   # comment|])
+            `shouldParse`
+              E.Expense E.Spent
+                        (E.Amount 1 23 Nothing False)
+                        "on food"
+                        (Just "# comment")
+        it "should parse comments that start at the beginning of the following line" $ do
+          parse PE.expense
+                ""
+                (unindent [i|
+                   Spent 1.23 on food
+                   # comment1
+                   # comment2|])
+            `shouldParse`
+              E.Expense E.Spent
+                        (E.Amount 1 23 Nothing False)
+                        "on food"
+                        (Just "# comment1\n# comment2")
 
       describe "parse error for \"Sent 100 SGD blah\"" $ do
         it "should show unexpected \"Sent\", expected \"Spent\" or \"Received\"" $ do

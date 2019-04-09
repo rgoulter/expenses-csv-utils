@@ -20,6 +20,7 @@ entryFromExpense (y,m,d) exp =
   Entry { entryDate       = (y,m,d)
         , entryPrice      = (dollars, cents, cur)
         , entryRemark     = E.expenseRemark exp
+        , entryComment    = E.expenseComment exp
         }
   where
     amount  = E.expenseAmount exp

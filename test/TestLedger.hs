@@ -15,7 +15,7 @@ import Data.Expenses.Types (Entry(..))
 
 sampleEntry :: Entry
 sampleEntry =
-  Entry (2018, 01, 01) (5, 0, "SGD") "on McDonalds"
+  Entry (2018, 01, 01) (5, 0, "SGD") "on McDonalds" Nothing
 
 sampleTransaction :: String
 sampleTransaction =

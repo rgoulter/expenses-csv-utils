@@ -21,12 +21,14 @@ data Expense = Expense
   { expenseDirection :: Direction
   , expenseAmount    :: Money
   , expenseRemark    :: String
+  , expenseComment   :: Maybe String
   } deriving (Show, Eq)
 
 data Entry = Entry
   { entryDate       :: (Int, Int, Int)    -- (y,m,d)
   , entryPrice      :: (Int, Int, String) -- (dlr,cents,cur)
   , entryRemark     :: String
+  , entryComment    :: Maybe String
   } deriving (Show, Eq)
 
 data QueryAttribute
