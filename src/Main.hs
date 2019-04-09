@@ -26,6 +26,7 @@ import Text.CSV (printCSV)
 
 import Text.Megaparsec (eof, errorBundlePretty, parseErrorPretty, runParser)
 
+import Data.Expenses.Ledger (outputLedgerFromEntries)
 import Data.Expenses.Parse.Megaparsec.ExpensesDoc
   (eitherOfLists, entriesFromDirectives, parseExpensesFile)
 import Data.Expenses.Parse.Megaparsec.Types (LineDirective)
@@ -38,10 +39,12 @@ data ExpensesCmd
   = CSV {src :: FilePath, out :: FilePath}
   | Check {src :: FilePath}
   | Query {attribute :: String, src :: FilePath}
+  | Ledger {src :: FilePath, out :: FilePath}
   deriving (Data,Typeable,Show,Eq)
 
 
 
+csvMode :: ExpensesCmd
 csvMode = CSV
   { src = def &= typ "EXPENSES.TXT" &= argPos 1
   , out = def &= typ "OUT.CSV" &= argPos 2
@@ -50,21 +53,31 @@ csvMode = CSV
 
 
 -- why is argPos 0 here, when it's 1 2 above?
+checkMode :: ExpensesCmd
 checkMode = Check
   { src = def &= typ "EXPENSES.TXT" &= argPos 0
   } &= help "Check expenses file"
 
 
 
+queryMode :: ExpensesCmd
 queryMode = Query
   { attribute = def &= typ "earliest|latest" &= argPos 1
   , src = def &= typ "EXPENSES.TXT" &= argPos 2
-  } &= help "Check expenses file"
+  } &= help "Query attributes of expenses file"
+
+
+
+ledgerMode :: ExpensesCmd
+ledgerMode = Ledger
+  { src = def &= typ "EXPENSES.TXT" &= argPos 3
+  , out = def &= typ "JOURNAL.LEDGER" &= argPos 4
+  } &= help "Output to Ledger format"
 
 
 
 mode =
-  cmdArgsMode $ modes [checkMode, csvMode, queryMode]
+  cmdArgsMode $ modes [checkMode, csvMode, queryMode, ledgerMode]
     &= help "Utils for expenses file format"
     &= program "expenses-utils"
     &= summary "Expenses Utils v0.2.1"
@@ -78,6 +91,7 @@ main = do
     CSV inputF outputF -> runCsvMode inputF outputF
     Check inputF -> runCheckMode inputF
     Query attribute inputF -> runQueryMode attribute inputF
+    Ledger inputF outputF -> runLedgerMode inputF outputF
 
 
 
@@ -127,3 +141,11 @@ runQueryMode attribute inputF = do
       withFile inputF $ \directives ->
         let entries = entriesFromDirectives directives
         in putStrLn $ queryDirectives attr' entries
+
+
+
+runLedgerMode :: String -> String -> IO ()
+runLedgerMode inputF outputF =
+  withFile inputF $ \directives ->
+    let entries = entriesFromDirectives directives
+    in outputLedgerFromEntries outputF entries

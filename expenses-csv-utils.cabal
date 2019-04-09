@@ -23,6 +23,7 @@ library
                      , csv >=0.1 && <0.2
                      , hashable
                      , hledger-lib
+                     , interpolate
                      , megaparsec >=7.0
                      , parser-combinators >=1.0
                      , split
@@ -37,6 +38,7 @@ library
                      , Data.Expenses.Parse.Megaparsec.ExpensesDoc
                      , Data.Expenses.Parse.Megaparsec.Types
                      , Data.Expenses.Expense
+                     , Data.Expenses.Ledger
                      , Data.Expenses.Query
                      , Data.Expenses.ToCSV
                      , Data.Expenses.Types
@@ -51,6 +53,7 @@ test-suite tests
                      , TestExpenseDocParser
                      , TestExpenseParser
                      , TestQuery
+                     , TestLedger
 
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
@@ -63,6 +66,7 @@ test-suite tests
                      , hspec >=2.0
                      , hspec-expectations >=0.5
                      , hspec-megaparsec ==2.0.0
+                     , interpolate
                      , megaparsec >=7.0
                      , parser-combinators >=1.0
                      , text
@@ -81,6 +85,7 @@ executable expenses-utils
                    , Data.Expenses.Parse.Megaparsec.ExpensesDoc
                    , Data.Expenses.Parse.Megaparsec.Types
                    , Data.Expenses.Expense
+                   , Data.Expenses.Ledger
                    , Data.Expenses.Query
                    , Data.Expenses.ToCSV
                    , Data.Expenses.Types
@@ -91,6 +96,7 @@ executable expenses-utils
                      , csv >=0.1 && <0.2
                      , hashable
                      , hledger-lib
+                     , interpolate
                      , megaparsec >=7.0
                      , parser-combinators >=1.0
                      , text

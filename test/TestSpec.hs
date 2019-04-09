@@ -7,6 +7,7 @@ import TestExpense (expenseSpec)
 import TestExpenseParser (parseExpenseDirectiveSpec)
 import TestExpenseDocParser (parseExpensesFileSpec)
 import TestQuery (querySpec)
+import TestLedger (ledgerSpec)
 
 
 
@@ -17,3 +18,4 @@ main = hspec $ do
   parseDateDirectiveSpec
   parseExpenseDirectiveSpec
   parseExpensesFileSpec
+  ledgerSpec
