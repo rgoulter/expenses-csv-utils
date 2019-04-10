@@ -35,3 +35,10 @@ data QueryAttribute
   = Earliest
   | Latest
   deriving (Show, Eq)
+
+data SimpleTransaction = SimpleTransaction
+  { transactionDescription :: String
+  , transactionAmount :: Money
+  , transactionCredittedAccount :: String
+  , transactionDebittedAccount :: String
+  } deriving (Show, Eq)

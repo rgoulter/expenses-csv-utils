@@ -7,11 +7,15 @@ import Test.Hspec (Spec, describe, it, shouldBe)
 import Data.String.Interpolate (i)
 import Data.String.Interpolate.Util (unindent)
 
+import qualified Data.Text as T
+
 import qualified Data.Time.Calendar as DT
+
+import Hledger.Read (readJournal')
 
 import qualified Data.Expenses.Expense as E
 import qualified Data.Expenses.Ledger as L
-import Data.Expenses.Types (Entry(..))
+import Data.Expenses.Types (Money(Amount), Entry(..), SimpleTransaction(..))
 
 
 
@@ -69,6 +73,21 @@ transactionWithMultilineComment =
 ledgerSpec :: Spec
 ledgerSpec =
   describe "Data.Expenses.Ledger" $ do
+    describe "simpleTransactionsInJournal" $ do
+      it "should get a SimpleTransaction from a sample ledger journal" $ do
+        journal <- readJournal' $ T.pack $ unindent [i|
+          2018/01/01 on McDonalds
+            Expenses:Food  5.0 SGD
+            Assets:Cash:SGD
+          |]
+        let actualTransactions = L.simpleTransactionsInJournal journal
+        actualTransactions
+          `shouldBe`
+            [ SimpleTransaction "on McDonalds"
+                                (Amount 5 0 (Just "SGD") False)
+                                "Expenses:Food"
+                                "Assets:Cash:SGD"
+            ]
     describe "showLedgerTransactionFromEntry" $ do
       it "should show a simple Ledger transaction for an Entry" $ do
         L.showLedgerTransactionFromEntry sampleEntry
