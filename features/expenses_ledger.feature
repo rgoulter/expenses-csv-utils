@@ -11,6 +11,8 @@ Feature: Translate Expenses File to Ledger Format
        """
       And the file "journal.ledger" should have content
        """
+       # 2018-01-01 Monday
+       # Spent 5.0 SGD on McDonalds
        2018-01-01 on McDonalds
          Undescribed  5.0 SGD
          Assets:Cash:SGD
