@@ -117,3 +117,25 @@ ledgerSpec =
         L.showLedgerTransactionFromEntry entryWithMultilineComment
           `shouldBe`
             transactionWithMultilineComment
+
+    describe "showLedgerJournalFromEntries" $ do
+      it "should show a Ledger journal with multiple transactions" $ do
+        let inputEntries =
+              [ Entry (2018, 01, 01) (5, 0, "SGD") "on McDonalds" Nothing
+              , Entry (2018, 01, 03) (40, 0, "SGD") "on ez-link top up" Nothing
+              ]
+            expectedJournal =
+              unindent [i|
+              # 2018-01-01 Monday
+              # Spent 5.0 SGD on McDonalds
+              2018-01-01 on McDonalds
+                Undescribed  5.0 SGD
+                Assets:Cash:SGD
+
+              # 2018-01-03 Wednesday
+              # Spent 40.0 SGD on ez-link top up
+              2018-01-03 on ez-link top up
+                Undescribed  40.0 SGD
+                Assets:Cash:SGD
+              |]
+        L.showLedgerJournalFromEntries inputEntries `shouldBe` expectedJournal

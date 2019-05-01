@@ -2,13 +2,16 @@
 
 module Data.Expenses.Ledger where
 
-import Data.Maybe (fromMaybe, mapMaybe)
+import Data.List (groupBy, intercalate)
+import Data.Maybe (mapMaybe)
 
 import Data.String.Interpolate (i)
 import Data.String.Interpolate.Util (unindent)
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as TI
+
+import qualified Data.Time.Calendar as DT
 
 import qualified Hledger.Data.Posting as HDP
 import qualified Hledger.Data.Transaction as HDT
@@ -88,6 +91,20 @@ directiveFromEntry Entry
 
 
 
+showEntryDate :: Entry -> String
+showEntryDate Entry { entryDate = (y, m, d) } =
+  printf "%4d-%02d-%02d" y m d
+
+
+
+showEntryDateWithDay :: Entry -> String
+showEntryDateWithDay Entry { entryDate = (y, m, d) } =
+  printf "%4d-%02d-%02d %s" y m d day
+    where
+      day = show $ DT.dayOfWeek $ DT.fromGregorian (fromIntegral y) m d
+
+
+
 showLedgerTransactionFromEntry :: Entry -> String
 showLedgerTransactionFromEntry entry =
   unindent [i|
@@ -97,7 +114,7 @@ showLedgerTransactionFromEntry entry =
     Assets:Cash:#{cur}|] ++ cmt
   where
     (y, m, d) = entryDate entry
-    date   = printf "%4d-%02d-%02d" y m d :: String
+    date   = showEntryDate entry
     (dollars, cents, cur) = entryPrice entry
     price  = printf "%d.%d" dollars cents :: String
     remark = entryRemark entry
@@ -106,8 +123,26 @@ showLedgerTransactionFromEntry entry =
 
 
 
+equalBy :: Eq b => (a -> b) -> (a -> a -> Bool)
+equalBy f a1 a2 =
+  f a1 == f a2
+
+
+
+showLedgerJournalFromEntries :: [Entry] -> String
+showLedgerJournalFromEntries entries =
+  let groupedEntries = groupBy (equalBy entryDate) entries
+      journalForDay :: [Entry] -> String
+      journalForDay es =
+        let dateComment = [i|# #{showEntryDateWithDay $ head es}|]
+            transactions = unlines $ map showLedgerTransactionFromEntry es
+        in dateComment ++ "\n" ++ transactions
+      journalParts = map journalForDay groupedEntries
+
+  in intercalate "\n" journalParts
+
+
+
 outputLedgerFromEntries :: String -> [Entry] -> IO ()
 outputLedgerFromEntries outputF entries =
-  let transactions = map showLedgerTransactionFromEntry entries
-      outp = unlines transactions
-  in  writeFile outputF outp
+  writeFile outputF $ showLedgerJournalFromEntries entries
