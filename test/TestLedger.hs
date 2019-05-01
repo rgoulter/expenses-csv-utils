@@ -94,24 +94,42 @@ ledgerSpec =
         L.showCommaSeparatedNumber 1 `shouldBe` "1"
         L.showCommaSeparatedNumber 1000 `shouldBe` "1,000"
         L.showCommaSeparatedNumber 1234567 `shouldBe` "1,234,567"
-    describe "showHumanReadableMoney" $ do
-      it "should output numbers in a human readable format (e.g. 5 SGD, 3.1m VND)" $ do
-        L.showHumanReadableMoney (5, 0, "SGD") `shouldBe` "5 SGD"
-        L.showHumanReadableMoney (5, 5, "SGD") `shouldBe` "5.05 SGD"
-        L.showHumanReadableMoney (1, 25, "SGD") `shouldBe` "1.25 SGD"
-        L.showHumanReadableMoney (1, 50, "SGD") `shouldBe` "1.50 SGD"
-        L.showHumanReadableMoney (2000, 0, "SGD") `shouldBe` "2k SGD"
-        L.showHumanReadableMoney (65000, 0, "VND") `shouldBe` "65k VND"
-        L.showHumanReadableMoney (10500, 0, "VND") `shouldBe` "10.5k VND"
-        L.showHumanReadableMoney (10035, 0, "VND") `shouldBe` "10,035 VND"
-        L.showHumanReadableMoney (3000000, 0, "VND") `shouldBe` "3m VND"
-        L.showHumanReadableMoney (3100000, 0, "VND") `shouldBe` "3.1m VND"
-        L.showHumanReadableMoney (3100005, 0, "VND") `shouldBe` "3,100,005 VND"
+    describe "showHumanReadableMoney" $
+      describe "should output numbers in a human readable format (e.g. 5 SGD, 3.1m VND)" $ do
+        it "shows (5 0 SGD) as '5 SGD'" $
+          L.showHumanReadableMoney (5, 0, "SGD") `shouldBe` "5 SGD"
+        it "shows (5 5 SGD) as '5.05 SGD'" $
+          L.showHumanReadableMoney (5, 5, "SGD") `shouldBe` "5.05 SGD"
+        it "shows (1 25 SGD) as '1.25'" $
+          L.showHumanReadableMoney (1, 25, "SGD") `shouldBe` "1.25 SGD"
+        it "shows (1 50 SGD) as '1.50 SGD'" $
+          L.showHumanReadableMoney (1, 50, "SGD") `shouldBe` "1.50 SGD"
+        it "shows (2000 0 SGD) as '2k SGD'" $
+          L.showHumanReadableMoney (2000, 0, "SGD") `shouldBe` "2k SGD"
+        it "shows (65 0 VND) as '65k VND'" $
+          L.showHumanReadableMoney (65000, 0, "VND") `shouldBe` "65k VND"
+        it "shows (10500 0 VND) as '10.5k VND'" $
+          L.showHumanReadableMoney (10500, 0, "VND") `shouldBe` "10.5k VND"
+        it "shows (10035 0 VND) as '10,035 VND'" $
+          L.showHumanReadableMoney (10035, 0, "VND") `shouldBe` "10,035 VND"
+        it "shows (3000000 0 VND) as '3m VND'" $
+          L.showHumanReadableMoney (3000000, 0, "VND") `shouldBe` "3m VND"
+        it "shows (3100000 0 VND) as '3.1m VND'" $
+          L.showHumanReadableMoney (3100000, 0, "VND") `shouldBe` "3.1m VND"
+        it "shows (3100005 0 VND) as '3,100,005 VND'" $
+          L.showHumanReadableMoney (3100005, 0, "VND") `shouldBe` "3,100,005 VND"
     describe "showMoney" $ do
-      it "should show numbers with commas (e.g. 1000 -> 1,000)" $ do
+      it "should show (1 0 SGD) as '1.00 SGD'" $
         L.showMoney (1, 0, "SGD") `shouldBe` "1.00 SGD"
+      it "should show (1 5 SGD) as '1.05 SGD'" $
         L.showMoney (1, 5, "SGD") `shouldBe` "1.05 SGD"
-    describe "simpleTransactionsInJournal" $ do
+      it "should show (1 25 SGD) as '1.25 SGD'" $
+        L.showMoney (1, 25, "SGD") `shouldBe` "1.25 SGD"
+      it "should show (1000 0 SGD) as '1,000.00 SGD'" $
+        L.showMoney (1000, 0, "SGD") `shouldBe` "1,000.00 SGD"
+      it "should show (1234567 89 SGD) as '1,234,567.89 SGD'" $
+        L.showMoney (1234567, 89, "SGD") `shouldBe` "1,234,567.89 SGD"
+    describe "simpleTransactionsInJournal" $
       it "should get a SimpleTransaction from a sample ledger journal" $ do
         journal <- readJournal' $ T.pack $ unindent [i|
           2018/01/01 on McDonalds
@@ -127,15 +145,15 @@ ledgerSpec =
                                 "Assets:Cash:SGD"
             ]
     describe "showLedgerTransactionFromEntry" $ do
-      it "should show a simple Ledger transaction for an Entry" $ do
+      it "should show a simple Ledger transaction for an Entry" $
         L.showLedgerTransactionFromEntry sampleEntry
           `shouldBe`
             sampleTransaction
-      it "should show a simple Ledger transaction for an Entry with a comment" $ do
+      it "should show a simple Ledger transaction for an Entry with a comment" $
         L.showLedgerTransactionFromEntry entryWithComment
           `shouldBe`
             transactionWithComment
-      it "should show a simple Ledger transaction for an Entry with a multiline comment" $ do
+      it "should show a simple Ledger transaction for an Entry with a multiline comment" $
         L.showLedgerTransactionFromEntry entryWithMultilineComment
           `shouldBe`
             transactionWithMultilineComment
