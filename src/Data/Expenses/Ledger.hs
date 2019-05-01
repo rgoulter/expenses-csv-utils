@@ -19,7 +19,7 @@ import Text.Printf (printf)
 
 import Data.Expenses.Types (Money(..), SimpleTransaction(..))
 import Data.Expenses.Parse.Megaparsec.Entry
-  (Entry, entryComment, entryDate, entryPrice, entryRemark)
+  (Entry(..), entryComment, entryDate, entryPrice, entryRemark)
 import Data.Expenses.Parse.Megaparsec.ExpensesDoc (entriesFromDirectives)
 import Data.Expenses.Parse.Megaparsec.Types (LineDirective)
 
@@ -76,9 +76,22 @@ simpleTransactionsInJournal j =
 
 
 
+directiveFromEntry :: Entry -> String
+directiveFromEntry Entry
+                   { entryDate = (y, m, d)
+                   , entryPrice = (dollars, cents, currency)
+                   , entryRemark = remark
+                   } =
+  [i|#{direction} #{dollars}.#{cents} #{currency} #{remark}|]
+    where
+      direction = if (dollars >= 0) then "Spent" else "Received"
+
+
+
 showLedgerTransactionFromEntry :: Entry -> String
 showLedgerTransactionFromEntry entry =
   unindent [i|
+  # #{originalDirective}
   #{date} #{remark}
     Undescribed  #{price} #{cur}
     Assets:Cash:#{cur}|] ++ cmt
@@ -89,6 +102,7 @@ showLedgerTransactionFromEntry entry =
     price  = printf "%d.%d" dollars cents :: String
     remark = entryRemark entry
     cmt = maybe "" ((:) '\n') $ entryComment entry
+    originalDirective = directiveFromEntry entry
 
 
 

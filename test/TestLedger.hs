@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module TestLedger where
+module TestLedger (ledgerSpec) where
 
 import Test.Hspec (Spec, describe, it, shouldBe)
 
@@ -28,8 +28,22 @@ sampleEntry =
 sampleTransaction :: String
 sampleTransaction =
   unindent [i|
+  # Spent 5.0 SGD on McDonalds
   2018-01-01 on McDonalds
     Undescribed  5.0 SGD
+    Assets:Cash:SGD|]
+
+
+
+sampleJournalWithTransactions :: String
+sampleJournalWithTransactions =
+  unindent [i|
+  2018-01-01 on McDonalds
+    Expenses:Food  5.0 SGD
+    Assets:Cash:SGD
+
+  2018-01-02 at Guardian
+    Expenses:Toiletries  5.0 SGD
     Assets:Cash:SGD|]
 
 
@@ -43,6 +57,7 @@ entryWithComment =
 transactionWithComment :: String
 transactionWithComment =
   unindent [i|
+  # Spent 5.0 SGD on McDonalds
   2018-01-01 on McDonalds
     Undescribed  5.0 SGD
     Assets:Cash:SGD
@@ -62,6 +77,7 @@ entryWithMultilineComment =
 transactionWithMultilineComment :: String
 transactionWithMultilineComment =
   unindent [i|
+  # Spent 5.0 SGD on McDonalds
   2018-01-01 on McDonalds
     Undescribed  5.0 SGD
     Assets:Cash:SGD
