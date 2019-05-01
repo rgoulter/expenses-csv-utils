@@ -16,8 +16,8 @@ import Data.Expenses.Types(Entry(..))
 
 
 entryFromExpense :: (Int, Int, Int) -> Expense -> Entry
-entryFromExpense (y,m,d) exp =
-  Entry { entryDate       = (y,m,d)
+entryFromExpense (y, m, d) exp =
+  Entry { entryDate       = (y, m, d)
         , entryPrice      = (dollars, cents, cur)
         , entryRemark     = E.expenseRemark exp
         , entryComment    = E.expenseComment exp

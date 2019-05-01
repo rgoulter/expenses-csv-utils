@@ -82,11 +82,12 @@ simpleTransactionsInJournal j =
 directiveFromEntry :: Entry -> String
 directiveFromEntry Entry
                    { entryDate = (y, m, d)
-                   , entryPrice = (dollars, cents, currency)
+                   , entryPrice = price@(dollars, _, _)
                    , entryRemark = remark
                    } =
-  [i|#{direction} #{dollars}.#{cents} #{currency} #{remark}|]
+  [i|#{direction} #{price'} #{remark}|]
     where
+      price' = showHumanReadableMoney price
       direction = if (dollars >= 0) then "Spent" else "Received"
 
 
@@ -105,18 +106,67 @@ showEntryDateWithDay Entry { entryDate = (y, m, d) } =
 
 
 
+showMoney :: (Int, Int, String) -> String
+showMoney (dollars, cents, currency) =
+  let dollars' = showCommaSeparatedNumber dollars
+  in [i|#{dollars'}.#{cents} #{currency}|]
+
+
+
+showCommaSeparatedNumber :: Int -> String
+showCommaSeparatedNumber x | x < 1000 = show x
+showCommaSeparatedNumber x =
+  let head = showCommaSeparatedNumber (x `div` 1000)
+      rest = printf "%03d" (x `mod` 1000) :: String
+  in [i|#{head},#{rest}|]
+
+
+
+showHumanReadableMoney :: (Int, Int, String) -> String
+showHumanReadableMoney (dollars, cents, currency) =
+  let trailing3Zeros = dollars `mod` 1000 == 0 && cents == 0
+      useM = dollars > 1000000 && trailing3Zeros
+      useK = dollars > 1000 && (dollars `mod` 1000 == 0 || dollars `mod` 1000 >= 100) && cents == 0
+      (dollars', cents', modifier) =
+        if useM then
+          (dollars `div` 1000000, (dollars `mod` 1000000) `div` 1000, "m")
+        else
+          if useK then
+            (dollars `div` 1000, dollars `mod` 1000, "k")
+          else
+            (dollars, cents, "")
+      truncateZeros x | x <= 0 = x
+      truncateZeros x | x `mod` 10 == 0 = truncateZeros (x `div` 10)
+      truncateZeros x | otherwise = x
+      humanReadableDollars = showCommaSeparatedNumber dollars'
+      humanReadableCents =
+        if cents' == 0 then
+          ""
+        else
+          if useM || useK then
+            [i|.#{truncateZeros cents'}|]
+          else
+            [i|.#{cents'}|]
+  in [i|#{humanReadableDollars}#{humanReadableCents}#{modifier} #{currency}|]
+
+
+
+showEntryPrice :: Entry -> String
+showEntryPrice = showMoney . entryPrice
+
+
+
 showLedgerTransactionFromEntry :: Entry -> String
 showLedgerTransactionFromEntry entry =
   unindent [i|
   # #{originalDirective}
   #{date} #{remark}
-    Undescribed  #{price} #{cur}
+    Undescribed  #{price}
     Assets:Cash:#{cur}|] ++ cmt
   where
-    (y, m, d) = entryDate entry
     date   = showEntryDate entry
-    (dollars, cents, cur) = entryPrice entry
-    price  = printf "%d.%d" dollars cents :: String
+    (_, _, cur) = entryPrice entry
+    price = showEntryPrice entry
     remark = entryRemark entry
     cmt = maybe "" ((:) '\n') $ entryComment entry
     originalDirective = directiveFromEntry entry
