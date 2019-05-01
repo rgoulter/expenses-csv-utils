@@ -67,3 +67,23 @@ Feature: Translate Expenses File to Ledger Format
          Assets:Cash:SGD
 
        """
+
+  Scenario: Preserves cents in expenses file
+    Given an expenses file "expenses.txt"
+      """
+      2018-01-01 MON
+      Spent 1.5 on ice cream
+      """
+     When I run the command "expenses-utils ledger" with "expenses.txt" and "journal.ledger"
+     Then the standard output should be
+       """
+       """
+      And the file "journal.ledger" should have content
+       """
+       # 2018-01-01 Monday
+       # Spent 1.5 SGD on ice cream
+       2018-01-01 on ice cream
+         Undescribed  1.50 SGD
+         Assets:Cash:SGD
+
+       """
