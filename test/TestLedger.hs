@@ -96,39 +96,30 @@ ledgerSpec =
         L.showCommaSeparatedNumber 1234567 `shouldBe` "1,234,567"
     describe "showHumanReadableMoney" $
       describe "should output numbers in a human readable format (e.g. 5 SGD, 3.1m VND)" $ do
-        it "shows (5 0 SGD) as '5 SGD'" $
-          L.showHumanReadableMoney (5, 0, "SGD") `shouldBe` "5 SGD"
-        it "shows (5 5 SGD) as '5.05 SGD'" $
-          L.showHumanReadableMoney (5, 5, "SGD") `shouldBe` "5.05 SGD"
-        it "shows (1 25 SGD) as '1.25'" $
-          L.showHumanReadableMoney (1, 25, "SGD") `shouldBe` "1.25 SGD"
-        it "shows (1 50 SGD) as '1.50 SGD'" $
-          L.showHumanReadableMoney (1, 50, "SGD") `shouldBe` "1.50 SGD"
-        it "shows (2000 0 SGD) as '2k SGD'" $
-          L.showHumanReadableMoney (2000, 0, "SGD") `shouldBe` "2k SGD"
-        it "shows (65 0 VND) as '65k VND'" $
-          L.showHumanReadableMoney (65000, 0, "VND") `shouldBe` "65k VND"
-        it "shows (10500 0 VND) as '10.5k VND'" $
-          L.showHumanReadableMoney (10500, 0, "VND") `shouldBe` "10.5k VND"
-        it "shows (10035 0 VND) as '10,035 VND'" $
-          L.showHumanReadableMoney (10035, 0, "VND") `shouldBe` "10,035 VND"
-        it "shows (3000000 0 VND) as '3m VND'" $
-          L.showHumanReadableMoney (3000000, 0, "VND") `shouldBe` "3m VND"
-        it "shows (3100000 0 VND) as '3.1m VND'" $
-          L.showHumanReadableMoney (3100000, 0, "VND") `shouldBe` "3.1m VND"
-        it "shows (3100005 0 VND) as '3,100,005 VND'" $
-          L.showHumanReadableMoney (3100005, 0, "VND") `shouldBe` "3,100,005 VND"
+        let shouldShowAsHumanReadable input expectedOutput =
+              let message = [i|should show #{input} as '#{expectedOutput}'"|]
+              in it message $
+                   L.showHumanReadableMoney input `shouldBe` expectedOutput
+        (5, 0, "SGD") `shouldShowAsHumanReadable` "5 SGD"
+        (5, 5, "SGD") `shouldShowAsHumanReadable` "5.05 SGD"
+        (1, 25, "SGD") `shouldShowAsHumanReadable` "1.25 SGD"
+        (1, 50, "SGD") `shouldShowAsHumanReadable` "1.50 SGD"
+        (2000, 0, "SGD") `shouldShowAsHumanReadable` "2k SGD"
+        (65000, 0, "VND") `shouldShowAsHumanReadable` "65k VND"
+        (10500, 0, "VND") `shouldShowAsHumanReadable` "10.5k VND"
+        (10035, 0, "VND") `shouldShowAsHumanReadable` "10,035 VND"
+        (3000000, 0, "VND") `shouldShowAsHumanReadable` "3m VND"
+        (3100000, 0, "VND") `shouldShowAsHumanReadable` "3.1m VND"
+        (3100005, 0, "VND") `shouldShowAsHumanReadable` "3,100,005 VND"
     describe "showMoney" $ do
-      it "should show (1 0 SGD) as '1.00 SGD'" $
-        L.showMoney (1, 0, "SGD") `shouldBe` "1.00 SGD"
-      it "should show (1 5 SGD) as '1.05 SGD'" $
-        L.showMoney (1, 5, "SGD") `shouldBe` "1.05 SGD"
-      it "should show (1 25 SGD) as '1.25 SGD'" $
-        L.showMoney (1, 25, "SGD") `shouldBe` "1.25 SGD"
-      it "should show (1000 0 SGD) as '1,000.00 SGD'" $
-        L.showMoney (1000, 0, "SGD") `shouldBe` "1,000.00 SGD"
-      it "should show (1234567 89 SGD) as '1,234,567.89 SGD'" $
-        L.showMoney (1234567, 89, "SGD") `shouldBe` "1,234,567.89 SGD"
+      let shouldShowAsMoney input expectedOutput =
+            let message = [i|should show #{input} as '#{expectedOutput}'"|]
+            in it message $ L.showMoney input `shouldBe` expectedOutput
+      (1, 0, "SGD") `shouldShowAsMoney` "1.00 SGD"
+      (1, 5, "SGD") `shouldShowAsMoney` "1.05 SGD"
+      (1, 25, "SGD") `shouldShowAsMoney` "1.25 SGD"
+      (1000, 0, "SGD") `shouldShowAsMoney` "1,000.00 SGD"
+      (1234567, 89, "SGD") `shouldShowAsMoney` "1,234,567.89 SGD"
     describe "simpleTransactionsInJournal" $
       it "should get a SimpleTransaction from a sample ledger journal" $ do
         journal <- readJournal' $ T.pack $ unindent [i|

@@ -65,9 +65,14 @@ parseExpenseDirectiveSpec =
         --                           etoks "Received")
 
     describe "dollarsAndCents" $ do
-      it "should parse cases '1', '1.23', etc." $ do
-        parse PE.dollarsAndCents ""  "1"  `shouldParse` (1, 0)
-        parse PE.dollarsAndCents ""  "1.23"  `shouldParse` (1, 23)
+      let shouldParseAsDollarsAndCents input expectedOutput =
+            let message = [i|should parse case '#{input}' as #{expectedOutput}|]
+            in it message $
+              parse PE.dollarsAndCents "" input `shouldParse` expectedOutput
+      "1"    `shouldParseAsDollarsAndCents` (1, 0)
+      "1.23" `shouldParseAsDollarsAndCents` (1, 23)
+      "1.05" `shouldParseAsDollarsAndCents` (1, 5)
+      "1.5"  `shouldParseAsDollarsAndCents` (1, 50)
       it "should ignore commas; e.g. '1,234.0', etc." $ do
         parse PE.dollarsAndCents ""  "1,234"  `shouldParse` (1234, 0)
 
