@@ -30,7 +30,7 @@ sampleTransaction =
   unindent [i|
   # Spent 5 SGD on McDonalds
   2018-01-01 on McDonalds
-    Undescribed  5.0 SGD
+    Undescribed  5.00 SGD
     Assets:Cash:SGD|]
 
 
@@ -59,7 +59,7 @@ transactionWithComment =
   unindent [i|
   # Spent 5 SGD on McDonalds
   2018-01-01 on McDonalds
-    Undescribed  5.0 SGD
+    Undescribed  5.00 SGD
     Assets:Cash:SGD
   # comment|]
 
@@ -79,7 +79,7 @@ transactionWithMultilineComment =
   unindent [i|
   # Spent 5 SGD on McDonalds
   2018-01-01 on McDonalds
-    Undescribed  5.0 SGD
+    Undescribed  5.00 SGD
     Assets:Cash:SGD
   # comment1
   # comment2|]
@@ -97,14 +97,20 @@ ledgerSpec =
     describe "showHumanReadableMoney" $ do
       it "should output numbers in a human readable format (e.g. 5 SGD, 3.1m VND)" $ do
         L.showHumanReadableMoney (5, 0, "SGD") `shouldBe` "5 SGD"
+        L.showHumanReadableMoney (5, 5, "SGD") `shouldBe` "5.05 SGD"
         L.showHumanReadableMoney (1, 25, "SGD") `shouldBe` "1.25 SGD"
         L.showHumanReadableMoney (1, 50, "SGD") `shouldBe` "1.50 SGD"
         L.showHumanReadableMoney (2000, 0, "SGD") `shouldBe` "2k SGD"
         L.showHumanReadableMoney (65000, 0, "VND") `shouldBe` "65k VND"
         L.showHumanReadableMoney (10500, 0, "VND") `shouldBe` "10.5k VND"
+        L.showHumanReadableMoney (10035, 0, "VND") `shouldBe` "10,035 VND"
         L.showHumanReadableMoney (3000000, 0, "VND") `shouldBe` "3m VND"
         L.showHumanReadableMoney (3100000, 0, "VND") `shouldBe` "3.1m VND"
         L.showHumanReadableMoney (3100005, 0, "VND") `shouldBe` "3,100,005 VND"
+    describe "showMoney" $ do
+      it "should show numbers with commas (e.g. 1000 -> 1,000)" $ do
+        L.showMoney (1, 0, "SGD") `shouldBe` "1.00 SGD"
+        L.showMoney (1, 5, "SGD") `shouldBe` "1.05 SGD"
     describe "simpleTransactionsInJournal" $ do
       it "should get a SimpleTransaction from a sample ledger journal" $ do
         journal <- readJournal' $ T.pack $ unindent [i|
@@ -145,13 +151,13 @@ ledgerSpec =
               # 2018-01-01 Monday
               # Spent 5 SGD on McDonalds
               2018-01-01 on McDonalds
-                Undescribed  5.0 SGD
+                Undescribed  5.00 SGD
                 Assets:Cash:SGD
 
               # 2018-01-03 Wednesday
               # Spent 2k SGD on new computer
               2018-01-03 on new computer
-                Undescribed  2,000.0 SGD
+                Undescribed  2,000.00 SGD
                 Assets:Cash:SGD
               |]
         L.showLedgerJournalFromEntries inputEntries `shouldBe` expectedJournal

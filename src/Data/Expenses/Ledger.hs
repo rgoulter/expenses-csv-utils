@@ -109,7 +109,8 @@ showEntryDateWithDay Entry { entryDate = (y, m, d) } =
 showMoney :: (Int, Int, String) -> String
 showMoney (dollars, cents, currency) =
   let dollars' = showCommaSeparatedNumber dollars
-  in [i|#{dollars'}.#{cents} #{currency}|]
+      cents' = printf "%.2d" cents :: String
+  in [i|#{dollars'}.#{cents'} #{currency}|]
 
 
 
@@ -146,7 +147,7 @@ showHumanReadableMoney (dollars, cents, currency) =
           if useM || useK then
             [i|.#{truncateZeros cents'}|]
           else
-            [i|.#{cents'}|]
+            printf ".%.2d" cents'
   in [i|#{humanReadableDollars}#{humanReadableCents}#{modifier} #{currency}|]
 
 
