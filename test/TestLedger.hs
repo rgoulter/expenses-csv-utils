@@ -103,7 +103,7 @@ ledgerSpec =
         (fromIntegral 5, "SGD") `shouldShowAsHumanReadable` "5 SGD"
         (fromRational 5.05, "SGD") `shouldShowAsHumanReadable` "5.05 SGD"
         (fromRational 1.25, "SGD") `shouldShowAsHumanReadable` "1.25 SGD"
-        (fromRational 1.50, "SGD") `shouldShowAsHumanReadable` "1.50 SGD"
+        (fromRational 1.50, "SGD") `shouldShowAsHumanReadable` "1.5 SGD"
         (fromIntegral 2000, "SGD") `shouldShowAsHumanReadable` "2k SGD"
         (fromIntegral 65000, "VND") `shouldShowAsHumanReadable` "65k VND"
         (fromIntegral 10500, "VND") `shouldShowAsHumanReadable` "10.5k VND"
@@ -119,6 +119,7 @@ ledgerSpec =
             in it message $ L.showMoney input `shouldBe` expectedOutput
       (fromIntegral 1, "SGD") `shouldShowAsMoney` "1.00 SGD"
       (fromRational 1.05, "SGD") `shouldShowAsMoney` "1.05 SGD"
+      (fromRational 1.5, "SGD") `shouldShowAsMoney` "1.50 SGD"
       (fromRational 1.25, "SGD") `shouldShowAsMoney` "1.25 SGD"
       (fromIntegral 1000, "SGD") `shouldShowAsMoney` "1,000.00 SGD"
       (fromRational 1234567.89, "SGD") `shouldShowAsMoney` "1,234,567.89 SGD"

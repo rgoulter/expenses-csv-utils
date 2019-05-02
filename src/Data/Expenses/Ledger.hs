@@ -110,7 +110,7 @@ showMoney :: (D.Decimal, String) -> String
 showMoney (amount, currency) =
   let (dollars, cents) = properFraction amount
       dollars' = showCommaSeparatedNumber dollars
-      cents' = printf "%.02d" (D.decimalMantissa cents) :: String
+      cents' = printf "%.02d" (truncate $ cents * 100 :: Integer) :: String
   in [i|#{dollars'}.#{cents'} #{currency}|]
 
 
@@ -133,27 +133,23 @@ showHumanReadableMoney (amount, currency) =
       (dollars', cents', modifier) =
         if useM then
           ( dollars `div` 1000000
-          , fromIntegral $ (dollars `mod` 1000000) `div` 1000
+          , D.Decimal 3 $ fromIntegral $ (dollars `mod` 1000000) `div` 1000
           , "m"
           )
         else
           if useK then
-            (dollars `div` 1000, fromIntegral $ dollars `mod` 1000, "k")
+            (dollars `div` 1000, D.Decimal 3 $ fromIntegral $ dollars `mod` 1000, "k")
           else
             (dollars, cents, "")
-      truncateZeros x | x <= 0 = x
-      truncateZeros x | x `mod` 10 == 0 = truncateZeros (x `div` 10)
-      truncateZeros x | otherwise = x
       humanReadableDollars = showCommaSeparatedNumber $ fromIntegral dollars'
       humanReadableCents =
         if cents' == 0 then
           ""
         else
           if useM || useK then
-            -- [i|.#{truncateZeros cents'}|]
-            printf ".%.02d" (D.decimalMantissa cents')
+            drop 1 $ show $ D.normalizeDecimal cents'
           else
-            printf ".%.02d" (D.decimalMantissa cents')
+            drop 1 $ show cents'
   in [i|#{humanReadableDollars}#{humanReadableCents}#{modifier} #{currency}|]
 
 

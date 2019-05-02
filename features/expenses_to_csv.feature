@@ -11,7 +11,7 @@ Feature: Translate Expenses File to CSV Format
        """
       And the file "output.csv" should have content
        """
-       "2018-01-01","5.0","SGD","on McDonalds"
+       "2018-01-01","5","SGD","on McDonalds"
        """
 
   Scenario: Outputs error for malformed file
