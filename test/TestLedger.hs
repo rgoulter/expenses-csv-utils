@@ -21,7 +21,7 @@ import Data.Expenses.Types (Money(Amount), Entry(..), SimpleTransaction(..))
 
 sampleEntry :: Entry
 sampleEntry =
-  Entry (2018, 01, 01) (5, 0, "SGD") "on McDonalds" Nothing
+  Entry (2018, 01, 01) (fromIntegral 5, "SGD") "on McDonalds" Nothing
 
 
 
@@ -50,7 +50,7 @@ sampleJournalWithTransactions =
 
 entryWithComment :: Entry
 entryWithComment =
-  Entry (2018, 01, 01) (5, 0, "SGD") "on McDonalds" (Just "# comment")
+  Entry (2018, 01, 01) (fromIntegral 5, "SGD") "on McDonalds" (Just "# comment")
 
 
 
@@ -68,7 +68,7 @@ transactionWithComment =
 entryWithMultilineComment :: Entry
 entryWithMultilineComment =
   Entry (2018, 01, 01)
-        (5, 0, "SGD")
+        (fromIntegral 5, "SGD")
         "on McDonalds"
         (Just "# comment1\n# comment2")
 
@@ -100,26 +100,28 @@ ledgerSpec =
               let message = [i|should show #{input} as '#{expectedOutput}'"|]
               in it message $
                    L.showHumanReadableMoney input `shouldBe` expectedOutput
-        (5, 0, "SGD") `shouldShowAsHumanReadable` "5 SGD"
-        (5, 5, "SGD") `shouldShowAsHumanReadable` "5.05 SGD"
-        (1, 25, "SGD") `shouldShowAsHumanReadable` "1.25 SGD"
-        (1, 50, "SGD") `shouldShowAsHumanReadable` "1.50 SGD"
-        (2000, 0, "SGD") `shouldShowAsHumanReadable` "2k SGD"
-        (65000, 0, "VND") `shouldShowAsHumanReadable` "65k VND"
-        (10500, 0, "VND") `shouldShowAsHumanReadable` "10.5k VND"
-        (10035, 0, "VND") `shouldShowAsHumanReadable` "10,035 VND"
-        (3000000, 0, "VND") `shouldShowAsHumanReadable` "3m VND"
-        (3100000, 0, "VND") `shouldShowAsHumanReadable` "3.1m VND"
-        (3100005, 0, "VND") `shouldShowAsHumanReadable` "3,100,005 VND"
+        (fromIntegral 5, "SGD") `shouldShowAsHumanReadable` "5 SGD"
+        (fromRational 5.05, "SGD") `shouldShowAsHumanReadable` "5.05 SGD"
+        (fromRational 1.25, "SGD") `shouldShowAsHumanReadable` "1.25 SGD"
+        (fromRational 1.50, "SGD") `shouldShowAsHumanReadable` "1.50 SGD"
+        (fromIntegral 2000, "SGD") `shouldShowAsHumanReadable` "2k SGD"
+        (fromIntegral 65000, "VND") `shouldShowAsHumanReadable` "65k VND"
+        (fromIntegral 10500, "VND") `shouldShowAsHumanReadable` "10.5k VND"
+        (fromIntegral 10035, "VND") `shouldShowAsHumanReadable` "10,035 VND"
+        (fromIntegral 3000000, "VND") `shouldShowAsHumanReadable` "3m VND"
+        (fromIntegral 3100000, "VND") `shouldShowAsHumanReadable` "3.1m VND"
+        (fromIntegral 3100005, "VND")
+          `shouldShowAsHumanReadable`
+            "3,100,005 VND"
     describe "showMoney" $ do
       let shouldShowAsMoney input expectedOutput =
             let message = [i|should show #{input} as '#{expectedOutput}'"|]
             in it message $ L.showMoney input `shouldBe` expectedOutput
-      (1, 0, "SGD") `shouldShowAsMoney` "1.00 SGD"
-      (1, 5, "SGD") `shouldShowAsMoney` "1.05 SGD"
-      (1, 25, "SGD") `shouldShowAsMoney` "1.25 SGD"
-      (1000, 0, "SGD") `shouldShowAsMoney` "1,000.00 SGD"
-      (1234567, 89, "SGD") `shouldShowAsMoney` "1,234,567.89 SGD"
+      (fromIntegral 1, "SGD") `shouldShowAsMoney` "1.00 SGD"
+      (fromRational 1.05, "SGD") `shouldShowAsMoney` "1.05 SGD"
+      (fromRational 1.25, "SGD") `shouldShowAsMoney` "1.25 SGD"
+      (fromIntegral 1000, "SGD") `shouldShowAsMoney` "1,000.00 SGD"
+      (fromRational 1234567.89, "SGD") `shouldShowAsMoney` "1,234,567.89 SGD"
     describe "simpleTransactionsInJournal" $
       it "should get a SimpleTransaction from a sample ledger journal" $ do
         journal <- readJournal' $ T.pack $ unindent [i|
@@ -131,7 +133,7 @@ ledgerSpec =
         actualTransactions
           `shouldBe`
             [ SimpleTransaction "on McDonalds"
-                                (Amount 5 0 (Just "SGD") False)
+                                (Amount (fromIntegral 5) (Just "SGD") False)
                                 "Expenses:Food"
                                 "Assets:Cash:SGD"
             ]
@@ -152,8 +154,14 @@ ledgerSpec =
     describe "showLedgerJournalFromEntries" $ do
       it "should show a Ledger journal with multiple transactions" $ do
         let inputEntries =
-              [ Entry (2018, 01, 01) (5, 0, "SGD") "on McDonalds" Nothing
-              , Entry (2018, 01, 03) (2000, 0, "SGD") "on new computer" Nothing
+              [ Entry (2018, 01, 01)
+                      (fromIntegral 5, "SGD")
+                      "on McDonalds"
+                      Nothing
+              , Entry (2018, 01, 03)
+                      (fromIntegral 2000, "SGD")
+                      "on new computer"
+                      Nothing
               ]
             expectedJournal =
               unindent [i|

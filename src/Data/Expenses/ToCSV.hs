@@ -17,8 +17,8 @@ recordFromEntry entry =
   where
     (y, m, d) = entryDate entry
     date   = printf "%4d-%02d-%02d" y m d
-    (dollars, cents, cur) = entryPrice entry
-    price  = printf "%d.%d" dollars cents
+    (amount', cur) = entryPrice entry
+    price  = show amount'
     remark = entryRemark entry
 
 

@@ -2,6 +2,8 @@
 
 module TestExpenseParser where
 
+import qualified Data.Decimal as D
+
 import Data.List.NonEmpty (NonEmpty (..))
 
 import qualified Data.Set as E
@@ -11,7 +13,7 @@ import Data.String.Interpolate.Util (unindent)
 
 import Text.Heredoc (here)
 
-import Test.Hspec (Spec, describe, it)
+import Test.Hspec (Spec, describe, it, shouldBe)
 
 import Test.Hspec.Megaparsec
   ( err
@@ -69,36 +71,64 @@ parseExpenseDirectiveSpec =
             let message = [i|should parse case '#{input}' as #{expectedOutput}|]
             in it message $
               parse PE.dollarsAndCents "" input `shouldParse` expectedOutput
-      "1"    `shouldParseAsDollarsAndCents` (1, 0)
-      "1.23" `shouldParseAsDollarsAndCents` (1, 23)
-      "1.05" `shouldParseAsDollarsAndCents` (1, 5)
-      "1.5"  `shouldParseAsDollarsAndCents` (1, 50)
+      "1"    `shouldParseAsDollarsAndCents` fromIntegral 1
+      "1.23" `shouldParseAsDollarsAndCents` fromRational 1.23
+      "1.05" `shouldParseAsDollarsAndCents` fromRational 1.05
+      "1.5"  `shouldParseAsDollarsAndCents` D.Decimal 1 15
       it "should ignore commas; e.g. '1,234.0', etc." $ do
-        parse PE.dollarsAndCents ""  "1,234"  `shouldParse` (1234, 0)
+        parse PE.dollarsAndCents ""  "1,234"  `shouldParse` fromIntegral 1234
+      it "consumes trailing spaces" $ do
+        -- consume everything until the newline, for the 'remark'
+        runParser' PE.dollarsAndCents (initialState "1.23 k")
+          `succeedsLeaving` "k"
 
     describe "amount" $ do
       -- amount [~] 1[.23] [CUR]
+      it "should shift Decimal; 1.23 < 3 => 1230" $ do
+        PE.shiftDecimalPlaces 3 (fromRational 1.23) `shouldBe` fromIntegral 1230
       it "should parse cases like '1', '~1', '1.23', '1 NZD', etc." $ do
-        parse PE.amount ""  "1.23"  `shouldParse` E.Amount 1 23 Nothing False
-        parse PE.amount "" "~1.23"  `shouldParse` E.Amount 1 23 Nothing True
-        parse PE.amount ""  "1"     `shouldParse` E.Amount 1  0 Nothing False
+        parse PE.amount ""  "1.23"
+          `shouldParse`
+            E.Amount (fromRational 1.23) Nothing False
+        parse PE.amount "" "~1.23"
+          `shouldParse`
+            E.Amount (fromRational 1.23) Nothing True
+        parse PE.amount ""  "1"
+          `shouldParse`
+            E.Amount (fromIntegral 1) Nothing False
         -- Note that, if we test for currencies other than USD,
         parse PE.amount ""  "1 USD"
-          `shouldParse` E.Amount 1  0 (Just "USD") False
+          `shouldParse`
+            E.Amount (fromIntegral 1) (Just "USD") False
         parse PE.amount ""  "1 NZD"
-          `shouldParse` E.Amount 1  0 (Just "NZD") False
+          `shouldParse`
+            E.Amount (fromIntegral 1) (Just "NZD") False
         parse PE.amount ""  "1 SGD"
-          `shouldParse` E.Amount 1  0 (Just "SGD") False
+          `shouldParse`
+            E.Amount (fromIntegral 1) (Just "SGD") False
         parse PE.amount ""  "1 MYR"
-          `shouldParse` E.Amount 1  0 (Just "MYR") False
+          `shouldParse`
+            E.Amount (fromIntegral 1) (Just "MYR") False
       it "should allow a suffix of 'k' for 1,000x" $ do
-        parse PE.amount ""  "1k "  `shouldParse` E.Amount 1000 0 Nothing False
-        parse PE.amount ""  "1 k"  `shouldParse` E.Amount 1000 0 Nothing False
-        parse PE.amount ""  "1.23k "  `shouldParse` E.Amount 1230 0 Nothing False
-        parse PE.amount ""  "1.23 k"  `shouldParse` E.Amount 1230 0 Nothing False
+        parse PE.amount ""  "1k "
+          `shouldParse`
+            E.Amount (fromIntegral 1000) Nothing False
+        parse PE.amount ""  "1 k"
+          `shouldParse`
+            E.Amount (fromIntegral 1000) Nothing False
+        parse PE.amount ""  "1.23k "
+          `shouldParse`
+            E.Amount (fromIntegral 1230) Nothing False
+        parse PE.amount ""  "1.23 k"
+          `shouldParse`
+            E.Amount (fromIntegral 1230) Nothing False
       it "should allow a suffix of 'm' for 1,000,000x" $ do
-        parse PE.amount ""  "1.23m "  `shouldParse` E.Amount 1230000 0 Nothing False
-        parse PE.amount ""  "1.234 m"  `shouldParse` E.Amount 1234000 0 Nothing False
+        parse PE.amount ""  "1.23m "
+          `shouldParse`
+            E.Amount (fromIntegral 1230000) Nothing False
+        parse PE.amount ""  "1.234 m"
+          `shouldParse`
+            E.Amount (fromIntegral 1234000) Nothing False
       it "should fail to parse not-amount (e.g. S$123, $123, MON, etc.)" $ do
         parse PE.amount "" `shouldFailOn` "NotAnAmount"
         parse PE.amount "" `shouldFailOn` "S$123"
@@ -111,7 +141,10 @@ parseExpenseDirectiveSpec =
       it "should parse expense directive (working cases)" $ do
         parse PE.expense "" "Spent 1.23 on food"
           `shouldParse`
-            E.Expense E.Spent (E.Amount 1 23 Nothing False) "on food" Nothing
+            E.Expense E.Spent
+                      (E.Amount (fromRational 1.23) Nothing False)
+                      "on food"
+                      Nothing
 
       it "should not parse not expense directive" $ do
         parse PE.expense "" `shouldFailOn` "NotAnExpenseDirective"
@@ -143,7 +176,7 @@ parseExpenseDirectiveSpec =
                    # comment|])
             `shouldParse`
               E.Expense E.Spent
-                        (E.Amount 1 23 Nothing False)
+                        (E.Amount (fromRational 1.23) Nothing False)
                         "on food"
                         (Just "# comment")
         it "should parse comments that start at the beginning of the following line" $ do
@@ -155,7 +188,7 @@ parseExpenseDirectiveSpec =
                    # comment2|])
             `shouldParse`
               E.Expense E.Spent
-                        (E.Amount 1 23 Nothing False)
+                        (E.Amount (fromRational 1.23) Nothing False)
                         "on food"
                         (Just "# comment1\n# comment2")
 

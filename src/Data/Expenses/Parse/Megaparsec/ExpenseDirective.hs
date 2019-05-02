@@ -15,9 +15,13 @@ import Control.Monad.Combinators.Expr
 
 import Control.Monad (void)
 
+import qualified Data.Decimal as D
+
 import Data.Functor (($>))
 
 import Data.List (intercalate)
+
+import Data.Maybe (fromMaybe)
 
 import qualified Data.List.NonEmpty as NE
 
@@ -100,45 +104,47 @@ currency =
 
 
 
-modifyDollarsAndCents :: Int -> (Int, Int) -> (Int, Int)
-modifyDollarsAndCents mul (dollars, cents) =
-  let len :: Int -> Int
-      len n =
-        if n == 0 then
-          0
-        else
-          1 + floor(logBase 10 (fromIntegral n :: Double))
-      modifiedDollars = mul * dollars
-      modifiedCents = mul * cents `div` (10 ^ len cents)
-  in
-    (modifiedDollars + modifiedCents, 0)
-
-
-
-dollarsAndCents :: Parser (Int, Int)
+dollarsAndCents :: Parser D.Decimal
 dollarsAndCents =
-  do dollars <- read <$> some (skipMany (C.char ',') *> C.digitChar)
-     cents <- fromIntegral <$> try (C.char '.' *> integer) <|> (0 <$ sc)
-     return (dollars, cents)
+  do dollarsString <- some (skipMany (C.char ',') *> C.digitChar)
+     centsString <- try (C.char '.' *> (Just <$> some C.digitChar <* sc)) <|>
+                        Nothing <$ sc
+     let centsLength = fromIntegral $ maybe 0 length centsString
+         number = read $ dollarsString ++ fromMaybe "" centsString
+     return $ D.Decimal centsLength number
+
+
+
+shiftDecimalPlaces :: Int -> D.Decimal -> D.Decimal
+shiftDecimalPlaces mul value =
+  let places = D.decimalPlaces value
+      mantissa = D.decimalMantissa value
+      mul' = (fromIntegral mul) - places
+      value' = D.Decimal
+                { D.decimalPlaces = 0
+                , D.decimalMantissa =  (10 ^ mul') * mantissa
+                }
+  in value'
 
 
 
 amount :: Parser Money
 amount =
   do approx <- optional $ symbol "~"
-     (dollars, cents) <- dollarsAndCents
-     let kModifier = 1000 <$ C.char 'k'
-         mModifier = 1000000 <$ C.char 'm'
+     -- (dollars, cents) <- dollarsAndCents
+     value <- dollarsAndCents
+     let kModifier = 3 <$ C.char 'k'
+         mModifier = 6 <$ C.char 'm'
      modifier <- optional $ (kModifier <|> mModifier) <* sc
      cur <- optional currency
      void sc
      -- return $ Amount dollars cents cur (isJust approx)
      return $ case modifier of
-       Nothing -> Amount dollars cents cur (isJust approx)
+       Nothing -> Amount value cur (isJust approx)
        Just mul ->
-         let (dollars', cents') = modifyDollarsAndCents mul (dollars, cents)
+         let value' = shiftDecimalPlaces mul value
          in
-           Amount dollars' cents' cur (isJust approx)
+           Amount value' cur (isJust approx)
 
 
 

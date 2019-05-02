@@ -1,5 +1,7 @@
 module Data.Expenses.Types where
 
+import qualified Data.Decimal as D
+
 import Data.Time.Calendar (Day, DayOfWeek)
 
 data DateDirective = DateDir
@@ -9,8 +11,7 @@ data DateDirective = DateDir
 
 -- ~ 1234.12 CUR
 data Money = Amount
-  { moneyDollar   :: Int
-  , moneyCents    :: Int
+  { moneyAmount   :: D.Decimal
   , moneyCurrency :: Maybe String
   , moneyIsApprox :: Bool
   } deriving (Show, Eq)
@@ -26,7 +27,7 @@ data Expense = Expense
 
 data Entry = Entry
   { entryDate       :: (Int, Int, Int)    -- (y,m,d)
-  , entryPrice      :: (Int, Int, String) -- (dlr,cents,cur)
+  , entryPrice      :: (D.Decimal, String) -- (dlr,cents,cur)
   , entryRemark     :: String
   , entryComment    :: Maybe String
   } deriving (Show, Eq)

@@ -2,6 +2,8 @@
 
 module Data.Expenses.Ledger where
 
+import qualified Data.Decimal as D
+
 import Data.List (groupBy, intercalate)
 import Data.Maybe (mapMaybe)
 
@@ -38,11 +40,9 @@ readJournal filepath = do
 moneyFromLedgerAmount :: HT.MixedAmount -> Maybe Money
 moneyFromLedgerAmount (HT.Mixed [a]) =
   -- So, assume: only one amount
-  let (dollars, cents) = properFraction $ HT.aquantity a
-      cur = T.unpack $ HT.acommodity a
+  let cur = T.unpack $ HT.acommodity a
   in Just Amount
-     { moneyDollar = dollars
-     , moneyCents = round (cents * 100)
+     { moneyAmount = HT.aquantity a
      , moneyCurrency = Just cur
      , moneyIsApprox = False
      }
@@ -82,7 +82,7 @@ simpleTransactionsInJournal j =
 directiveFromEntry :: Entry -> String
 directiveFromEntry Entry
                    { entryDate = (y, m, d)
-                   , entryPrice = price@(dollars, _, _)
+                   , entryPrice = price@(dollars, _)
                    , entryRemark = remark
                    } =
   [i|#{direction} #{price'} #{remark}|]
@@ -106,10 +106,11 @@ showEntryDateWithDay Entry { entryDate = (y, m, d) } =
 
 
 
-showMoney :: (Int, Int, String) -> String
-showMoney (dollars, cents, currency) =
-  let dollars' = showCommaSeparatedNumber dollars
-      cents' = printf "%.2d" cents :: String
+showMoney :: (D.Decimal, String) -> String
+showMoney (amount, currency) =
+  let (dollars, cents) = properFraction amount
+      dollars' = showCommaSeparatedNumber dollars
+      cents' = printf "%.02d" (D.decimalMantissa cents) :: String
   in [i|#{dollars'}.#{cents'} #{currency}|]
 
 
@@ -123,31 +124,36 @@ showCommaSeparatedNumber x =
 
 
 
-showHumanReadableMoney :: (Int, Int, String) -> String
-showHumanReadableMoney (dollars, cents, currency) =
-  let trailing3Zeros = dollars `mod` 1000 == 0 && cents == 0
+showHumanReadableMoney :: (D.Decimal, String) -> String
+showHumanReadableMoney (amount, currency) =
+  let (dollars, cents) = properFraction amount
+      trailing3Zeros = dollars `mod` 1000 == 0 && cents == 0
       useM = dollars > 1000000 && trailing3Zeros
       useK = dollars > 1000 && (dollars `mod` 1000 == 0 || dollars `mod` 1000 >= 100) && cents == 0
       (dollars', cents', modifier) =
         if useM then
-          (dollars `div` 1000000, (dollars `mod` 1000000) `div` 1000, "m")
+          ( dollars `div` 1000000
+          , fromIntegral $ (dollars `mod` 1000000) `div` 1000
+          , "m"
+          )
         else
           if useK then
-            (dollars `div` 1000, dollars `mod` 1000, "k")
+            (dollars `div` 1000, fromIntegral $ dollars `mod` 1000, "k")
           else
             (dollars, cents, "")
       truncateZeros x | x <= 0 = x
       truncateZeros x | x `mod` 10 == 0 = truncateZeros (x `div` 10)
       truncateZeros x | otherwise = x
-      humanReadableDollars = showCommaSeparatedNumber dollars'
+      humanReadableDollars = showCommaSeparatedNumber $ fromIntegral dollars'
       humanReadableCents =
         if cents' == 0 then
           ""
         else
           if useM || useK then
-            [i|.#{truncateZeros cents'}|]
+            -- [i|.#{truncateZeros cents'}|]
+            printf ".%.02d" (D.decimalMantissa cents')
           else
-            printf ".%.2d" cents'
+            printf ".%.02d" (D.decimalMantissa cents')
   in [i|#{humanReadableDollars}#{humanReadableCents}#{modifier} #{currency}|]
 
 
@@ -166,7 +172,7 @@ showLedgerTransactionFromEntry entry =
     Assets:Cash:#{cur}|] ++ cmt
   where
     date   = showEntryDate entry
-    (_, _, cur) = entryPrice entry
+    (_, cur) = entryPrice entry
     price = showEntryPrice entry
     remark = entryRemark entry
     cmt = maybe "" ((:) '\n') $ entryComment entry

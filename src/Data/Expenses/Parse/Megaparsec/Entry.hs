@@ -6,29 +6,26 @@ where
 
 import Data.Maybe (fromMaybe)
 
-import Data.Expenses.Expense
-  (DateDirective, Expense(..), Direction(..), nextDate)
+import Data.Expenses.Expense (Expense(..), Direction(..))
 import qualified Data.Expenses.Expense as E
 
-import Data.Expenses.Parse.Megaparsec.Types (Parser)
 import Data.Expenses.Types(Entry(..))
 
 
 
 entryFromExpense :: (Int, Int, Int) -> Expense -> Entry
-entryFromExpense (y, m, d) exp =
+entryFromExpense (y, m, d) expense =
   Entry { entryDate       = (y, m, d)
-        , entryPrice      = (dollars, cents, cur)
-        , entryRemark     = E.expenseRemark exp
-        , entryComment    = E.expenseComment exp
+        , entryPrice      = (value, cur)
+        , entryRemark     = E.expenseRemark expense
+        , entryComment    = E.expenseComment expense
         }
   where
-    amount  = E.expenseAmount exp
-    mult    = case E.expenseDirection exp of
+    amount  = E.expenseAmount expense
+    mult    = case E.expenseDirection expense of
                Spent -> (1 *)
                Received -> ((-1) *)
-    dollars = mult $ E.moneyDollar amount
-    cents   = E.moneyCents amount
+    value = mult $ E.moneyAmount amount
 
     -- MAGIC: Implicit currency is SGD if not given.
     cur     = fromMaybe "SGD" (E.moneyCurrency amount)
