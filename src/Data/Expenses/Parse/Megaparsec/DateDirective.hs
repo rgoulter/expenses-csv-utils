@@ -15,12 +15,10 @@ import Control.Monad (void)
 
 import Data.Functor (($>))
 
-import Data.Void (Void)
-
 import qualified Data.Time.Calendar as DT
 
 import Text.Megaparsec
-  (Parsec, choice, hidden, noneOf, option, optional, skipMany, (<|>))
+  (choice, hidden, noneOf, option, optional, skipMany)
 import Text.Megaparsec.Char (spaceChar, string)
 import qualified Text.Megaparsec.Char.Lexer as L
 

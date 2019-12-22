@@ -1,12 +1,6 @@
 module TestDateParser where
 
-import Data.List.NonEmpty (NonEmpty (..))
-
-import qualified Data.Set as E
-
 import qualified Data.Time.Calendar as DT
-
-import Text.Heredoc (here)
 
 import Test.Hspec (Spec, describe, it)
 
@@ -16,7 +10,6 @@ import Test.Hspec.Megaparsec
 import Text.Megaparsec (parse, runParser')
 
 
-import Data.Expenses.Parse.Megaparsec.Types (Parser)
 import qualified Data.Expenses.Parse.Megaparsec.DateDirective as PD
 import qualified Data.Expenses.Expense as D
 

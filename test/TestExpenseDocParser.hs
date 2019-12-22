@@ -2,28 +2,18 @@
 
 module TestExpenseDocParser where
 
-import Data.List.NonEmpty (NonEmpty (..))
-
-import qualified Data.Set as E
-
 import Text.Heredoc (here)
 
 import Test.Hspec (Spec, describe, expectationFailure, it, shouldBe)
 
 import Test.Hspec.Megaparsec
-  ( eeof
-  , err
+  ( err
   , elabel
-  , initialState
   , shouldSucceedOn
-  , shouldFailOn
-  , shouldFailWith
-  , shouldParse
-  , utok
   , utoks
   )
 
-import Text.Megaparsec (SourcePos(..), eof, mkPos, parse)
+import Text.Megaparsec (parse)
 
 
 import qualified Data.Expenses.Parse.Megaparsec.ExpensesDoc as PED

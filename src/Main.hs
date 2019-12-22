@@ -7,10 +7,10 @@ import Control.Monad (forM_)
 import Data.Data (Data)
 import Data.Typeable (Typeable)
 
-import System.Environment (getArgs)
-
 import System.Console.CmdArgs
    ( (&=)
+   , CmdArgs
+   , Mode
    , argPos
    , cmdArgsMode
    , cmdArgsRun
@@ -24,7 +24,7 @@ import System.Console.CmdArgs
 
 import Text.CSV (printCSV)
 
-import Text.Megaparsec (eof, errorBundlePretty, parseErrorPretty, runParser)
+import Text.Megaparsec (errorBundlePretty, parseErrorPretty, runParser)
 
 import Data.Expenses.Ledger (outputLedgerFromEntries)
 import Data.Expenses.Parse.Megaparsec.ExpensesDoc
@@ -76,6 +76,7 @@ ledgerMode = Ledger
 
 
 
+mode :: Mode (CmdArgs ExpensesCmd)
 mode =
   cmdArgsMode $ modes [checkMode, csvMode, queryMode, ledgerMode]
     &= help "Utils for expenses file format"
@@ -90,7 +91,7 @@ main = do
   case expensesArgs of
     CSV inputF outputF -> runCsvMode inputF outputF
     Check inputF -> runCheckMode inputF
-    Query attribute inputF -> runQueryMode attribute inputF
+    Query attrib inputF -> runQueryMode attrib inputF
     Ledger inputF outputF -> runLedgerMode inputF outputF
 
 
@@ -134,9 +135,9 @@ runCheckMode inputF =
 
 
 runQueryMode :: String -> FilePath -> IO ()
-runQueryMode attribute inputF = do
-  case attr attribute of
-    Nothing -> putStrLn $ "unknown attribute: " ++ attribute
+runQueryMode qattr inputF = do
+  case attr qattr of
+    Nothing -> putStrLn $ "unknown attribute: " ++ qattr
     Just attr' ->
       withFile inputF $ \directives ->
         let entries = entriesFromDirectives directives

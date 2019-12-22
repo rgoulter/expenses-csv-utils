@@ -11,13 +11,9 @@
 
 module Data.Expenses.Parse.Megaparsec.ExpenseDirective where
 
-import Control.Monad.Combinators.Expr
-
 import Control.Monad (void)
 
 import qualified Data.Decimal as D
-
-import Data.Functor (($>))
 
 import Data.List (intercalate)
 
@@ -46,13 +42,11 @@ import Text.Megaparsec
   , some
   , someTill
   , try
-  , unexpected
   , (<|>)
   )
 import Text.Megaparsec.Char
   ( char
   , letterChar
-  , space
   , string
   , tab
   , upperChar
@@ -151,7 +145,7 @@ amount =
 commentOnNextLine :: Parser String
 commentOnNextLine = do
   sc
-  C.newline
+  void C.newline
   c <- C.char '#'
   s <- someTill anySingle (lookAhead (void C.eol <|> eof))
   return (c:s)

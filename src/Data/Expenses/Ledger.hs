@@ -15,7 +15,6 @@ import qualified Data.Text.IO as TI
 
 import qualified Data.Time.Calendar as DT
 
-import qualified Hledger.Data.Posting as HDP
 import qualified Hledger.Data.Transaction as HDT
 import qualified Hledger.Data.Types as HT
 import Hledger.Read (readJournal')
@@ -25,8 +24,6 @@ import Text.Printf (printf)
 import Data.Expenses.Types (Money(..), SimpleTransaction(..))
 import Data.Expenses.Parse.Megaparsec.Entry
   (Entry(..), entryComment, entryDate, entryPrice, entryRemark)
-import Data.Expenses.Parse.Megaparsec.ExpensesDoc (entriesFromDirectives)
-import Data.Expenses.Parse.Megaparsec.Types (LineDirective)
 
 
 
@@ -81,7 +78,7 @@ simpleTransactionsInJournal j =
 
 directiveFromEntry :: Entry -> String
 directiveFromEntry Entry
-                   { entryDate = (y, m, d)
+                   { entryDate = _
                    , entryPrice = price@(dollars, _)
                    , entryRemark = remark
                    } =
@@ -118,15 +115,15 @@ showMoney (amount, currency) =
 showCommaSeparatedNumber :: Int -> String
 showCommaSeparatedNumber x | x < 1000 = show x
 showCommaSeparatedNumber x =
-  let head = showCommaSeparatedNumber (x `div` 1000)
+  let first = showCommaSeparatedNumber (x `div` 1000)
       rest = printf "%03d" (x `mod` 1000) :: String
-  in [i|#{head},#{rest}|]
+  in [i|#{first},#{rest}|]
 
 
 
 showHumanReadableMoney :: (D.Decimal, String) -> String
 showHumanReadableMoney (amount, currency) =
-  let (dollars, cents) = properFraction amount
+  let (dollars, cents) = (properFraction amount) :: (Integer, D.Decimal)
       trailing3Zeros = dollars `mod` 1000 == 0 && cents == 0
       useM = dollars > 1000000 && trailing3Zeros
       useK = dollars > 1000 && (dollars `mod` 1000 == 0 || dollars `mod` 1000 >= 100) && cents == 0

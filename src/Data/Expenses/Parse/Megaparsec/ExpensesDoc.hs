@@ -2,14 +2,11 @@ module Data.Expenses.Parse.Megaparsec.ExpensesDoc where
 
 import Data.Void (Void)
 
-import Control.Monad (void, forM_)
+import Control.Monad (void)
 
 import Data.Either (Either(..), partitionEithers)
-import Data.Maybe (fromMaybe, mapMaybe)
 
 import qualified Data.Time.Calendar as DT
-
-import qualified Text.CSV as CSV
 
 import Text.Megaparsec
   ( ParseError
@@ -21,7 +18,6 @@ import Text.Megaparsec
   , manyTill
   , sepEndBy
   , skipMany
-  , some
   , someTill
   , try
   , withRecovery
@@ -29,17 +25,15 @@ import Text.Megaparsec
   , (<|>)
   )
 import Text.Megaparsec.Char (eol, space, spaceChar, tab)
-import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import Data.Expenses.Expense
-  (DateDirective, Direction(..), Expense(..), nextDate)
+  (nextDate)
 import Data.Expenses.Parse.Megaparsec.Entry
 import Data.Expenses.Parse.Megaparsec.Types
   (LineDirective(..), Parser, RawLineDirective)
 import qualified Data.Expenses.Parse.Megaparsec.DateDirective as PD
 import qualified Data.Expenses.Parse.Megaparsec.ExpenseDirective as PE
-import qualified Data.Expenses.Expense as E
 
 
 
@@ -64,12 +58,12 @@ scn = hidden . skipMany $ choice [ void spaceChar
 
 
 eitherOfLists :: [Either a b] -> Either [a] [b]
-eitherOfLists xs =
+eitherOfLists xxs =
   f pxs
     where
   f ([], xs) = Right xs
   f (xs, _) = Left xs
-  pxs = partitionEithers xs
+  pxs = partitionEithers xxs
 
 
 
@@ -107,21 +101,21 @@ parseExpensesFile =
 
 entriesFromDirectives :: [LineDirective] -> [Entry]
 entriesFromDirectives directives =
-  let init = ((-1, -1, -1), DT.Monday, [])
+  let initial = ((-1, -1, -1), DT.Monday, [])
 
       -- Fold over a (Date, Day, GatheredRows)
-      (_, _, rows) =
+      (_, _, directiveRows) =
         foldl (\(date, day, rows) lineD ->
                  case lineD of
                    -- For ExpenseDirectives, simply add to list of 'rows'.
-                   ExpCmd exp ->
-                     (date, day, entryFromExpense date exp : rows)
+                   ExpCmd expense ->
+                     (date, day, entryFromExpense date expense : rows)
 
                    -- For DateDirectives, increment/set the date/day.
                    DateCmd dateDir ->
                      let (date', day') = nextDate (date, day) dateDir
                      in  (date', day', rows))
-              init
+              initial
               directives
-      rows' = reverse rows
+      rows' = reverse directiveRows
   in  rows'

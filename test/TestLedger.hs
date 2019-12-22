@@ -9,11 +9,8 @@ import Data.String.Interpolate.Util (unindent)
 
 import qualified Data.Text as T
 
-import qualified Data.Time.Calendar as DT
-
 import Hledger.Read (readJournal')
 
-import qualified Data.Expenses.Expense as E
 import qualified Data.Expenses.Ledger as L
 import Data.Expenses.Types (Money(Amount), Entry(..), SimpleTransaction(..))
 
@@ -21,7 +18,7 @@ import Data.Expenses.Types (Money(Amount), Entry(..), SimpleTransaction(..))
 
 sampleEntry :: Entry
 sampleEntry =
-  Entry (2018, 01, 01) (fromIntegral 5, "SGD") "on McDonalds" Nothing
+  Entry (2018, 01, 01) (fromInteger 5, "SGD") "on McDonalds" Nothing
 
 
 
@@ -35,22 +32,9 @@ sampleTransaction =
 
 
 
-sampleJournalWithTransactions :: String
-sampleJournalWithTransactions =
-  unindent [i|
-  2018-01-01 on McDonalds
-    Expenses:Food  5.0 SGD
-    Assets:Cash:SGD
-
-  2018-01-02 at Guardian
-    Expenses:Toiletries  5.0 SGD
-    Assets:Cash:SGD|]
-
-
-
 entryWithComment :: Entry
 entryWithComment =
-  Entry (2018, 01, 01) (fromIntegral 5, "SGD") "on McDonalds" (Just "# comment")
+  Entry (2018, 01, 01) (fromInteger 5, "SGD") "on McDonalds" (Just "# comment")
 
 
 
@@ -68,7 +52,7 @@ transactionWithComment =
 entryWithMultilineComment :: Entry
 entryWithMultilineComment =
   Entry (2018, 01, 01)
-        (fromIntegral 5, "SGD")
+        (fromInteger 5, "SGD")
         "on McDonalds"
         (Just "# comment1\n# comment2")
 
@@ -100,28 +84,28 @@ ledgerSpec =
               let message = [i|should show #{input} as '#{expectedOutput}'"|]
               in it message $
                    L.showHumanReadableMoney input `shouldBe` expectedOutput
-        (fromIntegral 5, "SGD") `shouldShowAsHumanReadable` "5 SGD"
+        (fromInteger 5, "SGD") `shouldShowAsHumanReadable` "5 SGD"
         (fromRational 5.05, "SGD") `shouldShowAsHumanReadable` "5.05 SGD"
         (fromRational 1.25, "SGD") `shouldShowAsHumanReadable` "1.25 SGD"
         (fromRational 1.50, "SGD") `shouldShowAsHumanReadable` "1.5 SGD"
-        (fromIntegral 2000, "SGD") `shouldShowAsHumanReadable` "2k SGD"
-        (fromIntegral 65000, "VND") `shouldShowAsHumanReadable` "65k VND"
-        (fromIntegral 10500, "VND") `shouldShowAsHumanReadable` "10.5k VND"
-        (fromIntegral 10035, "VND") `shouldShowAsHumanReadable` "10,035 VND"
-        (fromIntegral 3000000, "VND") `shouldShowAsHumanReadable` "3m VND"
-        (fromIntegral 3100000, "VND") `shouldShowAsHumanReadable` "3.1m VND"
-        (fromIntegral 3100005, "VND")
+        (fromInteger 2000, "SGD") `shouldShowAsHumanReadable` "2k SGD"
+        (fromInteger 65000, "VND") `shouldShowAsHumanReadable` "65k VND"
+        (fromInteger 10500, "VND") `shouldShowAsHumanReadable` "10.5k VND"
+        (fromInteger 10035, "VND") `shouldShowAsHumanReadable` "10,035 VND"
+        (fromInteger 3000000, "VND") `shouldShowAsHumanReadable` "3m VND"
+        (fromInteger 3100000, "VND") `shouldShowAsHumanReadable` "3.1m VND"
+        (fromInteger 3100005, "VND")
           `shouldShowAsHumanReadable`
             "3,100,005 VND"
     describe "showMoney" $ do
       let shouldShowAsMoney input expectedOutput =
             let message = [i|should show #{input} as '#{expectedOutput}'"|]
             in it message $ L.showMoney input `shouldBe` expectedOutput
-      (fromIntegral 1, "SGD") `shouldShowAsMoney` "1.00 SGD"
+      (fromInteger 1, "SGD") `shouldShowAsMoney` "1.00 SGD"
       (fromRational 1.05, "SGD") `shouldShowAsMoney` "1.05 SGD"
       (fromRational 1.5, "SGD") `shouldShowAsMoney` "1.50 SGD"
       (fromRational 1.25, "SGD") `shouldShowAsMoney` "1.25 SGD"
-      (fromIntegral 1000, "SGD") `shouldShowAsMoney` "1,000.00 SGD"
+      (fromInteger 1000, "SGD") `shouldShowAsMoney` "1,000.00 SGD"
       (fromRational 1234567.89, "SGD") `shouldShowAsMoney` "1,234,567.89 SGD"
     describe "simpleTransactionsInJournal" $
       it "should get a SimpleTransaction from a sample ledger journal" $ do
@@ -134,7 +118,7 @@ ledgerSpec =
         actualTransactions
           `shouldBe`
             [ SimpleTransaction "on McDonalds"
-                                (Amount (fromIntegral 5) (Just "SGD") False)
+                                (Amount (fromInteger 5) (Just "SGD") False)
                                 "Expenses:Food"
                                 "Assets:Cash:SGD"
             ]
@@ -156,11 +140,11 @@ ledgerSpec =
       it "should show a Ledger journal with multiple transactions" $ do
         let inputEntries =
               [ Entry (2018, 01, 01)
-                      (fromIntegral 5, "SGD")
+                      (fromInteger 5, "SGD")
                       "on McDonalds"
                       Nothing
               , Entry (2018, 01, 03)
-                      (fromIntegral 2000, "SGD")
+                      (fromInteger 2000, "SGD")
                       "on new computer"
                       Nothing
               ]

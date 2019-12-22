@@ -4,14 +4,8 @@ module TestExpenseParser where
 
 import qualified Data.Decimal as D
 
-import Data.List.NonEmpty (NonEmpty (..))
-
-import qualified Data.Set as E
-
 import Data.String.Interpolate (i)
 import Data.String.Interpolate.Util (unindent)
-
-import Text.Heredoc (here)
 
 import Test.Hspec (Spec, describe, it, shouldBe)
 
@@ -71,12 +65,12 @@ parseExpenseDirectiveSpec =
             let message = [i|should parse case '#{input}' as #{expectedOutput}|]
             in it message $
               parse PE.dollarsAndCents "" input `shouldParse` expectedOutput
-      "1"    `shouldParseAsDollarsAndCents` fromIntegral 1
+      "1"    `shouldParseAsDollarsAndCents` fromInteger 1
       "1.23" `shouldParseAsDollarsAndCents` fromRational 1.23
       "1.05" `shouldParseAsDollarsAndCents` fromRational 1.05
       "1.5"  `shouldParseAsDollarsAndCents` D.Decimal 1 15
       it "should ignore commas; e.g. '1,234.0', etc." $ do
-        parse PE.dollarsAndCents ""  "1,234"  `shouldParse` fromIntegral 1234
+        parse PE.dollarsAndCents ""  "1,234"  `shouldParse` fromInteger 1234
       it "consumes trailing spaces" $ do
         -- consume everything until the newline, for the 'remark'
         runParser' PE.dollarsAndCents (initialState "1.23 k")
@@ -85,7 +79,7 @@ parseExpenseDirectiveSpec =
     describe "amount" $ do
       -- amount [~] 1[.23] [CUR]
       it "should shift Decimal; 1.23 < 3 => 1230" $ do
-        PE.shiftDecimalPlaces 3 (fromRational 1.23) `shouldBe` fromIntegral 1230
+        PE.shiftDecimalPlaces 3 (fromRational 1.23) `shouldBe` fromInteger 1230
       it "should parse cases like '1', '~1', '1.23', '1 NZD', etc." $ do
         parse PE.amount ""  "1.23"
           `shouldParse`
@@ -95,40 +89,40 @@ parseExpenseDirectiveSpec =
             E.Amount (fromRational 1.23) Nothing True
         parse PE.amount ""  "1"
           `shouldParse`
-            E.Amount (fromIntegral 1) Nothing False
+            E.Amount (fromInteger 1) Nothing False
         -- Note that, if we test for currencies other than USD,
         parse PE.amount ""  "1 USD"
           `shouldParse`
-            E.Amount (fromIntegral 1) (Just "USD") False
+            E.Amount (fromInteger 1) (Just "USD") False
         parse PE.amount ""  "1 NZD"
           `shouldParse`
-            E.Amount (fromIntegral 1) (Just "NZD") False
+            E.Amount (fromInteger 1) (Just "NZD") False
         parse PE.amount ""  "1 SGD"
           `shouldParse`
-            E.Amount (fromIntegral 1) (Just "SGD") False
+            E.Amount (fromInteger 1) (Just "SGD") False
         parse PE.amount ""  "1 MYR"
           `shouldParse`
-            E.Amount (fromIntegral 1) (Just "MYR") False
+            E.Amount (fromInteger 1) (Just "MYR") False
       it "should allow a suffix of 'k' for 1,000x" $ do
         parse PE.amount ""  "1k "
           `shouldParse`
-            E.Amount (fromIntegral 1000) Nothing False
+            E.Amount (fromInteger 1000) Nothing False
         parse PE.amount ""  "1 k"
           `shouldParse`
-            E.Amount (fromIntegral 1000) Nothing False
+            E.Amount (fromInteger 1000) Nothing False
         parse PE.amount ""  "1.23k "
           `shouldParse`
-            E.Amount (fromIntegral 1230) Nothing False
+            E.Amount (fromInteger 1230) Nothing False
         parse PE.amount ""  "1.23 k"
           `shouldParse`
-            E.Amount (fromIntegral 1230) Nothing False
+            E.Amount (fromInteger 1230) Nothing False
       it "should allow a suffix of 'm' for 1,000,000x" $ do
         parse PE.amount ""  "1.23m "
           `shouldParse`
-            E.Amount (fromIntegral 1230000) Nothing False
+            E.Amount (fromInteger 1230000) Nothing False
         parse PE.amount ""  "1.234 m"
           `shouldParse`
-            E.Amount (fromIntegral 1234000) Nothing False
+            E.Amount (fromInteger 1234000) Nothing False
       it "should fail to parse not-amount (e.g. S$123, $123, MON, etc.)" $ do
         parse PE.amount "" `shouldFailOn` "NotAnAmount"
         parse PE.amount "" `shouldFailOn` "S$123"

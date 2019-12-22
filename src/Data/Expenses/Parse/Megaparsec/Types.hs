@@ -2,7 +2,7 @@ module Data.Expenses.Parse.Megaparsec.Types where
 
 import Data.Void (Void)
 
-import Text.Megaparsec (ParseError, Parsec, hidden, optional, skipMany, (<|>))
+import Text.Megaparsec (ParseError, Parsec)
 
 import Data.Expenses.Expense (DateDirective, Expense)
 

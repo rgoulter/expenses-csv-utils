@@ -52,7 +52,7 @@ nextDate ((y, m, d), dy) (DateDir Nothing dy') =
 
 
 
-nextDate ((y, m, d), dy) (DateDir (Just day') dy') =
+nextDate _ (DateDir (Just day') dy') =
   -- Simply just use the new date/day
   ((fromIntegral y', m', d'), dy')
     where
