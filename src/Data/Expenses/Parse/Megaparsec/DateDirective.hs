@@ -15,7 +15,7 @@ import Control.Monad (void)
 
 import Data.Functor (($>))
 
-import qualified Data.Time.Calendar as DT
+import qualified Data.Time.Calendar.Compat as DT
 
 import Text.Megaparsec
   (choice, hidden, noneOf, option, optional, skipMany)

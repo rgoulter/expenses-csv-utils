@@ -13,7 +13,7 @@ import Data.String.Interpolate.Util (unindent)
 import qualified Data.Text as T
 import qualified Data.Text.IO as TI
 
-import qualified Data.Time.Calendar as DT
+import qualified Data.Time.Calendar.Compat as DT
 
 import qualified Hledger.Data.Transaction as HDT
 import qualified Hledger.Data.Types as HT

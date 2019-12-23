@@ -2,7 +2,7 @@ module TestExpense where
 
 import Test.Hspec (Spec, describe, it, shouldBe)
 
-import qualified Data.Time.Calendar as DT
+import qualified Data.Time.Calendar.Compat as DT
 
 import qualified Data.Expenses.Expense as E
 

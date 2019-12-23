@@ -9,7 +9,7 @@ module Data.Expenses.Expense
   )
 where
 
-import qualified Data.Time.Calendar as DT
+import qualified Data.Time.Calendar.Compat as DT
 
 import Data.Expenses.Types
   ( DateDirective(DateDir)

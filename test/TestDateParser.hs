@@ -1,6 +1,6 @@
 module TestDateParser where
 
-import qualified Data.Time.Calendar as DT
+import qualified Data.Time.Calendar.Compat as DT
 
 import Test.Hspec (Spec, describe, it)
 

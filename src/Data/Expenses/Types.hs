@@ -2,7 +2,7 @@ module Data.Expenses.Types where
 
 import qualified Data.Decimal as D
 
-import Data.Time.Calendar (Day, DayOfWeek)
+import Data.Time.Calendar.Compat (Day, DayOfWeek)
 
 data DateDirective = DateDir
     { dateDirDate :: Maybe Day

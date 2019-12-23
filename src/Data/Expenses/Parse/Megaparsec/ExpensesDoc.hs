@@ -6,7 +6,7 @@ import Control.Monad (void)
 
 import Data.Either (Either(..), partitionEithers)
 
-import qualified Data.Time.Calendar as DT
+import qualified Data.Time.Calendar.Compat as DT
 
 import Text.Megaparsec
   ( ParseError
