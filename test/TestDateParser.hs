@@ -42,8 +42,8 @@ parseDateDirectiveSpec =
         parse PD.dayOfWeek "" `shouldFailOn` "Received"
 
     describe "date" $ do
-      it "should parse cases like yyyy-mm-dd" $ do
-        parse PD.date "" "1234-56-78"   `shouldParse` (DT.fromGregorian 1234 56 78)
+      it "should parse cases like yyyy-mm-dd" $
+        parse PD.date "" "1234-56-78"   `shouldParse` DT.fromGregorian 1234 56 78
       it "should fail on non-functional cases" $ do
         parse PD.date "" `shouldFailOn` "NotADate"
         parse PD.date "" `shouldFailOn` "1234"
@@ -53,9 +53,9 @@ parseDateDirectiveSpec =
         parse PD.date "" `shouldFailOn` "MON"
 
     describe "dateDirective" $ do
-      it "should handle cases like 'SUN', etc." $ do
+      it "should handle cases like 'SUN', etc." $
         parse PD.dateDirective "" "SUN" `shouldParse` D.DateDir Nothing DT.Sunday
-      it "should handle cases like 'yyyy-mm-dd SUN', etc." $ do
+      it "should handle cases like 'yyyy-mm-dd SUN', etc." $
         parse PD.dateDirective "" "1234-56-78 SUN"
           `shouldParse` D.DateDir (Just (DT.fromGregorian 1234 56 78)) DT.Sunday
       it "should handle cases like 'yyyy-mm-dd', etc." $ do

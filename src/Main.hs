@@ -135,7 +135,7 @@ runCheckMode inputF =
 
 
 runQueryMode :: String -> FilePath -> IO ()
-runQueryMode qattr inputF = do
+runQueryMode qattr inputF =
   case attr qattr of
     Nothing -> putStrLn $ "unknown attribute: " ++ qattr
     Just attr' ->

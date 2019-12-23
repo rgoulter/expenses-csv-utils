@@ -50,7 +50,7 @@ parseExpenseDirectiveSpec =
         parse PE.direction "" `shouldFailOn` "2016-02-01 MON"
         parse PE.direction "" `shouldFailOn` "Sent"
 
-      it "parse errors should be the first word" $ do
+      it "parse errors should be the first word" $
         parse PE.direction "" "Sent 100 SGD on blah"
           `shouldFailWith` err 0 (utoks "Sent" <>
                                   etoks "Spent" <>
@@ -65,21 +65,21 @@ parseExpenseDirectiveSpec =
             let message = [i|should parse case '#{input}' as #{expectedOutput}|]
             in it message $
               parse PE.dollarsAndCents "" input `shouldParse` expectedOutput
-      "1"    `shouldParseAsDollarsAndCents` fromInteger 1
+      "1"    `shouldParseAsDollarsAndCents` 1
       "1.23" `shouldParseAsDollarsAndCents` fromRational 1.23
       "1.05" `shouldParseAsDollarsAndCents` fromRational 1.05
       "1.5"  `shouldParseAsDollarsAndCents` D.Decimal 1 15
-      it "should ignore commas; e.g. '1,234.0', etc." $ do
-        parse PE.dollarsAndCents ""  "1,234"  `shouldParse` fromInteger 1234
-      it "consumes trailing spaces" $ do
+      it "should ignore commas; e.g. '1,234.0', etc." $
+        parse PE.dollarsAndCents ""  "1,234"  `shouldParse` 1234
+      it "consumes trailing spaces" $
         -- consume everything until the newline, for the 'remark'
         runParser' PE.dollarsAndCents (initialState "1.23 k")
           `succeedsLeaving` "k"
 
     describe "amount" $ do
       -- amount [~] 1[.23] [CUR]
-      it "should shift Decimal; 1.23 < 3 => 1230" $ do
-        PE.shiftDecimalPlaces 3 (fromRational 1.23) `shouldBe` fromInteger 1230
+      it "should shift Decimal; 1.23 < 3 => 1230" $
+        PE.shiftDecimalPlaces 3 (fromRational 1.23) `shouldBe` 1230
       it "should parse cases like '1', '~1', '1.23', '1 NZD', etc." $ do
         parse PE.amount ""  "1.23"
           `shouldParse`
@@ -89,40 +89,40 @@ parseExpenseDirectiveSpec =
             E.Amount (fromRational 1.23) Nothing True
         parse PE.amount ""  "1"
           `shouldParse`
-            E.Amount (fromInteger 1) Nothing False
+            E.Amount 1 Nothing False
         -- Note that, if we test for currencies other than USD,
         parse PE.amount ""  "1 USD"
           `shouldParse`
-            E.Amount (fromInteger 1) (Just "USD") False
+            E.Amount 1 (Just "USD") False
         parse PE.amount ""  "1 NZD"
           `shouldParse`
-            E.Amount (fromInteger 1) (Just "NZD") False
+            E.Amount 1 (Just "NZD") False
         parse PE.amount ""  "1 SGD"
           `shouldParse`
-            E.Amount (fromInteger 1) (Just "SGD") False
+            E.Amount 1 (Just "SGD") False
         parse PE.amount ""  "1 MYR"
           `shouldParse`
-            E.Amount (fromInteger 1) (Just "MYR") False
+            E.Amount 1 (Just "MYR") False
       it "should allow a suffix of 'k' for 1,000x" $ do
         parse PE.amount ""  "1k "
           `shouldParse`
-            E.Amount (fromInteger 1000) Nothing False
+            E.Amount 1000 Nothing False
         parse PE.amount ""  "1 k"
           `shouldParse`
-            E.Amount (fromInteger 1000) Nothing False
+            E.Amount 1000 Nothing False
         parse PE.amount ""  "1.23k "
           `shouldParse`
-            E.Amount (fromInteger 1230) Nothing False
+            E.Amount 1230 Nothing False
         parse PE.amount ""  "1.23 k"
           `shouldParse`
-            E.Amount (fromInteger 1230) Nothing False
+            E.Amount 1230 Nothing False
       it "should allow a suffix of 'm' for 1,000,000x" $ do
         parse PE.amount ""  "1.23m "
           `shouldParse`
-            E.Amount (fromInteger 1230000) Nothing False
+            E.Amount 1230000 Nothing False
         parse PE.amount ""  "1.234 m"
           `shouldParse`
-            E.Amount (fromInteger 1234000) Nothing False
+            E.Amount 1234000 Nothing False
       it "should fail to parse not-amount (e.g. S$123, $123, MON, etc.)" $ do
         parse PE.amount "" `shouldFailOn` "NotAnAmount"
         parse PE.amount "" `shouldFailOn` "S$123"
@@ -132,7 +132,7 @@ parseExpenseDirectiveSpec =
 
     describe "expense" $ do
       -- expense (dir, amt, remark)
-      it "should parse expense directive (working cases)" $ do
+      it "should parse expense directive (working cases)" $
         parse PE.expense "" "Spent 1.23 on food"
           `shouldParse`
             E.Expense E.Spent
@@ -140,10 +140,10 @@ parseExpenseDirectiveSpec =
                       "on food"
                       Nothing
 
-      it "should not parse not expense directive" $ do
+      it "should not parse not expense directive" $
         parse PE.expense "" `shouldFailOn` "NotAnExpenseDirective"
 
-      it "doesn't parse beyond EOL (when there are no comments)" $ do
+      it "doesn't parse beyond EOL (when there are no comments)" $
         -- consume everything until the newline, for the 'remark'
         runParser' PE.expense (initialState "Spent 1 on x\nnext")
           `succeedsLeaving` "\nnext"
@@ -162,7 +162,7 @@ parseExpenseDirectiveSpec =
           `failsLeaving` "#cmt\nnext"
 
       describe "expense directive comments" $ do
-        it "should parse a comment that starts at the beginning of the following line" $ do
+        it "should parse a comment that starts at the beginning of the following line" $
           parse PE.expense
                 ""
                 (unindent [i|
@@ -173,7 +173,7 @@ parseExpenseDirectiveSpec =
                         (E.Amount (fromRational 1.23) Nothing False)
                         "on food"
                         (Just "# comment")
-        it "should parse comments that start at the beginning of the following line" $ do
+        it "should parse comments that start at the beginning of the following line" $
           parse PE.expense
                 ""
                 (unindent [i|
@@ -186,8 +186,8 @@ parseExpenseDirectiveSpec =
                         "on food"
                         (Just "# comment1\n# comment2")
 
-      describe "parse error for \"Sent 100 SGD blah\"" $ do
-        it "should show unexpected \"Sent\", expected \"Spent\" or \"Received\"" $ do
+      describe "parse error for \"Sent 100 SGD blah\"" $
+        it "should show unexpected \"Sent\", expected \"Spent\" or \"Received\"" $
           -- TBH, it's a bit strange that it's "unexpected Sent 100"
           parse PE.expense "" "Sent 100 SGD blah"
           `shouldFailWith` err 0 (utoks "Sent" <>

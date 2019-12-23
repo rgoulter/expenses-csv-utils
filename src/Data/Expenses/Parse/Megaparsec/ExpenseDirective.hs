@@ -15,16 +15,16 @@ import Control.Monad (void)
 
 import qualified Data.Decimal as D
 
+import Data.Functor (($>))
+
 import Data.List (intercalate)
 
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isJust)
 
 import qualified Data.List.NonEmpty as NE
 
 import qualified Data.Set as Set
 
-
-import Data.Maybe (isJust)
 
 import Text.Megaparsec
   ( ErrorItem(Tokens)
@@ -83,8 +83,8 @@ direction :: Parser Direction
 direction = do
   word <- lookAhead $ many letterChar :: Parser String
   case word of
-    "Spent" -> (string "Spent" :: Parser String) *> sc *> return Spent
-    "Received" -> (string "Received" :: Parser String) *> sc *> return Received
+    "Spent" -> ((string "Spent" :: Parser String) *> sc) $> Spent
+    "Received" -> ((string "Received" :: Parser String) *> sc) $> Received
     _ -> failure (Just $ Tokens $ NE.fromList word)
                  (Set.fromList [ Tokens (NE.fromList "Spent")
                                , Tokens (NE.fromList "Received")
@@ -113,7 +113,7 @@ shiftDecimalPlaces :: Int -> D.Decimal -> D.Decimal
 shiftDecimalPlaces mul value =
   let places = D.decimalPlaces value
       mantissa = D.decimalMantissa value
-      mul' = (fromIntegral mul) - places
+      mul' = fromIntegral mul - places
       value' = D.Decimal
                 { D.decimalPlaces = 0
                 , D.decimalMantissa =  (10 ^ mul') * mantissa
@@ -164,5 +164,5 @@ expense =
   do dir <- direction
      am  <- amount
      remark <- many (noneOf "\n\r\0")
-     comment <- optional $ commentsOnFollowingLines
+     comment <- optional commentsOnFollowingLines
      return $ Expense dir am remark comment

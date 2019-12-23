@@ -85,7 +85,7 @@ directiveFromEntry Entry
   [i|#{direction} #{price'} #{remark}|]
     where
       price' = showHumanReadableMoney price
-      direction = if (dollars >= 0) then "Spent" else "Received"
+      direction = if dollars >= 0 then "Spent" else "Received"
 
 
 
@@ -123,30 +123,25 @@ showCommaSeparatedNumber x =
 
 showHumanReadableMoney :: (D.Decimal, String) -> String
 showHumanReadableMoney (amount, currency) =
-  let (dollars, cents) = (properFraction amount) :: (Integer, D.Decimal)
+  let (dollars, cents) = properFraction amount :: (Integer, D.Decimal)
       trailing3Zeros = dollars `mod` 1000 == 0 && cents == 0
       useM = dollars > 1000000 && trailing3Zeros
       useK = dollars > 1000 && (dollars `mod` 1000 == 0 || dollars `mod` 1000 >= 100) && cents == 0
-      (dollars', cents', modifier) =
-        if useM then
+      (dollars', cents', modifier)
+        | useM =
           ( dollars `div` 1000000
           , D.Decimal 3 $ fromIntegral $ (dollars `mod` 1000000) `div` 1000
           , "m"
           )
-        else
-          if useK then
+        | useK =
             (dollars `div` 1000, D.Decimal 3 $ fromIntegral $ dollars `mod` 1000, "k")
-          else
+        | otherwise =
             (dollars, cents, "")
       humanReadableDollars = showCommaSeparatedNumber $ fromIntegral dollars'
-      humanReadableCents =
-        if cents' == 0 then
-          ""
-        else
-          if useM || useK then
-            drop 1 $ show $ D.normalizeDecimal cents'
-          else
-            drop 1 $ show cents'
+      humanReadableCents
+        | cents' == 0 = ""
+        | useM || useK = drop 1 $ show $ D.normalizeDecimal cents'
+        | otherwise = drop 1 $ show cents'
   in [i|#{humanReadableDollars}#{humanReadableCents}#{modifier} #{currency}|]
 
 
