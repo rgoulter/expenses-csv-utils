@@ -1,3 +1,7 @@
+## Simple Expenses Utils
+
+[![Build Status](https://travis-ci.com/rgoulter/expenses-utils.svg?branch=master)](https://travis-ci.com/rgoulter/expenses-utils)
+
 I use this program to convert from a simple daybook format such as
 
 ```
