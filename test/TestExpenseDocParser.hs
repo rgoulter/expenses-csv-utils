@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module TestExpenseDocParser where
+module TestExpenseDocParser (parseExpensesFileSpec) where
 
 import Data.String.Interpolate (i)
 import Data.String.Interpolate.Util (unindent)

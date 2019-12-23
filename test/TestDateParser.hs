@@ -1,4 +1,4 @@
-module TestDateParser where
+module TestDateParser (parseDateDirectiveSpec) where
 
 import qualified Data.Time.Calendar.Compat as DT
 

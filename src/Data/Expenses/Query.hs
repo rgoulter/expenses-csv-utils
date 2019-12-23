@@ -1,4 +1,4 @@
-module Data.Expenses.Query where
+module Data.Expenses.Query (attr, queryDirectives) where
 
 import Text.Printf (printf)
 

@@ -1,4 +1,4 @@
-module TestExpense where
+module TestExpense (expenseSpec) where
 
 import Test.Hspec (Spec, describe, it, shouldBe)
 

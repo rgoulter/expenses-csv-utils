@@ -1,4 +1,4 @@
-module Data.Expenses.ToCSV where
+module Data.Expenses.ToCSV (recordsFromDirectives) where
 
 import Text.CSV as CSV
 

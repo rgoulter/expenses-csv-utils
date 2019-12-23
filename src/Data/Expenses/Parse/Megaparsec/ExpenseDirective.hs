@@ -9,7 +9,8 @@
 -- No real value in distinguishing various details in the remark
 -- at this point. (e.g. "location").
 
-module Data.Expenses.Parse.Megaparsec.ExpenseDirective where
+module Data.Expenses.Parse.Megaparsec.ExpenseDirective
+  (amount, direction, dollarsAndCents, expense, shiftDecimalPlaces) where
 
 import Control.Monad (void)
 
@@ -71,11 +72,6 @@ lexeme = L.lexeme sc
 
 symbol :: String -> Parser String
 symbol = L.symbol sc
-
-
-
-integer :: Parser Integer
-integer = lexeme L.decimal
 
 
 

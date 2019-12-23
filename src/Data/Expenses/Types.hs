@@ -1,4 +1,12 @@
-module Data.Expenses.Types where
+module Data.Expenses.Types
+  ( DateDirective(..)
+  , Direction(..)
+  , Entry(..)
+  , Expense(..)
+  , Money(..)
+  , QueryAttribute(..)
+  , SimpleTransaction(..)
+  ) where
 
 import qualified Data.Decimal as D
 

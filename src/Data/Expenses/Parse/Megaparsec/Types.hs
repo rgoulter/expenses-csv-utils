@@ -1,4 +1,5 @@
-module Data.Expenses.Parse.Megaparsec.Types where
+module Data.Expenses.Parse.Megaparsec.Types
+  (Parser, LineDirective(..), RawLineDirective) where
 
 import Data.Void (Void)
 

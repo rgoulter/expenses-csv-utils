@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module TestExpenseParser where
+module TestExpenseParser (parseExpenseDirectiveSpec) where
 
 import qualified Data.Decimal as D
 

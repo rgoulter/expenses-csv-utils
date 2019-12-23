@@ -9,7 +9,8 @@
 -- MON, TUE, WED, THURS, FRI, SAT, SUN
 --  (also TUES, WEDS)
 
-module Data.Expenses.Parse.Megaparsec.DateDirective where
+module Data.Expenses.Parse.Megaparsec.DateDirective
+  (date, dateDirective, dayOfWeek) where
 
 import Control.Monad (void)
 
@@ -62,7 +63,7 @@ dayOfWeek =
 
 date :: Parser DT.Day
 date =
-  do yyyy <- fromIntegral <$> integer
+  do yyyy <- integer
      void  dash
      mm <- fromIntegral <$> integer
      void  dash

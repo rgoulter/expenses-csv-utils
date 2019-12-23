@@ -1,4 +1,8 @@
-module Data.Expenses.Parse.Megaparsec.ExpensesDoc where
+module Data.Expenses.Parse.Megaparsec.ExpensesDoc
+  ( eitherOfLists
+  , entriesFromDirectives
+  , parseExpensesFile
+  ) where
 
 import Data.Void (Void)
 
@@ -24,7 +28,7 @@ import Text.Megaparsec
   , (<?>)
   , (<|>)
   )
-import Text.Megaparsec.Char (eol, space, spaceChar, tab)
+import Text.Megaparsec.Char (eol, spaceChar)
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import Data.Expenses.Expense
@@ -39,14 +43,6 @@ import qualified Data.Expenses.Parse.Megaparsec.ExpenseDirective as PE
 
 
 -- PARSER
-
-
-
-sc :: Parser ()
-sc = hidden . skipMany $ choice [ void space
-                                , void tab
-                                , L.skipLineComment "#"
-                                ]
 
 
 

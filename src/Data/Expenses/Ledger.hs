@@ -1,6 +1,14 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Data.Expenses.Ledger where
+module Data.Expenses.Ledger
+  ( outputLedgerFromEntries
+  , showCommaSeparatedNumber
+  , showHumanReadableMoney
+  , showLedgerJournalFromEntries
+  , showLedgerTransactionFromEntry
+  , showMoney
+  , simpleTransactionsInJournal
+  ) where
 
 import qualified Data.Decimal as D
 
@@ -11,26 +19,17 @@ import Data.String.Interpolate (i)
 import Data.String.Interpolate.Util (unindent)
 
 import qualified Data.Text as T
-import qualified Data.Text.IO as TI
 
 import qualified Data.Time.Calendar.Compat as DT
 
 import qualified Hledger.Data.Transaction as HDT
 import qualified Hledger.Data.Types as HT
-import Hledger.Read (readJournal')
 
 import Text.Printf (printf)
 
 import Data.Expenses.Types (Money(..), SimpleTransaction(..))
 import Data.Expenses.Parse.Megaparsec.Entry
   (Entry(..), entryComment, entryDate, entryPrice, entryRemark)
-
-
-
-readJournal :: FilePath -> IO HT.Journal
-readJournal filepath = do
-  content <- TI.readFile filepath
-  readJournal' content
 
 
 
@@ -130,11 +129,11 @@ showHumanReadableMoney (amount, currency) =
       (dollars', cents', modifier)
         | useM =
           ( dollars `div` 1000000
-          , D.Decimal 3 $ fromIntegral $ (dollars `mod` 1000000) `div` 1000
+          , D.Decimal 3 $ (dollars `mod` 1000000) `div` 1000
           , "m"
           )
         | useK =
-            (dollars `div` 1000, D.Decimal 3 $ fromIntegral $ dollars `mod` 1000, "k")
+            (dollars `div` 1000, D.Decimal 3 $ dollars `mod` 1000, "k")
         | otherwise =
             (dollars, cents, "")
       humanReadableDollars = showCommaSeparatedNumber $ fromIntegral dollars'

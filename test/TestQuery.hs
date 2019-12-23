@@ -1,4 +1,4 @@
-module TestQuery where
+module TestQuery (querySpec) where
 
 import Test.Hspec (Spec, describe, it, shouldBe)
 
