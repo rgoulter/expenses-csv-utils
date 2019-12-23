@@ -1,0 +1,25 @@
+sudo: true
+language: haskell
+
+cache:
+  directories:
+  - "$HOME/.stack"
+  - "$TRAVIS_BUILD_DIR/.stack-work"
+
+ghc:
+- 8.6.5
+
+before_install:
+- gem install cucumber rspec
+- curl -sSL https://get.haskellstack.org/ | sh
+- stack --version
+
+install:
+- stack build --system-ghc --copy-bins --no-run-tests --no-run-benchmarks
+
+script:
+- stack test --system-ghc
+- cucumber
+
+notifications:
+  email: false
