@@ -16,8 +16,6 @@ import Control.Monad (void)
 
 import qualified Data.Decimal as D
 
-import Data.Functor (($>))
-
 import Data.List (intercalate)
 
 import Data.Maybe (fromMaybe, isJust)
@@ -79,8 +77,8 @@ direction :: Parser Direction
 direction = do
   word <- lookAhead $ many letterChar :: Parser String
   case word of
-    "Spent" -> ((string "Spent" :: Parser String) *> sc) $> Spent
-    "Received" -> ((string "Received" :: Parser String) *> sc) $> Received
+    "Spent" -> Spent <$ ((string "Spent" :: Parser String) *> sc)
+    "Received" -> Received <$ ((string "Received" :: Parser String) *> sc)
     _ -> failure (Just $ Tokens $ NE.fromList word)
                  (Set.fromList [ Tokens (NE.fromList "Spent")
                                , Tokens (NE.fromList "Received")
