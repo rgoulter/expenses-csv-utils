@@ -39,10 +39,12 @@ library
                      , Data.Expenses.Parse.Megaparsec.ExpensesDoc
                      , Data.Expenses.Parse.Megaparsec.Types
                      , Data.Expenses.Expense
+                     , Data.Expenses.Ledger.AccountSuggestions
                      , Data.Expenses.Ledger
                      , Data.Expenses.Query
                      , Data.Expenses.ToCSV
                      , Data.Expenses.Types
+                     , Data.TagFrequencies
   default-language:    Haskell2010
 
 
@@ -55,6 +57,7 @@ test-suite tests
                      , TestExpenseParser
                      , TestQuery
                      , TestLedger
+                     , TestLedgerAccountSuggestions
 
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
@@ -87,10 +90,12 @@ executable expenses-utils
                    , Data.Expenses.Parse.Megaparsec.ExpensesDoc
                    , Data.Expenses.Parse.Megaparsec.Types
                    , Data.Expenses.Expense
+                   , Data.Expenses.Ledger.AccountSuggestions
                    , Data.Expenses.Ledger
                    , Data.Expenses.Query
                    , Data.Expenses.ToCSV
                    , Data.Expenses.Types
+                   , Data.TagFrequencies
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
                      , cmdargs >=0.10
