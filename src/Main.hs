@@ -35,6 +35,7 @@ import Data.Expenses.ToCSV (recordsFromDirectives)
 
 
 
+
 data ExpensesCmd
   = CSV {src :: FilePath, out :: FilePath}
   | Check {src :: FilePath}
