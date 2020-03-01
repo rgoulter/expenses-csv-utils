@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable, QuasiQuotes #-}
 
 module Main (main) where
 
@@ -6,6 +6,14 @@ import Control.Monad (forM_)
 
 import Data.Data (Data)
 import Data.Typeable (Typeable)
+
+import qualified Data.List.NonEmpty as NE
+
+import Data.String.Interpolate (i)
+
+import qualified Data.Text.IO as TIO
+
+import Hledger.Read (readJournal')
 
 import System.Console.CmdArgs
    ( (&=)
@@ -22,16 +30,32 @@ import System.Console.CmdArgs
    , typ
    )
 
+import System.IO (hFlush, stdout)
+
 import Text.CSV (printCSV)
 
-import Text.Megaparsec (errorBundlePretty, parseErrorPretty, runParser)
+import Text.Megaparsec
+  ( (<|>)
+  , errorBundlePretty
+  , parseErrorPretty
+  , parseMaybe
+  , runParser
+  )
+import qualified Text.Megaparsec.Char.Lexer as L
 
-import Data.Expenses.Ledger (outputLedgerFromEntries)
+import Data.Expenses.Ledger
+  ( outputLedgerFromEntries
+  , simpleTransactionsInJournal
+  , directiveFromEntry
+  , showEntryDateWithDay
+  )
+import Data.Expenses.Ledger.AccountSuggestions (SuggestionResult(..), suggestions)
 import Data.Expenses.Parse.Megaparsec.ExpensesDoc
   (eitherOfLists, entriesFromDirectives, parseExpensesFile)
-import Data.Expenses.Parse.Megaparsec.Types (LineDirective)
+import Data.Expenses.Parse.Megaparsec.Types (LineDirective, Parser)
 import Data.Expenses.Query (attr, queryDirectives)
 import Data.Expenses.ToCSV (recordsFromDirectives)
+import Data.Expenses.Types (Entry(..), SimpleTransaction)
 
 
 
@@ -39,7 +63,11 @@ data ExpensesCmd
   = CSV {src :: FilePath, out :: FilePath}
   | Check {src :: FilePath}
   | Query {attribute :: String, src :: FilePath}
-  | Ledger {src :: FilePath, out :: FilePath}
+  | Ledger { src :: FilePath
+           , out :: FilePath
+           , no_accounts :: Bool
+           , journal :: [FilePath]
+           }
   deriving (Data,Typeable,Show,Eq)
 
 
@@ -70,8 +98,10 @@ queryMode = Query
 
 ledgerMode :: ExpensesCmd
 ledgerMode = Ledger
-  { src = def &= typ "EXPENSES.TXT" &= argPos 3
-  , out = def &= typ "JOURNAL.LEDGER" &= argPos 4
+  { src = def &= argPos 0 &= typ "EXPENSES.TXT"
+  , out = def &= argPos 1 &= typ "JOURNAL.LEDGER"
+  , no_accounts = def &= typ "Fill in accounts "
+  , journal = def &= typ "ledger.dat"
   } &= help "Output to Ledger format"
 
 
@@ -92,7 +122,7 @@ main = do
     CSV inputF outputF -> runCsvMode inputF outputF
     Check inputF -> runCheckMode inputF
     Query attrib inputF -> runQueryMode attrib inputF
-    Ledger inputF outputF -> runLedgerMode inputF outputF
+    Ledger inputF outputF noAccounts journals -> runLedgerMode inputF outputF noAccounts journals
 
 
 
@@ -145,8 +175,73 @@ runQueryMode qattr inputF =
 
 
 
-runLedgerMode :: String -> String -> IO ()
-runLedgerMode inputF outputF =
+readJournal :: FilePath -> IO [SimpleTransaction]
+readJournal journalPath = do
+  journalT <- TIO.readFile journalPath
+  journal' <- readJournal' journalT
+  return $ simpleTransactionsInJournal journal'
+
+
+
+simpleTransactions :: [FilePath] -> IO [SimpleTransaction]
+simpleTransactions journalPaths = do
+  journals <- mapM readJournal journalPaths
+  return $ concat journals
+
+
+
+
+
+readAccount :: [String] -> IO String
+readAccount [] =
+  getLine
+readAccount sugs = do
+  line <- getLine
+  let sugsLen = length sugs
+  -- Inelegant, but easy to implement
+  return $ case line of
+    "1" | sugsLen > 0 -> sugs !! 0
+    "2" | sugsLen > 1 -> sugs !! 1
+    "3" | sugsLen > 2 -> sugs !! 2
+    "4" | sugsLen > 3 -> sugs !! 3
+    "5" | sugsLen > 4 -> sugs !! 4
+    _ -> line
+
+
+promptForEntry :: Entry -> IO String
+promptForEntry e = do
+  putStrLn $ showEntryDateWithDay e
+  putStrLn $ directiveFromEntry e
+  putStrLn ""
+  putStr "Debitted account:"
+  hFlush stdout
+  readAccount []
+
+promptForEntryWith :: [String] -> Entry -> IO String
+promptForEntryWith sugs e = do
+  putStrLn $ showEntryDateWithDay e
+  putStrLn $ directiveFromEntry e
+  putStrLn ""
+  putStrLn "Suggested Accounts:"
+  forM_ (zip sugs [1..]) (\(s, idx) -> putStrLn [i| (#{idx}) #{s}|])
+  putStr "Debitted account:"
+  hFlush stdout
+  readAccount sugs
+
+
+runLedgerMode :: String -> String -> Bool -> [FilePath] -> IO ()
+runLedgerMode inputF outputF useUndescribedAccounts journals = do
+  txns <- simpleTransactions journals
+  let
+    acct :: Entry -> IO String
+    acct e =
+     if useUndescribedAccounts then
+       return "Undescribed"
+     else
+       case suggestions txns (entryRemark e) of
+         Exact a -> return a
+         Ambiguous sugs -> promptForEntryWith (take 9 $ NE.toList sugs) e
+         None -> promptForEntry e
   withFile inputF $ \directives ->
     let entries = entriesFromDirectives directives
-    in outputLedgerFromEntries outputF entries
+    in outputLedgerFromEntries outputF entries acct

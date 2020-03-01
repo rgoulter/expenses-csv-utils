@@ -87,3 +87,118 @@ Feature: Translate Expenses File to Ledger Format
          Assets:Cash:SGD
 
        """
+
+  Scenario: Prompts for input if given no ledger journals
+    Given an expenses file "expenses.txt"
+      """
+      2018-01-01 MON
+      Spent 5 on McDonalds
+      """
+     When I run the command "expenses-utils ledger expenses.txt journal.ledger"
+     Then the standard output should be
+       """
+       2018-01-01 Monday
+       Spent 5 SGD on McDonalds
+
+       Debitted account:
+       """
+
+  Scenario: Uses input from prompt for output ledger file
+    Given an expenses file "expenses.txt"
+      """
+      2018-01-01 MON
+      Spent 5 on McDonalds
+      """
+     When I run the command "expenses-utils ledger expenses.txt journal.ledger"
+      And input "Expenses:Food"
+     Then the file "journal.ledger" should have content
+       """
+       # 2018-01-01 Monday
+       # Spent 5 SGD on McDonalds
+       2018-01-01 on McDonalds
+         Expenses:Food  5.00 SGD
+         Assets:Cash:SGD
+
+       """
+
+  Scenario: Account used from journal data in case of exact unambiguous match
+    Given an expenses file "expenses.txt"
+      """
+      2018-01-01 MON
+      Spent 5 on McDonalds
+      """
+      And a ledger file "ledger.dat"
+      """
+      2017-12-01 on McDonalds
+        Expenses:Food  5.00 SGD
+        Assets:Cash:SGD
+      """
+     When I run the command "expenses-utils ledger -j ledger.dat expenses.txt journal.ledger"
+     Then the standard output should be
+       """
+       """
+      And the file "journal.ledger" should have content
+       """
+       # 2018-01-01 Monday
+       # Spent 5 SGD on McDonalds
+       2018-01-01 on McDonalds
+         Expenses:Food  5.00 SGD
+         Assets:Cash:SGD
+
+       """
+
+  Scenario: Prompts for input in case of ambiguous match
+    Given an expenses file "expenses.txt"
+      """
+      2018-01-01 MON
+      Spent 5 on McDonalds
+      """
+      And a ledger file "ledger.dat"
+      """
+      2017-12-01 on McDonalds
+        Expenses:Food  5.00 SGD
+        Assets:Cash:SGD
+
+      2017-12-02 on McDonalds
+        Expenses:Dessert  1.50 SGD
+        Assets:Cash:SGD
+      """
+     When I run the command "expenses-utils ledger -j ledger.dat expenses.txt journal.ledger"
+     Then the standard output should be
+       """
+       2018-01-01 Monday
+       Spent 5 SGD on McDonalds
+
+       Suggested Accounts:
+        (1) Expenses:Dessert
+        (2) Expenses:Food
+       Debitted account:
+       """
+
+  Scenario: Uses suggested input number from prompt for output ledger file
+    Given an expenses file "expenses.txt"
+      """
+      2018-01-01 MON
+      Spent 5 on McDonalds
+      """
+      And a ledger file "ledger.dat"
+      """
+      2017-12-01 on McDonalds
+        Expenses:Food  5.00 SGD
+        Assets:Cash:SGD
+
+      2017-12-02 on McDonalds
+        Expenses:Dessert  1.50 SGD
+        Assets:Cash:SGD
+      """
+     When I run the command "expenses-utils ledger -j ledger.dat expenses.txt journal.ledger"
+      And input "2"
+     Then the file "journal.ledger" should have content
+       """
+       # 2018-01-01 Monday
+       # Spent 5 SGD on McDonalds
+       2018-01-01 on McDonalds
+         Expenses:Food  5.00 SGD
+         Assets:Cash:SGD
+
+       """
