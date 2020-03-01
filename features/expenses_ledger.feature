@@ -5,7 +5,7 @@ Feature: Translate Expenses File to Ledger Format
       2018-01-01 MON
       Spent 5 SGD on McDonalds
       """
-     When I run the command "expenses-utils ledger" with "expenses.txt" and "journal.ledger"
+     When I run the command "expenses-utils ledger --no-accounts expenses.txt journal.ledger"
      Then the standard output should be
        """
        """
@@ -28,7 +28,7 @@ Feature: Translate Expenses File to Ledger Format
       WED
       Spent 40 SGD on ez-link top up
       """
-     When I run the command "expenses-utils ledger" with "expenses.txt" and "journal.ledger"
+     When I run the command "expenses-utils ledger --no-accounts expenses.txt journal.ledger"
      Then the standard output should be
        """
        """
@@ -54,7 +54,7 @@ Feature: Translate Expenses File to Ledger Format
       2018-01-01 MON
       Spent 2,000 SGD on new computer
       """
-     When I run the command "expenses-utils ledger" with "expenses.txt" and "journal.ledger"
+     When I run the command "expenses-utils ledger --no-accounts expenses.txt journal.ledger"
      Then the standard output should be
        """
        """
@@ -74,7 +74,7 @@ Feature: Translate Expenses File to Ledger Format
       2018-01-01 MON
       Spent 1.5 on ice cream
       """
-     When I run the command "expenses-utils ledger" with "expenses.txt" and "journal.ledger"
+     When I run the command "expenses-utils ledger --no-accounts expenses.txt journal.ledger"
      Then the standard output should be
        """
        """

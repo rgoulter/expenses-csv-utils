@@ -5,7 +5,7 @@ Feature: Check Expenses File Syntax
       2018-01-01 MON
       Spent 5 SGD on McDonalds
       """
-     When I run the command "expenses-utils check" with "expenses.txt"
+     When I run the command "expenses-utils check expenses.txt"
      Then the standard output should be
        """
        """
@@ -16,7 +16,7 @@ Feature: Check Expenses File Syntax
       2018-01-01 MON
       Sent 5 SGD on McDonalds
       """
-     When I run the command "expenses-utils check" with "expenses.txt"
+     When I run the command "expenses-utils check expenses.txt"
      Then the standard output should be
        """
        offset=15:

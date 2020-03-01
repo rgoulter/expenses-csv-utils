@@ -5,7 +5,7 @@ Feature: Query Attributes of Expenses File Syntax
       2018-01-01 MON
       Spent 5 SGD on McDonalds
       """
-     When I run the command "expenses-utils query earliest" with "expenses.txt"
+     When I run the command "expenses-utils query earliest expenses.txt"
      Then the standard output should be
        """
        2018-01-01
@@ -21,7 +21,7 @@ Feature: Query Attributes of Expenses File Syntax
       2018-06-30
       Spent 5 SGD on McDonalds
       """
-     When I run the command "expenses-utils query latest" with "expenses.txt"
+     When I run the command "expenses-utils query latest expenses.txt"
      Then the standard output should be
        """
        2018-06-30
@@ -37,7 +37,7 @@ Feature: Query Attributes of Expenses File Syntax
       THU
       Spent 5 SGD on McDonalds
       """
-     When I run the command "expenses-utils query latest" with "expenses.txt"
+     When I run the command "expenses-utils query latest expenses.txt"
      Then the standard output should be
        """
        2018-01-04
