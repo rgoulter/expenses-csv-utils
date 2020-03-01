@@ -39,6 +39,7 @@ library
                      , Data.Expenses.Parse.Megaparsec.ExpensesDoc
                      , Data.Expenses.Parse.Megaparsec.Types
                      , Data.Expenses.Expense
+                     , Data.Expenses.Ledger.AccountSuggestions
                      , Data.Expenses.Ledger
                      , Data.Expenses.Query
                      , Data.Expenses.ToCSV
@@ -55,6 +56,7 @@ test-suite tests
                      , TestExpenseParser
                      , TestQuery
                      , TestLedger
+                     , TestLedgerAccountSuggestions
 
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
@@ -87,6 +89,7 @@ executable expenses-utils
                    , Data.Expenses.Parse.Megaparsec.ExpensesDoc
                    , Data.Expenses.Parse.Megaparsec.Types
                    , Data.Expenses.Expense
+                   , Data.Expenses.Ledger.AccountSuggestions
                    , Data.Expenses.Ledger
                    , Data.Expenses.Query
                    , Data.Expenses.ToCSV
