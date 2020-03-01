@@ -70,6 +70,11 @@ transactionWithMultilineComment =
 
 
 
+undescribed :: Entry -> String
+undescribed = const "Undescribed"
+
+
+
 ledgerSpec :: Spec
 ledgerSpec =
   describe "Data.Expenses.Ledger" $ do
@@ -124,15 +129,15 @@ ledgerSpec =
             ]
     describe "showLedgerTransactionFromEntry" $ do
       it "should show a simple Ledger transaction for an Entry" $
-        L.showLedgerTransactionFromEntry sampleEntry
+        L.showLedgerTransactionFromEntry sampleEntry "Undescribed"
           `shouldBe`
             sampleTransaction
       it "should show a simple Ledger transaction for an Entry with a comment" $
-        L.showLedgerTransactionFromEntry entryWithComment
+        L.showLedgerTransactionFromEntry entryWithComment "Undescribed"
           `shouldBe`
             transactionWithComment
       it "should show a simple Ledger transaction for an Entry with a multiline comment" $
-        L.showLedgerTransactionFromEntry entryWithMultilineComment
+        L.showLedgerTransactionFromEntry entryWithMultilineComment "Undescribed"
           `shouldBe`
             transactionWithMultilineComment
 
@@ -162,4 +167,6 @@ ledgerSpec =
                 Undescribed  2,000.00 SGD
                 Assets:Cash:SGD
               |]
-        L.showLedgerJournalFromEntries inputEntries `shouldBe` expectedJournal
+        L.showLedgerJournalFromEntries inputEntries undescribed
+          `shouldBe`
+            expectedJournal

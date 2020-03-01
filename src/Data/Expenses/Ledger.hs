@@ -1,8 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Data.Expenses.Ledger
-  ( outputLedgerFromEntries
+  ( directiveFromEntry
+  , outputLedgerFromEntries
   , showCommaSeparatedNumber
+  , showEntryDateWithDay
   , showHumanReadableMoney
   , showLedgerJournalFromEntries
   , showLedgerTransactionFromEntry
@@ -10,10 +12,12 @@ module Data.Expenses.Ledger
   , simpleTransactionsInJournal
   ) where
 
+import Control.Monad (mapM)
+
 import qualified Data.Decimal as D
 
-import Data.List (groupBy, intercalate)
-import Data.Maybe (mapMaybe)
+import Data.List (groupBy, intercalate, lookup)
+import Data.Maybe (fromMaybe, mapMaybe)
 
 import Data.String.Interpolate (i)
 import Data.String.Interpolate.Util (unindent)
@@ -150,12 +154,12 @@ showEntryPrice = showMoney . entryPrice
 
 
 
-showLedgerTransactionFromEntry :: Entry -> String
-showLedgerTransactionFromEntry entry =
+showLedgerTransactionFromEntry :: Entry -> String -> String
+showLedgerTransactionFromEntry entry account =
   unindent [i|
   # #{originalDirective}
   #{date} #{remark}
-    Undescribed  #{price}
+    #{account}  #{price}
     Assets:Cash:#{cur}|] ++ cmt
   where
     date   = showEntryDate entry
@@ -173,13 +177,13 @@ equalBy f a1 a2 =
 
 
 
-showLedgerJournalFromEntries :: [Entry] -> String
-showLedgerJournalFromEntries entries =
+showLedgerJournalFromEntries :: [Entry] -> (Entry -> String) -> String
+showLedgerJournalFromEntries entries accountForEntry =
   let groupedEntries = groupBy (equalBy entryDate) entries
       journalForDay :: [Entry] -> String
       journalForDay es =
         let dateComment = [i|# #{showEntryDateWithDay $ head es}|]
-            transactions = unlines $ map showLedgerTransactionFromEntry es
+            transactions = unlines $ map (\e -> showLedgerTransactionFromEntry e $ accountForEntry e) es
         in dateComment ++ "\n" ++ transactions
       journalParts = map journalForDay groupedEntries
 
@@ -187,6 +191,8 @@ showLedgerJournalFromEntries entries =
 
 
 
-outputLedgerFromEntries :: String -> [Entry] -> IO ()
-outputLedgerFromEntries outputF entries =
-  writeFile outputF $ showLedgerJournalFromEntries entries
+outputLedgerFromEntries :: String -> [Entry] -> (Entry -> IO String) -> IO ()
+outputLedgerFromEntries outputF entries accountForEntry = do
+  assocList <- mapM (\e -> accountForEntry e >>= \a -> return (e, a)) entries
+  let acct e = fromMaybe "Undescribed" $ lookup e assocList
+  writeFile outputF $ showLedgerJournalFromEntries entries acct
