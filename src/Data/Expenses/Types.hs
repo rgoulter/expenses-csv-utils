@@ -48,6 +48,11 @@ data QueryAttribute
 data SimpleTransaction = SimpleTransaction
   { transactionDescription :: String
   , transactionAmount :: Money
-  , transactionCredittedAccount :: String
   , transactionDebittedAccount :: String
+  , transactionCredittedAccount :: String
   } deriving (Show, Eq)
+
+instance Ord SimpleTransaction where
+  compare SimpleTransaction { transactionDescription = a }
+          SimpleTransaction { transactionDescription = b } =
+    compare a b

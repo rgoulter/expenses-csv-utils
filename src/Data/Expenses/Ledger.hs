@@ -50,11 +50,11 @@ simpleTransactionFromTransaction :: HT.Transaction -> Maybe SimpleTransaction
 simpleTransactionFromTransaction t =
   let postings = HDT.realPostings t
   in if length postings == 2 then
-       -- ASSUMPTION: First posting is credit, second posting is debit
+       -- ASSUMPTION: First posting is debit, second posting is credit
        let description = T.unpack $ HT.tdescription t
-           [credPosting, _debPosting] = postings
-           [credAccount, debAccount] = map (T.unpack . HT.paccount) postings
-           credAmount = HT.pamount credPosting
+           [debPosting, _credPosting] = postings
+           [debAccount, credAccount] = map (T.unpack . HT.paccount) postings
+           debAmount = HT.pamount debPosting
        in fmap
           (\money ->
              SimpleTransaction
@@ -63,7 +63,7 @@ simpleTransactionFromTransaction t =
              , transactionCredittedAccount = credAccount
              , transactionDebittedAccount = debAccount
              })
-          (moneyFromLedgerAmount credAmount)
+          (moneyFromLedgerAmount debAmount)
      else
        Nothing
 
