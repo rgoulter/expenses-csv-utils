@@ -1,11 +1,20 @@
 module Data.Expenses.Parse.Megaparsec.Types
-  (Parser, LineDirective(..), RawLineDirective) where
+  ( AST(..)
+  , DateDirective(..)
+  , Direction(..)
+  , Expense(..)
+  , Parser
+  , LineDirective(..)
+  , RawLineDirective
+  ) where
+
+import Data.Time.Calendar.Compat (Day, DayOfWeek)
 
 import Data.Void (Void)
 
 import Text.Megaparsec (ParseError, Parsec)
 
-import Data.Expenses.Types (DateDirective, Expense)
+import Data.Expenses.Types (Money)
 
 
 
@@ -13,7 +22,25 @@ type Parser = Parsec Void String
 
 
 
--- LineDirective serves as the "AST" of an Expenses document
+data DateDirective = DateDir
+    { dateDirDate :: Maybe Day
+    , dateDirDay  :: DayOfWeek
+    } deriving (Show, Eq)
+
+
+
+data Direction = Spent | Received deriving (Show, Eq)
+
+
+
+data Expense = Expense
+  { expenseDirection :: Direction
+  , expenseAmount    :: Money
+  , expenseRemark    :: String
+  , expenseComment   :: Maybe String
+  } deriving (Show, Eq)
+
+
 
 data LineDirective = DateCmd DateDirective
                    | ExpCmd Expense
@@ -21,4 +48,9 @@ data LineDirective = DateCmd DateDirective
 
 
 
+-- XXX: inline this into AST
 type RawLineDirective = Either (ParseError String Void) LineDirective
+
+
+
+newtype AST = AST [RawLineDirective]

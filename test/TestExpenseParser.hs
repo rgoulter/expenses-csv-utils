@@ -25,6 +25,7 @@ import Text.Megaparsec (parse, runParser')
 
 
 import qualified Data.Expenses.Parse.Megaparsec.ExpenseDirective as PE
+import qualified Data.Expenses.Parse.Megaparsec.Types as E
 import qualified Data.Expenses.Types as E
 
 

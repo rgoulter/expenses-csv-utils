@@ -21,8 +21,8 @@ import Text.Megaparsec
 import Text.Megaparsec.Char (spaceChar, string)
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Data.Expenses.Parse.Megaparsec.Types (Parser)
-import Data.Expenses.Expense (DateDirective(..))
+import Data.Expenses.Parse.Megaparsec.Types (Parser, DateDirective(..))
+
 
 
 sc :: Parser ()

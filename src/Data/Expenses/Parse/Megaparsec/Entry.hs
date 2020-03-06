@@ -6,8 +6,10 @@ where
 
 import Data.Maybe (fromMaybe)
 
-import Data.Expenses.Types (Direction(..), Entry(..), Expense(..))
 import qualified Data.Expenses.Types as E
+import Data.Expenses.Types (Entry(..))
+import qualified Data.Expenses.Parse.Megaparsec.Types as PE
+import Data.Expenses.Parse.Megaparsec.Types (Direction(..), Expense(..))
 
 
 
@@ -15,12 +17,12 @@ entryFromExpense :: (Int, Int, Int) -> Expense -> Entry
 entryFromExpense (y, m, d) expense =
   Entry { entryDate       = (y, m, d)
         , entryPrice      = (value, cur)
-        , entryRemark     = E.expenseRemark expense
-        , entryComment    = E.expenseComment expense
+        , entryRemark     = PE.expenseRemark expense
+        , entryComment    = PE.expenseComment expense
         }
   where
-    amount  = E.expenseAmount expense
-    mult    = case E.expenseDirection expense of
+    amount  = PE.expenseAmount expense
+    mult    = case PE.expenseDirection expense of
                Spent -> (1 *)
                Received -> ((-1) *)
     value = mult $ E.moneyAmount amount

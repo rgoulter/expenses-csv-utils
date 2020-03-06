@@ -1,6 +1,5 @@
 module Data.Expenses.Expense
-  ( DateDirective(DateDir)
-  , dayOfWeek
+  ( dayOfWeek
   , numDaysAfter
   , nextDate
   )
@@ -8,7 +7,7 @@ where
 
 import qualified Data.Time.Calendar.Compat as DT
 
-import Data.Expenses.Types
+import Data.Expenses.Parse.Megaparsec.Types
   ( DateDirective(DateDir)
   )
 
