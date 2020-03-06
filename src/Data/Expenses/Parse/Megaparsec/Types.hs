@@ -5,7 +5,7 @@ import Data.Void (Void)
 
 import Text.Megaparsec (ParseError, Parsec)
 
-import Data.Expenses.Expense (DateDirective, Expense)
+import Data.Expenses.Types (DateDirective, Expense)
 
 
 

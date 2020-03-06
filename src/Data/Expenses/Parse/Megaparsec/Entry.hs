@@ -6,10 +6,8 @@ where
 
 import Data.Maybe (fromMaybe)
 
-import Data.Expenses.Expense (Expense(..), Direction(..))
-import qualified Data.Expenses.Expense as E
-
-import Data.Expenses.Types(Entry(..))
+import Data.Expenses.Types (Direction(..), Entry(..), Expense(..))
+import qualified Data.Expenses.Types as E
 
 
 

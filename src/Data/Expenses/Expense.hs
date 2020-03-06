@@ -1,8 +1,5 @@
 module Data.Expenses.Expense
   ( DateDirective(DateDir)
-  , Direction(..)
-  , Expense(..)
-  , Money(..)
   , dayOfWeek
   , numDaysAfter
   , nextDate
@@ -13,9 +10,6 @@ import qualified Data.Time.Calendar.Compat as DT
 
 import Data.Expenses.Types
   ( DateDirective(DateDir)
-  , Direction(..)
-  , Expense(..)
-  , Money(..)
   )
 
 
