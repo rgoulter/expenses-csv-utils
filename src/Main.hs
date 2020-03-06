@@ -1,11 +1,8 @@
-{-# LANGUAGE DeriveDataTypeable, QuasiQuotes #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Main (main) where
 
 import Control.Monad (forM_)
-
-import Data.Data (Data)
-import Data.Typeable (Typeable)
 
 import qualified Data.List.NonEmpty as NE
 
@@ -15,33 +12,15 @@ import qualified Data.Text.IO as TIO
 
 import Hledger.Read (readJournal')
 
-import System.Console.CmdArgs
-   ( (&=)
-   , CmdArgs
-   , Mode
-   , argPos
-   , cmdArgsMode
-   , cmdArgsRun
-   , def
-   , help
-   , modes
-   , program
-   , summary
-   , typ
-   )
-
 import System.IO (hFlush, stdout)
 
 import Text.CSV (printCSV)
 
 import Text.Megaparsec
-  ( (<|>)
-  , errorBundlePretty
+  ( errorBundlePretty
   , parseErrorPretty
-  , parseMaybe
   , runParser
   )
-import qualified Text.Megaparsec.Char.Lexer as L
 
 import Data.Expenses.Ledger
   ( outputLedgerFromEntries
@@ -52,77 +31,22 @@ import Data.Expenses.Ledger
 import Data.Expenses.Ledger.AccountSuggestions (SuggestionResult(..), suggestions)
 import Data.Expenses.Parse.Megaparsec.ExpensesDoc
   (eitherOfLists, entriesFromDirectives, parseExpensesFile)
-import Data.Expenses.Parse.Megaparsec.Types (LineDirective, Parser)
+import Data.Expenses.Parse.Megaparsec.Types (LineDirective)
 import Data.Expenses.Query (attr, queryDirectives)
 import Data.Expenses.ToCSV (recordsFromDirectives)
 import Data.Expenses.Types (Entry(..), SimpleTransaction)
-
-
-
-data ExpensesCmd
-  = CSV {src :: FilePath, out :: FilePath}
-  | Check {src :: FilePath}
-  | Query {attribute :: String, src :: FilePath}
-  | Ledger { src :: FilePath
-           , out :: FilePath
-           , no_accounts :: Bool
-           , journal :: [FilePath]
-           }
-  deriving (Data,Typeable,Show,Eq)
-
-
-
-csvMode :: ExpensesCmd
-csvMode = CSV
-  { src = def &= typ "EXPENSES.TXT" &= argPos 1
-  , out = def &= typ "OUT.CSV" &= argPos 2
-  } &= help "Output to CSV"
-
-
-
--- why is argPos 0 here, when it's 1 2 above?
-checkMode :: ExpensesCmd
-checkMode = Check
-  { src = def &= typ "EXPENSES.TXT" &= argPos 0
-  } &= help "Check expenses file"
-
-
-
-queryMode :: ExpensesCmd
-queryMode = Query
-  { attribute = def &= typ "earliest|latest" &= argPos 1
-  , src = def &= typ "EXPENSES.TXT" &= argPos 2
-  } &= help "Query attributes of expenses file"
-
-
-
-ledgerMode :: ExpensesCmd
-ledgerMode = Ledger
-  { src = def &= argPos 0 &= typ "EXPENSES.TXT"
-  , out = def &= argPos 1 &= typ "JOURNAL.LEDGER"
-  , no_accounts = def &= typ "Fill in accounts "
-  , journal = def &= typ "ledger.dat"
-  } &= help "Output to Ledger format"
-
-
-
-mode :: Mode (CmdArgs ExpensesCmd)
-mode =
-  cmdArgsMode $ modes [checkMode, csvMode, queryMode, ledgerMode]
-    &= help "Utils for expenses file format"
-    &= program "expenses-utils"
-    &= summary "Expenses Utils v0.2.1"
+import qualified Main.CmdArgs as Args
 
 
 
 main :: IO ()
 main = do
-  expensesArgs <- cmdArgsRun mode
-  case expensesArgs of
-    CSV inputF outputF -> runCsvMode inputF outputF
-    Check inputF -> runCheckMode inputF
-    Query attrib inputF -> runQueryMode attrib inputF
-    Ledger inputF outputF noAccounts journals -> runLedgerMode inputF outputF noAccounts journals
+  mode <- Args.run
+  case mode of
+    Args.CSV inputF outputF -> runCsvMode inputF outputF
+    Args.Check inputF -> runCheckMode inputF
+    Args.Query attrib inputF -> runQueryMode attrib inputF
+    Args.Ledger inputF outputF noAccounts journals -> runLedgerMode inputF outputF noAccounts journals
 
 
 
@@ -134,6 +58,7 @@ withFile inputF f = do
   case rawResult of
     Left err ->
       putStrLn $ errorBundlePretty err
+
     Right result ->
       case eitherOfLists result of
         Left errors ->
@@ -223,7 +148,9 @@ promptForEntryWith sugs e = do
   putStrLn $ directiveFromEntry e
   putStrLn ""
   putStrLn "Suggested Accounts:"
-  forM_ (zip sugs [1..]) (\(s, idx) -> putStrLn [i| (#{idx}) #{s}|])
+  let zipped :: [(String, Int)]
+      zipped = zip sugs [1..]
+  forM_ zipped (\(s, idx) -> putStrLn [i| (#{idx}) #{s}|])
   putStr "Debitted account:"
   hFlush stdout
   readAccount sugs

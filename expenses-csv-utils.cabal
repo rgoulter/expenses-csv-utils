@@ -96,6 +96,7 @@ executable expenses-utils
                    , Data.Expenses.ToCSV
                    , Data.Expenses.Types
                    , Data.TagFrequencies
+                   , Main.CmdArgs
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
                      , cmdargs >=0.10
