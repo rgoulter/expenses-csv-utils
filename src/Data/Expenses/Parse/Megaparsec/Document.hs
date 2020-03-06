@@ -1,12 +1,12 @@
 module Data.Expenses.Parse.Megaparsec.Document
-  ( eitherOfLists
-  , entriesFromDirectives
+  ( modelFromAst
   , parseExpensesFile
+  , withFile
   ) where
 
-import Data.Void (Void)
+import Control.Monad (forM_, void)
 
-import Control.Monad (void)
+import Data.Void (Void)
 
 import Data.Either (Either(..), partitionEithers)
 
@@ -18,8 +18,11 @@ import Text.Megaparsec
   , between
   , choice
   , eof
+  , errorBundlePretty
   , hidden
   , manyTill
+  , parseErrorPretty
+  , runParser
   , sepEndBy
   , skipMany
   , someTill
@@ -31,13 +34,14 @@ import Text.Megaparsec
 import Text.Megaparsec.Char (eol, spaceChar)
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Data.Expenses.Expense
-  (nextDate)
 import Data.Expenses.Parse.Megaparsec.Entry
 import Data.Expenses.Parse.Megaparsec.Types
-  (LineDirective(..), Parser, RawLineDirective)
+  (AST(..), LineDirective(..), Parser, RawLineDirective)
 import qualified Data.Expenses.Parse.Megaparsec.DateDirective as PD
 import qualified Data.Expenses.Parse.Megaparsec.ExpenseDirective as PE
+import Data.Expenses.Expense
+  (nextDate)
+import Data.Expenses.Types (Model, modelFromEntries)
 
 
 
@@ -73,9 +77,9 @@ recover err =
 
 
 
-parseExpensesFile :: Parser [RawLineDirective]
+parseExpensesFile :: Parser AST
 parseExpensesFile =
-  between scn eof (sepEndBy rawLine scn)
+  AST <$> between scn eof (sepEndBy rawLine scn)
    where
      rawLine = withRecovery recover (Right <$> lineDirective)
 
@@ -85,33 +89,55 @@ parseExpensesFile =
 
 
 
-eitherOfLists :: [Either a b] -> Either [a] [b]
-eitherOfLists xxs =
-  f pxs
+modelFromAst :: AST -> Either [ParseError String Void] Model
+modelFromAst (AST eitherLineDirectives) =
+  f partitionedEitherDirectives
     where
-  f ([], xs) = Right xs
-  f (xs, _) = Left xs
-  pxs = partitionEithers xxs
+  f ([], lineDirectives) =
+    Right (modelFromEntries $ entriesFromDirectives lineDirectives)
+  f (parseErrors, _) =
+    Left parseErrors
+  partitionedEitherDirectives = partitionEithers eitherLineDirectives
 
 
 
 entriesFromDirectives :: [LineDirective] -> [Entry]
 entriesFromDirectives directives =
-  let initial = ((-1, -1, -1), DT.Monday, [])
+  let
+    initial = ((-1, -1, -1), DT.Monday, [])
 
-      -- Fold over a (Date, Day, GatheredRows)
-      (_, _, directiveRows) =
-        foldl (\(date, day, rows) lineD ->
-                 case lineD of
-                   -- For ExpenseDirectives, simply add to list of 'rows'.
-                   ExpCmd expense ->
-                     (date, day, entryFromExpense date expense : rows)
+    -- Fold over a (Date, Day, GatheredRows)
+    (_, _, directiveRows) =
+      foldl (\(date, day, rows) lineD ->
+               case lineD of
+                 -- For ExpenseDirectives, simply add to list of 'rows'.
+                 ExpCmd expense ->
+                   (date, day, entryFromExpense date expense : rows)
 
-                   -- For DateDirectives, increment/set the date/day.
-                   DateCmd dateDir ->
-                     let (date', day') = nextDate (date, day) dateDir
-                     in  (date', day', rows))
-              initial
-              directives
-      rows' = reverse directiveRows
-  in  rows'
+                 -- For DateDirectives, increment/set the date/day.
+                 DateCmd dateDir ->
+                   let (date', day') = nextDate (date, day) dateDir
+                   in  (date', day', rows))
+            initial
+            directives
+    rows' = reverse directiveRows
+  in
+  rows'
+
+
+
+withFile :: String -> (Model -> IO()) -> IO ()
+withFile inputF f = do
+  -- Parse the input file to list of [DateDir | ExpDir]
+  rawResult <- runParser parseExpensesFile inputF <$> readFile inputF
+
+  case rawResult of
+    Left err ->
+      putStrLn $ errorBundlePretty err
+
+    Right result ->
+      case modelFromAst result of
+        Left errors ->
+          forM_ errors $ putStrLn . parseErrorPretty
+        Right directives ->
+          f directives

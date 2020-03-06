@@ -54,3 +54,4 @@ type RawLineDirective = Either (ParseError String Void) LineDirective
 
 
 newtype AST = AST [RawLineDirective]
+  deriving (Show, Eq)

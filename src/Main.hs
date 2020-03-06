@@ -16,12 +16,6 @@ import System.IO (hFlush, stdout)
 
 import Text.CSV (printCSV)
 
-import Text.Megaparsec
-  ( errorBundlePretty
-  , parseErrorPretty
-  , runParser
-  )
-
 import Data.Expenses.Ledger
   ( outputLedgerFromEntries
   , simpleTransactionsInJournal
@@ -29,12 +23,11 @@ import Data.Expenses.Ledger
   , showEntryDateWithDay
   )
 import Data.Expenses.Ledger.AccountSuggestions (SuggestionResult(..), suggestions)
-import Data.Expenses.Parse.Megaparsec.Document
-  (eitherOfLists, entriesFromDirectives, parseExpensesFile)
-import Data.Expenses.Parse.Megaparsec.Types (LineDirective)
+import Data.Expenses.Parse.Megaparsec.Document (withFile)
 import Data.Expenses.Query (attr, queryDirectives)
-import Data.Expenses.ToCSV (recordsFromDirectives)
-import Data.Expenses.Types (Entry(..), SimpleTransaction)
+import Data.Expenses.ToCSV (recordsFromEntries)
+import Data.Expenses.Types
+  (Entry(..), SimpleTransaction, entriesFromModel)
 import qualified Main.CmdArgs as Args
 
 
@@ -50,34 +43,16 @@ main = do
 
 
 
-withFile :: String -> ([LineDirective] -> IO()) -> IO ()
-withFile inputF f = do
-  -- Parse the input file to list of [DateDir | ExpDir]
-  rawResult <- runParser parseExpensesFile inputF <$> readFile inputF
-
-  case rawResult of
-    Left err ->
-      putStrLn $ errorBundlePretty err
-
-    Right result ->
-      case eitherOfLists result of
-        Left errors ->
-          forM_ errors $ putStrLn . parseErrorPretty
-        Right directives ->
-          f directives
-
-
-
 runCsvMode :: String -> String -> IO ()
 runCsvMode inputF outputF =
-  withFile inputF $ \directives ->
-    outputCSVFromDirectives outputF directives
+  withFile inputF $ \model ->
+    outputCSVFromDirectives outputF $ entriesFromModel model
 
 
 
-outputCSVFromDirectives :: String -> [LineDirective] -> IO ()
-outputCSVFromDirectives outputF directives =
-  let rows = recordsFromDirectives directives
+outputCSVFromDirectives :: String -> [Entry] -> IO ()
+outputCSVFromDirectives outputF entries =
+  let rows = recordsFromEntries entries
       outp = printCSV rows
   in  writeFile outputF outp
 
@@ -94,8 +69,8 @@ runQueryMode qattr inputF =
   case attr qattr of
     Nothing -> putStrLn $ "unknown attribute: " ++ qattr
     Just attr' ->
-      withFile inputF $ \directives ->
-        let entries = entriesFromDirectives directives
+      withFile inputF $ \model ->
+        let entries = entriesFromModel model
         in putStrLn $ queryDirectives attr' entries
 
 
@@ -169,6 +144,6 @@ runLedgerMode inputF outputF useUndescribedAccounts journals = do
          Exact a -> return a
          Ambiguous sugs -> promptForEntryWith (take 9 $ NE.toList sugs) e
          None -> promptForEntry e
-  withFile inputF $ \directives ->
-    let entries = entriesFromDirectives directives
+  withFile inputF $ \model ->
+    let entries = entriesFromModel model
     in outputLedgerFromEntries outputF entries acct

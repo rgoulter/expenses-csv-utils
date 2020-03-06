@@ -18,7 +18,7 @@ import Text.Megaparsec (parse)
 
 
 import qualified Data.Expenses.Parse.Megaparsec.Document as PED
-import Data.Expenses.Parse.Megaparsec.Document (eitherOfLists)
+import Data.Expenses.Parse.Megaparsec.Document (modelFromAst)
 
 
 
@@ -107,8 +107,8 @@ parseExpensesFileSpec =
 
           case rawResult of
             Left _ -> expectationFailure "parser shouldn't fail"
-            Right rawDirectives ->
-              case eitherOfLists rawDirectives of
+            Right ast ->
+              case modelFromAst ast of
                 Left errors ->
                   errors
                     `shouldBe`
@@ -126,8 +126,8 @@ parseExpensesFileSpec =
 
           case rawResult of
             Left _ -> expectationFailure "parser shouldn't fail"
-            Right rawDirectives ->
-              case eitherOfLists rawDirectives of
+            Right ast ->
+              case modelFromAst ast of
                 Left errors ->
                   errors
                     `shouldBe`

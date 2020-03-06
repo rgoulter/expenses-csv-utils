@@ -1,8 +1,11 @@
 module Data.Expenses.Types
   ( Entry(..)
+  , Model
   , Money(..)
   , QueryAttribute(..)
   , SimpleTransaction(..)
+  , entriesFromModel
+  , modelFromEntries
   ) where
 
 import qualified Data.Decimal as D
@@ -24,6 +27,20 @@ data Entry = Entry
   , entryRemark     :: String
   , entryComment    :: Maybe String
   } deriving (Show, Eq)
+
+
+
+newtype Model = Model [Entry]
+
+
+
+modelFromEntries :: [Entry] -> Model
+modelFromEntries = Model
+
+
+
+entriesFromModel :: Model -> [Entry]
+entriesFromModel (Model entries) = entries
 
 
 

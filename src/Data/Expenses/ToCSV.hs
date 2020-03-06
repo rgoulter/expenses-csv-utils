@@ -1,4 +1,4 @@
-module Data.Expenses.ToCSV (recordsFromDirectives) where
+module Data.Expenses.ToCSV (recordsFromEntries) where
 
 import Text.CSV as CSV
 
@@ -6,8 +6,6 @@ import Text.Printf (printf)
 
 import Data.Expenses.Parse.Megaparsec.Entry
   (Entry, entryDate, entryPrice, entryRemark)
-import Data.Expenses.Parse.Megaparsec.Document (entriesFromDirectives)
-import Data.Expenses.Parse.Megaparsec.Types (LineDirective)
 
 
 
@@ -23,6 +21,6 @@ recordFromEntry entry =
 
 
 
-recordsFromDirectives :: [LineDirective] -> [CSV.Record]
-recordsFromDirectives directives =
-  map recordFromEntry $ entriesFromDirectives directives
+recordsFromEntries :: [Entry] -> [CSV.Record]
+recordsFromEntries =
+  map recordFromEntry
