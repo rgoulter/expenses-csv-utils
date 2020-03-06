@@ -53,9 +53,9 @@ import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Data.Expenses.Expense (Money(..), Direction(..), Expense(..))
+import Data.Expenses.Types (Money(..))
 
-import Data.Expenses.Parse.Megaparsec.Types (Parser)
+import Data.Expenses.Parse.Megaparsec.Types (Direction(..), Expense(..), Parser)
 
 
 

@@ -1,21 +1,16 @@
 module Data.Expenses.Types
-  ( DateDirective(..)
-  , Direction(..)
-  , Entry(..)
-  , Expense(..)
+  ( Entry(..)
+  , Model
   , Money(..)
   , QueryAttribute(..)
   , SimpleTransaction(..)
+  , entriesFromModel
+  , modelFromEntries
   ) where
 
 import qualified Data.Decimal as D
 
-import Data.Time.Calendar.Compat (Day, DayOfWeek)
 
-data DateDirective = DateDir
-    { dateDirDate :: Maybe Day
-    , dateDirDay  :: DayOfWeek
-    } deriving (Show, Eq)
 
 -- ~ 1234.12 CUR
 data Money = Amount
@@ -24,14 +19,7 @@ data Money = Amount
   , moneyIsApprox :: Bool
   } deriving (Show, Eq)
 
-data Direction = Spent | Received deriving (Show, Eq)
 
-data Expense = Expense
-  { expenseDirection :: Direction
-  , expenseAmount    :: Money
-  , expenseRemark    :: String
-  , expenseComment   :: Maybe String
-  } deriving (Show, Eq)
 
 data Entry = Entry
   { entryDate       :: (Int, Int, Int)    -- (y,m,d)
@@ -40,10 +28,28 @@ data Entry = Entry
   , entryComment    :: Maybe String
   } deriving (Show, Eq)
 
+
+
+newtype Model = Model [Entry]
+
+
+
+modelFromEntries :: [Entry] -> Model
+modelFromEntries = Model
+
+
+
+entriesFromModel :: Model -> [Entry]
+entriesFromModel (Model entries) = entries
+
+
+
 data QueryAttribute
   = Earliest
   | Latest
   deriving (Show, Eq)
+
+
 
 data SimpleTransaction = SimpleTransaction
   { transactionDescription :: String

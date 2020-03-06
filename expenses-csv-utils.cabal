@@ -36,7 +36,7 @@ library
   exposed-modules:     Data.Expenses.Parse.Megaparsec.DateDirective
                      , Data.Expenses.Parse.Megaparsec.Entry
                      , Data.Expenses.Parse.Megaparsec.ExpenseDirective
-                     , Data.Expenses.Parse.Megaparsec.ExpensesDoc
+                     , Data.Expenses.Parse.Megaparsec.Document
                      , Data.Expenses.Parse.Megaparsec.Types
                      , Data.Expenses.Expense
                      , Data.Expenses.Ledger.AccountSuggestions
@@ -53,7 +53,7 @@ test-suite tests
   type: exitcode-stdio-1.0
   other-modules:       TestDateParser
                      , TestExpense
-                     , TestExpenseDocParser
+                     , TestDocumentParser
                      , TestExpenseParser
                      , TestQuery
                      , TestLedger
@@ -87,7 +87,7 @@ executable expenses-utils
   other-modules:     Data.Expenses.Parse.Megaparsec.DateDirective
                    , Data.Expenses.Parse.Megaparsec.Entry
                    , Data.Expenses.Parse.Megaparsec.ExpenseDirective
-                   , Data.Expenses.Parse.Megaparsec.ExpensesDoc
+                   , Data.Expenses.Parse.Megaparsec.Document
                    , Data.Expenses.Parse.Megaparsec.Types
                    , Data.Expenses.Expense
                    , Data.Expenses.Ledger.AccountSuggestions
@@ -96,6 +96,7 @@ executable expenses-utils
                    , Data.Expenses.ToCSV
                    , Data.Expenses.Types
                    , Data.TagFrequencies
+                   , Main.CmdArgs
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
                      , cmdargs >=0.10
