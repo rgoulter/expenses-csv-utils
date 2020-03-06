@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module TestExpenseDocParser (parseExpensesFileSpec) where
+module TestDocumentParser (parseExpensesFileSpec) where
 
 import Data.String.Interpolate (i)
 import Data.String.Interpolate.Util (unindent)
@@ -17,8 +17,8 @@ import Test.Hspec.Megaparsec
 import Text.Megaparsec (parse)
 
 
-import qualified Data.Expenses.Parse.Megaparsec.ExpensesDoc as PED
-import Data.Expenses.Parse.Megaparsec.ExpensesDoc (eitherOfLists)
+import qualified Data.Expenses.Parse.Megaparsec.Document as PED
+import Data.Expenses.Parse.Megaparsec.Document (eitherOfLists)
 
 
 

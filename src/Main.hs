@@ -29,7 +29,7 @@ import Data.Expenses.Ledger
   , showEntryDateWithDay
   )
 import Data.Expenses.Ledger.AccountSuggestions (SuggestionResult(..), suggestions)
-import Data.Expenses.Parse.Megaparsec.ExpensesDoc
+import Data.Expenses.Parse.Megaparsec.Document
   (eitherOfLists, entriesFromDirectives, parseExpensesFile)
 import Data.Expenses.Parse.Megaparsec.Types (LineDirective)
 import Data.Expenses.Query (attr, queryDirectives)

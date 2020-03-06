@@ -1,4 +1,4 @@
-module Data.Expenses.Parse.Megaparsec.ExpensesDoc
+module Data.Expenses.Parse.Megaparsec.Document
   ( eitherOfLists
   , entriesFromDirectives
   , parseExpensesFile
@@ -53,16 +53,6 @@ scn = hidden . skipMany $ choice [ void spaceChar
 
 
 
-eitherOfLists :: [Either a b] -> Either [a] [b]
-eitherOfLists xxs =
-  f pxs
-    where
-  f ([], xs) = Right xs
-  f (xs, _) = Left xs
-  pxs = partitionEithers xxs
-
-
-
 lineDirective :: Parser LineDirective
 lineDirective =
   (DateCmd
@@ -92,6 +82,16 @@ parseExpensesFile =
 
 
 -- UTILITY FUNCTIONS
+
+
+
+eitherOfLists :: [Either a b] -> Either [a] [b]
+eitherOfLists xxs =
+  f pxs
+    where
+  f ([], xs) = Right xs
+  f (xs, _) = Left xs
+  pxs = partitionEithers xxs
 
 
 
