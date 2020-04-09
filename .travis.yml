@@ -13,6 +13,9 @@ before_install:
 - gem install cucumber rspec
 - curl -sSL https://get.haskellstack.org/ | sh
 - stack --version
+- sudo add-apt-repository -y ppa:mbudde/ledger
+- sudo apt-get -q update
+- sudo apt-get -y install ledger
 
 install:
 - stack build --system-ghc --copy-bins --no-run-tests --no-run-benchmarks

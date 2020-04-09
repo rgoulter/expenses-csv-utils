@@ -19,6 +19,7 @@ library
   -- other-modules:
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
+                     , bytestring
                      , containers >=0.5 && <0.7
                      , csv >=0.1 && <0.2
                      , Decimal >= 0.5.1 && < 1.0
@@ -31,6 +32,7 @@ library
                      , split
                      , text
                      , time-compat
+                     , typed-process
                      , unordered-containers
                      , void
   hs-source-dirs:    src/
@@ -41,6 +43,7 @@ library
                      , Data.Expenses.Parse.Megaparsec.Types
                      , Data.Expenses.Expense
                      , Data.Expenses.Ledger.AccountSuggestions
+                     , Data.Expenses.Ledger.Process
                      , Data.Expenses.Ledger.Xml
                      , Data.Expenses.Ledger
                      , Data.Expenses.Query
@@ -60,10 +63,12 @@ test-suite tests
                      , TestQuery
                      , TestLedger
                      , TestLedgerAccountSuggestions
+                     , TestLedgerProcess
                      , TestLedgerXml
 
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
+                     , bytestring
                      , containers >=0.5 && <0.7
                      , csv >=0.1 && <0.2
                      , Decimal >= 0.5.1 && < 1.0
@@ -78,8 +83,10 @@ test-suite tests
                      , interpolate
                      , megaparsec >=7.0
                      , parser-combinators >=1.0
+                     , regex
                      , text
                      , time-compat
+                     , typed-process
   if !impl(ghc >= 8.0)
     build-depends:     semigroups         == 0.18.*
   hs-source-dirs:      test/
@@ -95,6 +102,7 @@ executable expenses-utils
                    , Data.Expenses.Parse.Megaparsec.Types
                    , Data.Expenses.Expense
                    , Data.Expenses.Ledger.AccountSuggestions
+                   , Data.Expenses.Ledger.Process
                    , Data.Expenses.Ledger.Xml
                    , Data.Expenses.Ledger
                    , Data.Expenses.Query
@@ -104,6 +112,7 @@ executable expenses-utils
                    , Main.CmdArgs
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
+                     , bytestring
                      , cmdargs >=0.10
                      , containers >=0.5 && <0.7
                      , csv >=0.1 && <0.2
@@ -116,6 +125,7 @@ executable expenses-utils
                      , parser-combinators >=1.0
                      , text
                      , time-compat
+                     , typed-process
                      , expenses-csv-utils
   hs-source-dirs:      src/
   default-language:    Haskell2010
