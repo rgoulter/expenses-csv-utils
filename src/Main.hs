@@ -8,21 +8,18 @@ import qualified Data.List.NonEmpty as NE
 
 import Data.String.Interpolate (i)
 
-import qualified Data.Text.IO as TIO
-
-import Hledger.Read (readJournal')
-
 import System.IO (hFlush, stdout)
 
 import Text.CSV (printCSV)
 
 import Data.Expenses.Ledger
   ( outputLedgerFromEntries
-  , simpleTransactionsInJournal
   , directiveFromEntry
   , showEntryDateWithDay
   )
 import Data.Expenses.Ledger.AccountSuggestions (SuggestionResult(..), suggestions)
+import qualified Data.Expenses.Ledger.Process as LP
+import qualified Data.Expenses.Ledger.Xml as LX
 import Data.Expenses.Parse.Megaparsec.Document (withFile)
 import Data.Expenses.Query (attr, queryDirectives)
 import Data.Expenses.ToCSV (recordsFromEntries)
@@ -77,9 +74,8 @@ runQueryMode qattr inputF =
 
 readJournal :: FilePath -> IO [SimpleTransaction]
 readJournal journalPath = do
-  journalT <- TIO.readFile journalPath
-  journal' <- readJournal' journalT
-  return $ simpleTransactionsInJournal journal'
+  xml <- LP.xmlOf journalPath
+  return $ LX.simpleTransactionsInXmlDocument xml
 
 
 
