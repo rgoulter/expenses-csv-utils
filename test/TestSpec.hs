@@ -8,6 +8,7 @@ import TestExpenseParser (parseExpenseDirectiveSpec)
 import TestDocumentParser (parseExpensesFileSpec)
 import TestQuery (querySpec)
 import TestLedger (ledgerSpec)
+import TestLedgerProcess (ledgerProcessSpec)
 import TestLedgerXml (ledgerXmlSpec)
 import TestLedgerAccountSuggestions (ledgerAccountSuggestionsSpec)
 
@@ -22,4 +23,5 @@ main = hspec $ do
   parseExpensesFileSpec
   ledgerSpec
   ledgerAccountSuggestionsSpec
+  ledgerProcessSpec
   ledgerXmlSpec
