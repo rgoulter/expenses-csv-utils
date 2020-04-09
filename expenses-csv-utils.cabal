@@ -24,6 +24,7 @@ library
                      , Decimal >= 0.5.1 && < 1.0
                      , hashable
                      , hledger-lib
+                     , hxt
                      , interpolate
                      , megaparsec >=7.0
                      , parser-combinators >=1.0
@@ -40,6 +41,7 @@ library
                      , Data.Expenses.Parse.Megaparsec.Types
                      , Data.Expenses.Expense
                      , Data.Expenses.Ledger.AccountSuggestions
+                     , Data.Expenses.Ledger.Xml
                      , Data.Expenses.Ledger
                      , Data.Expenses.Query
                      , Data.Expenses.ToCSV
@@ -58,6 +60,7 @@ test-suite tests
                      , TestQuery
                      , TestLedger
                      , TestLedgerAccountSuggestions
+                     , TestLedgerXml
 
   -- other-extensions:
   build-depends:       base >=4.8 && <4.13
@@ -71,6 +74,7 @@ test-suite tests
                      , hspec >=2.0
                      , hspec-expectations >=0.5
                      , hspec-megaparsec
+                     , hxt
                      , interpolate
                      , megaparsec >=7.0
                      , parser-combinators >=1.0
@@ -91,6 +95,7 @@ executable expenses-utils
                    , Data.Expenses.Parse.Megaparsec.Types
                    , Data.Expenses.Expense
                    , Data.Expenses.Ledger.AccountSuggestions
+                   , Data.Expenses.Ledger.Xml
                    , Data.Expenses.Ledger
                    , Data.Expenses.Query
                    , Data.Expenses.ToCSV
@@ -106,6 +111,7 @@ executable expenses-utils
                      , hashable
                      , hledger-lib
                      , interpolate
+                     , hxt
                      , megaparsec >=7.0
                      , parser-combinators >=1.0
                      , text
