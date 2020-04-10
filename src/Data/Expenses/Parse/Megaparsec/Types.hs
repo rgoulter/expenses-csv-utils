@@ -6,15 +6,20 @@ module Data.Expenses.Parse.Megaparsec.Types
   , Parser
   , LineDirective(..)
   , RawLineDirective
-  ) where
+  )
+where
 
-import Data.Time.Calendar.Compat (Day, DayOfWeek)
+import           Data.Time.Calendar.Compat      ( Day
+                                                , DayOfWeek
+                                                )
 
-import Data.Void (Void)
+import           Data.Void                      ( Void )
 
-import Text.Megaparsec (ParseError, Parsec)
+import           Text.Megaparsec                ( ParseError
+                                                , Parsec
+                                                )
 
-import Data.Expenses.Types (Money)
+import           Data.Expenses.Types            ( Money )
 
 
 

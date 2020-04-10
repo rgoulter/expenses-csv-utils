@@ -6,9 +6,10 @@ module Data.Expenses.Types
   , SimpleTransaction(..)
   , entriesFromModel
   , modelFromEntries
-  ) where
+  )
+where
 
-import qualified Data.Decimal as D
+import qualified Data.Decimal                  as D
 
 
 
@@ -59,6 +60,5 @@ data SimpleTransaction = SimpleTransaction
   } deriving (Show, Eq)
 
 instance Ord SimpleTransaction where
-  compare SimpleTransaction { transactionDescription = a }
-          SimpleTransaction { transactionDescription = b } =
-    compare a b
+  compare SimpleTransaction { transactionDescription = a } SimpleTransaction { transactionDescription = b }
+    = compare a b
