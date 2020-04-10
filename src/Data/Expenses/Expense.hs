@@ -44,7 +44,6 @@ nextDate ((y, m, d), dy) (DateDir Nothing dy') =
 
 
 
-nextDate _ (DateDir (Just day') dy') =
-  -- Simply just use the new date/day
-                                       ((fromIntegral y', m', d'), dy')
+-- Simply just use the new date/day
+nextDate _ (DateDir (Just day') dy') = ((fromIntegral y', m', d'), dy')
   where (y', m', d') = DT.toGregorian day'
