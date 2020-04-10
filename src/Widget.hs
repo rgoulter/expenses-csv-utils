@@ -1,6 +1,9 @@
+import Control.Monad (forM_)
+
 import Data.Bits ((.&.), (.|.), complement)
 
 import Data.Char (isPrint)
+import qualified Data.List as L
 
 import System.Win32.Types
 import System.Win32.Console
@@ -18,8 +21,10 @@ import Graphics.Win32.Misc (sTD_INPUT_HANDLE, getStdHandle)
 import System.IO
 import Control.Monad (when)
 
+import qualified System.Console.ANSI as ANSI
+
 data Direction
-  = Up | Down | Right | Left
+  = UpA | DownA | RightA | LeftA
 
 data Input
   = ArrowKey Direction
@@ -36,7 +41,7 @@ data WidgetConfig = WidgetConfig
 data WidgetState = WidgetState
   { widgetConfig :: WidgetConfig
   , widgetSelected :: Int
-  , widgetInput :: String
+  , widgetValue :: String
   }
 
 data WidgetMsg
@@ -59,10 +64,10 @@ widgetInput :: IO Input
 widgetInput = do
   key <- getKey
   return $ case key of
-    "\ESC[A" -> ArrowKey Up
-    "\ESC[B" -> ArrowKey Down
-    "\ESC[C" -> ArrowKey Right
-    "\ESC[D" -> ArrowKey Left
+    "\ESC[A" -> ArrowKey UpA
+    "\ESC[B" -> ArrowKey DownA
+    "\ESC[C" -> ArrowKey RightA
+    "\ESC[D" -> ArrowKey LeftA
     "\DEL"   -> Del
     "\n"     -> Enter
     "\r"     -> Enter
@@ -71,35 +76,73 @@ widgetInput = do
 
 
 updateWidget :: WidgetState -> Input -> WidgetMsg
-updateWidget ws input =
-  -- XXX
+updateWidget ws Esc = Cancelled
+updateWidget ws Enter = Submitted "XXX TBI"
+updateWidget ws (ArrowKey direction) = case direction of
+  UpA   -> Updated ws
+  DownA -> Updated ws
+  _    -> Updated ws
+updateWidget ws Del =
+  Updated ws
+updateWidget ws (Printable c) =
   Updated ws
 
 
+-- data WidgetConfig = WidgetConfig
+--   { widgetContext :: String
+--   , widgetOptions :: [String]
+--   }
+
+-- data WidgetState = WidgetState
+--   { widgetConfig :: WidgetConfig
+--   , widgetSelected :: Int
+--   , widgetInput :: String
+--   }
 renderWidget :: WidgetState -> IO ()
 renderWidget ws =
-  -- XXX
-  return ()
+  let renderPrompt =
+        putStrLn "Input value for:"
+      indent i s =
+        let pad = replicate i ' '
+        in unlines $ (pad ++) <$> lines s
+      renderContext = do
+        let ctx = widgetContext $ widgetConfig ws
+            indentedCtx = indent 2 ctx
+        ANSI.setSGR [ ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.White
+                    ]
+        putStrLn indentedCtx
+        ANSI.setSGR []
+      renderInput =
+        putStrLn "0."
+      renderSuggestion (i, s) = do
+        putStrLn $ show i ++ ". " ++ s
+      renderSuggestions = do
+        forM_ (zip [1 ..] (widgetOptions $ widgetConfig ws)) renderSuggestion
+  in do
+    renderPrompt
+    renderContext
+    renderInput
+    renderSuggestions
 
 initState :: WidgetConfig -> WidgetState
 initState cfg = WidgetState
   { widgetConfig = cfg
   , widgetSelected = 0
-  , widgetInput = ""
+  , widgetValue = ""
   }
 
 runWidget :: WidgetConfig -> IO (Maybe String)
 runWidget widgetConfig =
   let loop ws = do
-        -- XXX save cursor
+        ANSI.saveCursor
         renderWidget ws
         i <- widgetInput
-        msg <- updateWidget ws i
+        let msg = updateWidget ws i
         case msg of
           Cancelled -> return Nothing
           Submitted s -> return (Just s)
           Updated ws' -> do
-            -- XXX restore cursor
+            ANSI.restoreCursor
             loop ws'
   in loop $ initState widgetConfig
 
@@ -126,6 +169,9 @@ main = do
   hSetNewlineMode stdin noNewlineTranslation
   hSetBuffering stdout NoBuffering
   withC (\() -> do
-    putStrLn "running (win32, loop):"
-
-    loop)
+    let cfg = WidgetConfig
+              { widgetContext = "on McDonalds"
+              , widgetOptions = ["Expenses:Food", "Expenses:Drinks", "Expenses:Dessert"]
+              }
+    maybeRes <- runWidget cfg
+    print maybeRes)
