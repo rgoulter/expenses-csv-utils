@@ -56,7 +56,7 @@ getKey =
     getKey' chars = do
       char <- getChar
       more <- hReady stdin
-      more <- hWaitForInput stdin 2
+      more <- hWaitForInput stdin 5
       (if more then getKey' else return) (char:chars)
   in reverse <$> getKey' ""
 
@@ -79,8 +79,8 @@ updateWidget :: WidgetState -> Input -> WidgetMsg
 updateWidget ws Esc = Cancelled
 updateWidget ws Enter = Submitted "XXX TBI"
 updateWidget ws (ArrowKey direction) = case direction of
-  UpA   -> Updated ws
-  DownA -> Updated ws
+  UpA   -> Updated (ws { widgetSelected = (widgetSelected ws) - 1 })
+  DownA -> Updated (ws { widgetSelected = (widgetSelected ws) + 1 })
   _    -> Updated ws
 updateWidget ws Del =
   Updated ws
@@ -99,7 +99,7 @@ updateWidget ws (Printable c) =
 --   , widgetInput :: String
 --   }
 renderWidget :: WidgetState -> IO ()
-renderWidget ws =
+renderWidget ws@WidgetState { widgetSelected = widgetIdx } =
   let renderPrompt =
         putStrLn "Input value for:"
       indent i s =
@@ -112,13 +112,31 @@ renderWidget ws =
                     ]
         putStrLn indentedCtx
         ANSI.setSGR []
-      renderInput =
-        putStrLn "0."
+      renderInput = do
+        putStr "0. "
+        -- if widgetIdx == 0
+        --   then ANSI.showCursor
+        --   else ANSI.hideCursor
+        if 0 == widgetIdx
+          then ANSI.setSGR [ ANSI.SetUnderlining ANSI.SingleUnderline
+                           , ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Cyan
+                           ]
+          else ANSI.setSGR [ ANSI.SetUnderlining ANSI.SingleUnderline ]
+        putStrLn $ replicate 20 ' '
+        ANSI.setSGR []
       renderSuggestion (i, s) = do
-        putStrLn $ show i ++ ". " ++ s
-      renderSuggestions = do
+        putStr $ show i ++ ". "
+        if i == widgetIdx
+          then ANSI.setSGR [ ANSI.SetUnderlining ANSI.SingleUnderline
+                           , ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Cyan
+                           ]
+          else ANSI.setSGR []
+        putStrLn s
+        ANSI.setSGR []
+      renderSuggestions =
         forM_ (zip [1 ..] (widgetOptions $ widgetConfig ws)) renderSuggestion
   in do
+    ANSI.hideCursor
     renderPrompt
     renderContext
     renderInput
@@ -135,6 +153,7 @@ runWidget :: WidgetConfig -> IO (Maybe String)
 runWidget widgetConfig =
   let loop ws = do
         ANSI.saveCursor
+        ANSI.clearFromCursorToScreenEnd
         renderWidget ws
         i <- widgetInput
         let msg = updateWidget ws i
