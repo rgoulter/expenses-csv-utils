@@ -55,8 +55,7 @@ getKey =
   let
     getKey' chars = do
       char <- getChar
-      more <- hReady stdin
-      more <- hWaitForInput stdin 5
+      more <- hWaitForInput stdin 10
       (if more then getKey' else return) (char:chars)
   in reverse <$> getKey' ""
 
@@ -77,15 +76,19 @@ widgetInput = do
 
 updateWidget :: WidgetState -> Input -> WidgetMsg
 updateWidget ws Esc = Cancelled
-updateWidget ws Enter = Submitted "XXX TBI"
+updateWidget ws@(WidgetState { widgetSelected = idx, widgetValue = s, widgetConfig = WidgetConfig { widgetOptions = opts } }) Enter
+  | idx == 0 = Submitted s
+  | otherwise = Submitted $ opts !! (idx - 1)
 updateWidget ws (ArrowKey direction) = case direction of
-  UpA   -> Updated (ws { widgetSelected = (widgetSelected ws) - 1 })
-  DownA -> Updated (ws { widgetSelected = (widgetSelected ws) + 1 })
+  UpA   -> Updated (ws { widgetSelected = max 0 $ (widgetSelected ws) - 1 })
+  DownA -> Updated (ws { widgetSelected = min (length $ widgetOptions $ widgetConfig ws) ((widgetSelected ws) + 1) })
   _    -> Updated ws
-updateWidget ws Del =
-  Updated ws
-updateWidget ws (Printable c) =
-  Updated ws
+updateWidget ws@(WidgetState { widgetSelected = idx, widgetValue = s }) Del
+  | idx == 0 && not (null s) = Updated ws { widgetValue = take (length s - 1) s }
+  | otherwise = Updated ws
+updateWidget ws@(WidgetState { widgetSelected = idx, widgetValue = s }) (Printable c)
+  | idx == 0 && isPrint c = Updated ws { widgetValue = s ++ (c:"") }
+  | otherwise = Updated ws
 
 
 -- data WidgetConfig = WidgetConfig
@@ -99,7 +102,7 @@ updateWidget ws (Printable c) =
 --   , widgetInput :: String
 --   }
 renderWidget :: WidgetState -> IO ()
-renderWidget ws@WidgetState { widgetSelected = widgetIdx } =
+renderWidget ws@WidgetState { widgetValue = widgetVal, widgetSelected = widgetIdx } =
   let renderPrompt =
         putStrLn "Input value for:"
       indent i s =
@@ -122,8 +125,9 @@ renderWidget ws@WidgetState { widgetSelected = widgetIdx } =
                            , ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Cyan
                            ]
           else ANSI.setSGR [ ANSI.SetUnderlining ANSI.SingleUnderline ]
-        putStrLn $ replicate 20 ' '
+        putStr $ take 20 $ widgetVal ++ L.repeat ' '
         ANSI.setSGR []
+        putStrLn ""
       renderSuggestion (i, s) = do
         putStr $ show i ++ ". "
         if i == widgetIdx
@@ -131,8 +135,9 @@ renderWidget ws@WidgetState { widgetSelected = widgetIdx } =
                            , ANSI.SetColor ANSI.Foreground ANSI.Vivid ANSI.Cyan
                            ]
           else ANSI.setSGR []
-        putStrLn s
+        putStr s
         ANSI.setSGR []
+        putStrLn ""
       renderSuggestions =
         forM_ (zip [1 ..] (widgetOptions $ widgetConfig ws)) renderSuggestion
   in do
@@ -153,7 +158,7 @@ runWidget :: WidgetConfig -> IO (Maybe String)
 runWidget widgetConfig =
   let loop ws = do
         ANSI.saveCursor
-        ANSI.clearFromCursorToScreenEnd
+        -- ANSI.clearFromCursorToScreenEnd
         renderWidget ws
         i <- widgetInput
         let msg = updateWidget ws i
@@ -189,7 +194,7 @@ main = do
   hSetBuffering stdout NoBuffering
   withC (\() -> do
     let cfg = WidgetConfig
-              { widgetContext = "on McDonalds"
+              { widgetContext = "Spent 5 SGD\non McDonalds"
               , widgetOptions = ["Expenses:Food", "Expenses:Drinks", "Expenses:Dessert"]
               }
     maybeRes <- runWidget cfg
