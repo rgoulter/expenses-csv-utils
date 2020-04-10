@@ -5,22 +5,21 @@ module Data.Expenses.Expense
   )
 where
 
-import qualified Data.Time.Calendar.Compat as DT
+import qualified Data.Time.Calendar.Compat     as DT
 
-import Data.Expenses.Parse.Megaparsec.Types
-  ( DateDirective(DateDir)
-  )
+import           Data.Expenses.Parse.Megaparsec.Types
+                                                ( DateDirective(DateDir) )
 
 
 
 dayOfWeek :: DT.DayOfWeek -> Int
-dayOfWeek DT.Monday = 0
-dayOfWeek DT.Tuesday = 1
+dayOfWeek DT.Monday    = 0
+dayOfWeek DT.Tuesday   = 1
 dayOfWeek DT.Wednesday = 2
-dayOfWeek DT.Thursday = 3
-dayOfWeek DT.Friday = 4
-dayOfWeek DT.Saturday = 5
-dayOfWeek DT.Sunday = 6
+dayOfWeek DT.Thursday  = 3
+dayOfWeek DT.Friday    = 4
+dayOfWeek DT.Saturday  = 5
+dayOfWeek DT.Sunday    = 6
 
 
 
@@ -37,16 +36,14 @@ nextDate
   -> ((Int, Int, Int), DT.DayOfWeek)
 nextDate ((y, m, d), dy) (DateDir Nothing dy') =
   -- Need to calculate how many days dy' is after dy.
-  let diff = numDaysAfter dy dy'
-      day = DT.fromGregorian (fromIntegral y) m d
-      day' = DT.addDays (fromIntegral diff) day
+  let diff         = numDaysAfter dy dy'
+      day          = DT.fromGregorian (fromIntegral y) m d
+      day'         = DT.addDays (fromIntegral diff) day
       (y', m', d') = DT.toGregorian day'
-  in ((fromIntegral y', m', d'), dy')
+  in  ((fromIntegral y', m', d'), dy')
 
 
 
-nextDate _ (DateDir (Just day') dy') =
-  -- Simply just use the new date/day
-  ((fromIntegral y', m', d'), dy')
-    where
-     (y', m', d') = DT.toGregorian day'
+-- Simply just use the new date/day
+nextDate _ (DateDir (Just day') dy') = ((fromIntegral y', m', d'), dy')
+  where (y', m', d') = DT.toGregorian day'

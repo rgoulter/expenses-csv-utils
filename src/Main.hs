@@ -1,31 +1,43 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Main (main) where
-
-import Control.Monad (forM_)
-
-import qualified Data.List.NonEmpty as NE
-
-import Data.String.Interpolate (i)
-
-import System.IO (hFlush, stdout)
-
-import Text.CSV (printCSV)
-
-import Data.Expenses.Ledger
-  ( outputLedgerFromEntries
-  , directiveFromEntry
-  , showEntryDateWithDay
+module Main
+  ( main
   )
-import Data.Expenses.Ledger.AccountSuggestions (SuggestionResult(..), suggestions)
-import qualified Data.Expenses.Ledger.Process as LP
-import qualified Data.Expenses.Ledger.Xml as LX
-import Data.Expenses.Parse.Megaparsec.Document (withFile)
-import Data.Expenses.Query (attr, queryDirectives)
-import Data.Expenses.ToCSV (recordsFromEntries)
-import Data.Expenses.Types
-  (Entry(..), SimpleTransaction, entriesFromModel)
-import qualified Main.CmdArgs as Args
+where
+
+import           Control.Monad                  ( forM_ )
+
+import qualified Data.List.NonEmpty            as NE
+
+import           Data.String.Interpolate        ( i )
+
+import           System.IO                      ( hFlush
+                                                , stdout
+                                                )
+
+import           Text.CSV                       ( printCSV )
+
+import           Data.Expenses.Ledger           ( outputLedgerFromEntries
+                                                , directiveFromEntry
+                                                , showEntryDateWithDay
+                                                )
+import           Data.Expenses.Ledger.AccountSuggestions
+                                                ( SuggestionResult(..)
+                                                , suggestions
+                                                )
+import qualified Data.Expenses.Ledger.Process  as LP
+import qualified Data.Expenses.Ledger.Xml      as LX
+import           Data.Expenses.Parse.Megaparsec.Document
+                                                ( withFile )
+import           Data.Expenses.Query            ( attr
+                                                , queryDirectives
+                                                )
+import           Data.Expenses.ToCSV            ( recordsFromEntries )
+import           Data.Expenses.Types            ( Entry(..)
+                                                , SimpleTransaction
+                                                , entriesFromModel
+                                                )
+import qualified Main.CmdArgs                  as Args
 
 
 
@@ -33,17 +45,17 @@ main :: IO ()
 main = do
   mode <- Args.run
   case mode of
-    Args.CSV inputF outputF -> runCsvMode inputF outputF
-    Args.Check inputF -> runCheckMode inputF
+    Args.CSV inputF outputF  -> runCsvMode inputF outputF
+    Args.Check inputF        -> runCheckMode inputF
     Args.Query attrib inputF -> runQueryMode attrib inputF
-    Args.Ledger inputF outputF noAccounts journals -> runLedgerMode inputF outputF noAccounts journals
+    Args.Ledger inputF outputF noAccounts journals ->
+      runLedgerMode inputF outputF noAccounts journals
 
 
 
 runCsvMode :: String -> String -> IO ()
-runCsvMode inputF outputF =
-  withFile inputF $ \model ->
-    outputCSVFromDirectives outputF $ entriesFromModel model
+runCsvMode inputF outputF = withFile inputF
+  $ \model -> outputCSVFromDirectives outputF $ entriesFromModel model
 
 
 
@@ -56,19 +68,16 @@ outputCSVFromDirectives outputF entries =
 
 
 runCheckMode :: String -> IO ()
-runCheckMode inputF =
-  withFile inputF $ \_directives -> return ()
+runCheckMode inputF = withFile inputF $ \_directives -> return ()
 
 
 
 runQueryMode :: String -> FilePath -> IO ()
-runQueryMode qattr inputF =
-  case attr qattr of
-    Nothing -> putStrLn $ "unknown attribute: " ++ qattr
-    Just attr' ->
-      withFile inputF $ \model ->
-        let entries = entriesFromModel model
-        in putStrLn $ queryDirectives attr' entries
+runQueryMode qattr inputF = case attr qattr of
+  Nothing    -> putStrLn $ "unknown attribute: " ++ qattr
+  Just attr' -> withFile inputF $ \model ->
+    let entries = entriesFromModel model
+    in  putStrLn $ queryDirectives attr' entries
 
 
 
@@ -89,8 +98,7 @@ simpleTransactions journalPaths = do
 
 
 readAccount :: [String] -> IO String
-readAccount [] =
-  getLine
+readAccount []   = getLine
 readAccount sugs = do
   line <- getLine
   let sugsLen = length sugs
@@ -101,7 +109,7 @@ readAccount sugs = do
     "3" | sugsLen > 2 -> sugs !! 2
     "4" | sugsLen > 3 -> sugs !! 3
     "5" | sugsLen > 4 -> sugs !! 4
-    _ -> line
+    _                 -> line
 
 
 promptForEntry :: Entry -> IO String
@@ -120,7 +128,7 @@ promptForEntryWith sugs e = do
   putStrLn ""
   putStrLn "Suggested Accounts:"
   let zipped :: [(String, Int)]
-      zipped = zip sugs [1..]
+      zipped = zip sugs [1 ..]
   forM_ zipped (\(s, idx) -> putStrLn [i| (#{idx}) #{s}|])
   putStr "Debitted account:"
   hFlush stdout
@@ -130,16 +138,13 @@ promptForEntryWith sugs e = do
 runLedgerMode :: String -> String -> Bool -> [FilePath] -> IO ()
 runLedgerMode inputF outputF useUndescribedAccounts journals = do
   txns <- simpleTransactions journals
-  let
-    acct :: Entry -> IO String
-    acct e =
-     if useUndescribedAccounts then
-       return "Undescribed"
-     else
-       case suggestions txns (entryRemark e) of
-         Exact a -> return a
-         Ambiguous sugs -> promptForEntryWith (take 9 $ NE.toList sugs) e
-         None -> promptForEntry e
+  let acct :: Entry -> IO String
+      acct e = if useUndescribedAccounts
+        then return "Undescribed"
+        else case suggestions txns (entryRemark e) of
+          Exact     a    -> return a
+          Ambiguous sugs -> promptForEntryWith (take 9 $ NE.toList sugs) e
+          None           -> promptForEntry e
   withFile inputF $ \model ->
     let entries = entriesFromModel model
-    in outputLedgerFromEntries outputF entries acct
+    in  outputLedgerFromEntries outputF entries acct
