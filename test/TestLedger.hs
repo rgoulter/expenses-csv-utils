@@ -2,7 +2,7 @@
 
 module TestLedger (ledgerSpec) where
 
-import Test.Hspec (Spec, describe, it, shouldBe)
+import Test.Hspec (Spec, context, describe, it, shouldBe)
 
 import Data.String.Interpolate (i)
 import Data.String.Interpolate.Util (unindent)
@@ -59,12 +59,15 @@ ledgerSpec =
               message = [i|should show #{input} as '#{expectedOutput}'"|]
             in
             it message $ L.showMoney input `shouldBe` expectedOutput
-      (1, "SGD") `shouldShowAsMoney` "1.00 SGD"
-      (fromRational 1.05, "SGD") `shouldShowAsMoney` "1.05 SGD"
-      (fromRational 1.5, "SGD") `shouldShowAsMoney` "1.50 SGD"
-      (fromRational 1.25, "SGD") `shouldShowAsMoney` "1.25 SGD"
-      (1000, "SGD") `shouldShowAsMoney` "1,000.00 SGD"
-      (fromRational 1234567.89, "SGD") `shouldShowAsMoney` "1,234,567.89 SGD"
+      context "omits cents" $ do
+        (1, "SGD") `shouldShowAsMoney` "1 SGD"
+        (1000, "SGD") `shouldShowAsMoney` "1,000 SGD"
+      context "shows cents" $ do
+        (fromRational 1.05, "SGD") `shouldShowAsMoney` "1.05 SGD"
+        (fromRational 1.5, "SGD") `shouldShowAsMoney` "1.50 SGD"
+        (fromRational 1.25, "SGD") `shouldShowAsMoney` "1.25 SGD"
+      context "shows cents, separates by comma" $
+        (fromRational 1234567.89, "SGD") `shouldShowAsMoney` "1,234,567.89 SGD"
 
 
     describe "simpleTransactionsInJournal" $
@@ -96,7 +99,7 @@ ledgerSpec =
             unindent [i|
             # Spent 5 SGD on McDonalds
             2018-01-01 on McDonalds
-              Undescribed  5.00 SGD
+              Undescribed  5 SGD
               Assets:Cash:SGD|]
         in
         L.showLedgerTransactionFromEntry sampleEntry "Undescribed"
@@ -114,7 +117,7 @@ ledgerSpec =
             unindent [i|
             # Spent 5 SGD on McDonalds
             2018-01-01 on McDonalds
-              Undescribed  5.00 SGD
+              Undescribed  5 SGD
               Assets:Cash:SGD
             # comment|]
         in
@@ -133,7 +136,7 @@ ledgerSpec =
             unindent [i|
             # Spent 5 SGD on McDonalds
             2018-01-01 on McDonalds
-              Undescribed  5.00 SGD
+              Undescribed  5 SGD
               Assets:Cash:SGD
             # comment1
             # comment2|]
@@ -160,13 +163,13 @@ ledgerSpec =
               # 2018-01-01 Monday
               # Spent 5 SGD on McDonalds
               2018-01-01 on McDonalds
-                Undescribed  5.00 SGD
+                Undescribed  5 SGD
                 Assets:Cash:SGD
 
               # 2018-01-03 Wednesday
               # Spent 2k SGD on new computer
               2018-01-03 on new computer
-                Undescribed  2,000.00 SGD
+                Undescribed  2,000 SGD
                 Assets:Cash:SGD
               |]
         L.showLedgerJournalFromEntries inputEntries undescribed

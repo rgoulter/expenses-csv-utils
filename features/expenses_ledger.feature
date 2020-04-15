@@ -14,7 +14,7 @@ Feature: Translate Expenses File to Ledger Format
        # 2018-01-01 Monday
        # Spent 5 SGD on McDonalds
        2018-01-01 on McDonalds
-         Undescribed  5.00 SGD
+         Undescribed  5 SGD
          Assets:Cash:SGD
 
        """
@@ -37,13 +37,13 @@ Feature: Translate Expenses File to Ledger Format
        # 2018-01-01 Monday
        # Spent 5 SGD on McDonalds
        2018-01-01 on McDonalds
-         Undescribed  5.00 SGD
+         Undescribed  5 SGD
          Assets:Cash:SGD
 
        # 2018-01-03 Wednesday
        # Spent 40 SGD on ez-link top up
        2018-01-03 on ez-link top up
-         Undescribed  40.00 SGD
+         Undescribed  40 SGD
          Assets:Cash:SGD
 
        """
@@ -63,7 +63,7 @@ Feature: Translate Expenses File to Ledger Format
        # 2018-01-01 Monday
        # Spent 2k SGD on new computer
        2018-01-01 on new computer
-         Undescribed  2,000.00 SGD
+         Undescribed  2,000 SGD
          Assets:Cash:SGD
 
        """
@@ -116,7 +116,7 @@ Feature: Translate Expenses File to Ledger Format
        # 2018-01-01 Monday
        # Spent 5 SGD on McDonalds
        2018-01-01 on McDonalds
-         Expenses:Food  5.00 SGD
+         Expenses:Food  5 SGD
          Assets:Cash:SGD
 
        """
@@ -130,7 +130,7 @@ Feature: Translate Expenses File to Ledger Format
       And a ledger file "ledger.dat"
       """
       2017-12-01 on McDonalds
-        Expenses:Food  5.00 SGD
+        Expenses:Food  5 SGD
         Assets:Cash:SGD
       """
      When I run the command "expenses-utils ledger -j ledger.dat expenses.txt journal.ledger"
@@ -142,7 +142,7 @@ Feature: Translate Expenses File to Ledger Format
        # 2018-01-01 Monday
        # Spent 5 SGD on McDonalds
        2018-01-01 on McDonalds
-         Expenses:Food  5.00 SGD
+         Expenses:Food  5 SGD
          Assets:Cash:SGD
 
        """
@@ -156,7 +156,7 @@ Feature: Translate Expenses File to Ledger Format
       And a ledger file "ledger.dat"
       """
       2017-12-01 on McDonalds
-        Expenses:Food  5.00 SGD
+        Expenses:Food  5 SGD
         Assets:Cash:SGD
 
       2017-12-02 on McDonalds
@@ -184,7 +184,7 @@ Feature: Translate Expenses File to Ledger Format
       And a ledger file "ledger.dat"
       """
       2017-12-01 on McDonalds
-        Expenses:Food  5.00 SGD
+        Expenses:Food  5 SGD
         Assets:Cash:SGD
 
       2017-12-02 on McDonalds
@@ -198,7 +198,7 @@ Feature: Translate Expenses File to Ledger Format
        # 2018-01-01 Monday
        # Spent 5 SGD on McDonalds
        2018-01-01 on McDonalds
-         Expenses:Food  5.00 SGD
+         Expenses:Food  5 SGD
          Assets:Cash:SGD
 
        """

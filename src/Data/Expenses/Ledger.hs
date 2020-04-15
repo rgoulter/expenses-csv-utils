@@ -119,14 +119,18 @@ showEntryDateWithDay Entry { entryDate = (y, m, d) } = printf
 showMoney :: (D.Decimal, String) -> String
 showMoney (amount, currency) =
   let (dollars, cents) = properFraction amount
-      dollars' = showCommaSeparatedNumber dollars
-      cents' = printf "%.02d" (truncate $ cents * 100 :: Integer) :: String
-  in  [i|#{dollars'}.#{cents'} #{currency}|]
+      dollars'         = showCommaSeparatedNumber dollars
+      andCents
+        | cents == 0
+        = ""
+        | otherwise
+        = "." ++ printf "%.02d" (truncate $ cents * 100 :: Integer) :: String
+  in  [i|#{dollars'}#{andCents} #{currency}|]
 
 
 
 showCommaSeparatedNumber :: Int -> String
-showCommaSeparatedNumber x | x < 0 = "-" ++ showCommaSeparatedNumber (-x)
+showCommaSeparatedNumber x | x < 0    = "-" ++ showCommaSeparatedNumber (-x)
 showCommaSeparatedNumber x | x < 1000 = show x
 showCommaSeparatedNumber x =
   let first = showCommaSeparatedNumber (x `div` 1000)
