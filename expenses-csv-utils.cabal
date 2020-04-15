@@ -41,6 +41,7 @@ library
                      , Data.Expenses.Parse.Megaparsec.ExpenseDirective
                      , Data.Expenses.Parse.Megaparsec.Document
                      , Data.Expenses.Parse.Megaparsec.Types
+                     , Data.Expenses.Parse.Megaparsec.UsingDirective
                      , Data.Expenses.Expense
                      , Data.Expenses.Ledger.AccountSuggestions
                      , Data.Expenses.Ledger.Process
@@ -60,6 +61,7 @@ test-suite tests
                      , TestExpense
                      , TestDocumentParser
                      , TestExpenseParser
+                     , TestUsingParser
                      , TestQuery
                      , TestLedger
                      , TestLedgerAccountSuggestions
@@ -100,6 +102,7 @@ executable expenses-utils
                    , Data.Expenses.Parse.Megaparsec.ExpenseDirective
                    , Data.Expenses.Parse.Megaparsec.Document
                    , Data.Expenses.Parse.Megaparsec.Types
+                   , Data.Expenses.Parse.Megaparsec.UsingDirective
                    , Data.Expenses.Expense
                    , Data.Expenses.Ledger.AccountSuggestions
                    , Data.Expenses.Ledger.Process

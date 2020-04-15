@@ -5,6 +5,7 @@ import Test.Hspec (hspec)
 import TestDateParser (parseDateDirectiveSpec)
 import TestExpense (expenseSpec)
 import TestExpenseParser (parseExpenseDirectiveSpec)
+import TestUsingParser (parseUsingDirectiveSpec)
 import TestDocumentParser (parseExpensesFileSpec)
 import TestQuery (querySpec)
 import TestLedger (ledgerSpec)
@@ -20,6 +21,7 @@ main = hspec $ do
   querySpec
   parseDateDirectiveSpec
   parseExpenseDirectiveSpec
+  parseUsingDirectiveSpec
   parseExpensesFileSpec
   ledgerSpec
   ledgerAccountSuggestionsSpec

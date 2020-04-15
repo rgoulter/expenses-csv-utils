@@ -1,5 +1,6 @@
 module Data.Expenses.Parse.Megaparsec.Types
   ( AST(..)
+  , Configuration(..)
   , DateDirective(..)
   , Direction(..)
   , Expense(..)
@@ -24,6 +25,12 @@ import           Data.Expenses.Types            ( Money )
 
 
 type Parser = Parsec Void String
+
+
+
+data Configuration = Configuration
+    { configDefaultCurrency :: String
+    } deriving (Show, Eq)
 
 
 
