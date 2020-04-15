@@ -21,7 +21,7 @@ Feature: Check Expenses File Syntax
        """
        offset=15:
        unexpected "Sent"
-       expecting Date directive or Expense directive
+       expecting Date directive, Expense directive, or Using directive
        
        
        """

@@ -4,6 +4,8 @@ module TestDocumentParser (parseExpensesFileSpec) where
 
 import Data.Either (isLeft, isRight)
 
+import qualified Data.Time.Calendar.Compat     as DT
+
 import Data.String.Interpolate (i)
 import Data.String.Interpolate.Util (unindent)
 
@@ -21,6 +23,7 @@ import Text.Megaparsec (parse)
 
 import qualified Data.Expenses.Parse.Megaparsec.Document as PED
 import qualified Data.Expenses.Parse.Megaparsec.Types as PT
+import qualified Data.Expenses.Types as ET
 import Data.Expenses.Parse.Megaparsec.Document (modelFromAst)
 
 
@@ -100,7 +103,7 @@ badExpensesDocTypoLastLine =
 
 parseExpensesFileSpec :: Spec
 parseExpensesFileSpec =
-  describe "Data.Expenses.Parse.Megaparsec.ExpensesDoc" $
+  describe "Data.Expenses.Parse.Megaparsec.ExpensesDoc" $ do
     describe "parseExpensesFile" $ do
       context "should successfully parse well-formed doc" $ do
         let shouldSuccessfullyParseDocument p d = do
@@ -143,7 +146,7 @@ parseExpensesFileSpec =
                     `shouldBe`
                       [ err 32    -- row 4, col 1
                         -- Extra space b/c 'Using' parser not as strict as directives
-                        (utoks "Sent " <>
+                        (utoks "Sent" <>
                          elabel "Date directive" <>
                          elabel "Expense directive" <>
                          elabel "Using directive")
@@ -164,7 +167,7 @@ parseExpensesFileSpec =
                     `shouldBe`
                       [ err 32    -- row 4, col 1
                         -- Extra space b/c 'Using' parser not as strict as directives
-                        (utoks "Sent " <>
+                        (utoks "Sent" <>
                          elabel "Date directive" <>
                          elabel "Expense directive" <>
                          elabel "Using directive")
@@ -176,5 +179,19 @@ parseExpensesFileSpec =
                       ]
                 Right _ ->
                   expectationFailure "should have recovered from an error"
+
+    describe "entriesFromDirectives" $
+      it "a Using directive can change the default currency" $
+        PED.entriesFromDirectives
+          [ PT.DateCmd  $ PT.DateDir (Just $ DT.fromGregorian 2018 01 01) DT.Monday
+          , PT.ExpCmd   $ PT.Expense PT.Spent (ET.Amount 5 Nothing False) "remark1" Nothing
+          , PT.UsingCmd $ PT.Configuration "VND"
+          , PT.ExpCmd   $ PT.Expense PT.Spent (ET.Amount 10000 Nothing False) "remark2" Nothing
+          ]
+          `shouldBe`
+          [ ET.Entry (2018, 01, 01) (5, "SGD") "remark1" Nothing
+          , ET.Entry (2018, 01, 01) (10000, "VND") "remark2" Nothing
+          ]
+
     where
       docParser = PED.parseExpensesFile

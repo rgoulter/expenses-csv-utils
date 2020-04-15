@@ -1,5 +1,6 @@
 module Data.Expenses.Parse.Megaparsec.Document
-  ( modelFromAst
+  ( entriesFromDirectives
+  , modelFromAst
   , parseExpensesFile
   , withFile
   )
@@ -43,6 +44,7 @@ import qualified Text.Megaparsec.Char.Lexer    as L
 import           Data.Expenses.Parse.Megaparsec.Entry
 import           Data.Expenses.Parse.Megaparsec.Types
                                                 ( AST(..)
+                                                , Configuration(..)
                                                 , LineDirective(..)
                                                 , Parser
                                                 , RawLineDirective
@@ -108,20 +110,26 @@ modelFromAst (AST eitherLineDirectives) = f partitionedEitherDirectives
 
 entriesFromDirectives :: [LineDirective] -> [Entry]
 entriesFromDirectives directives =
-  let initial               = ((-1, -1, -1), DT.Monday, [])
+  let initial = ((-1, -1, -1), DT.Monday, Configuration "SGD", [])
 
       -- Fold over a (Date, Day, GatheredRows)
-      (_, _, directiveRows) = foldl
-        (\(date, day, rows) lineD -> case lineD of
-                   -- For ExpenseDirectives, simply add to list of 'rows'.
-          ExpCmd expense -> (date, day, entryFromExpense date expense : rows)
+      (_, _, _, directiveRows) = foldl
+        (\(date, day, config, rows) lineD -> case lineD of
+          -- For ExpenseDirectives, simply add to list of 'rows'.
+          ExpCmd expense ->
+            ( date
+            , day
+            , config
+            , entryFromExpense date (configDefaultCurrency config) expense
+              : rows
+            )
 
           -- For DateDirectives, increment/set the date/day.
           DateCmd dateDir ->
             let (date', day') = nextDate (date, day) dateDir
-            in  (date', day', rows)
+            in  (date', day', config, rows)
 
-          UsingCmd _config -> (date, day, rows)
+          UsingCmd config' -> (date, day, config', rows)
         )
         initial
         directives

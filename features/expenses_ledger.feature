@@ -48,6 +48,37 @@ Feature: Translate Expenses File to Ledger Format
 
        """
 
+  Scenario: Translate a well-formatted expenses file using different default currency
+    Given an expenses file "expenses.txt"
+      """
+      2018-01-01 MON
+      Spent 5 on McDonalds
+
+      Using VND as the default currency
+
+      WED
+      Spent 10k on snacks
+      """
+     When I run the command "expenses-utils ledger --no-accounts expenses.txt journal.ledger"
+     Then the standard output should be
+       """
+       """
+      And the file "journal.ledger" should have content
+       """
+       # 2018-01-01 Monday
+       # Spent 5 SGD on McDonalds
+       2018-01-01 on McDonalds
+         Undescribed  5 SGD
+         Assets:Cash:SGD
+
+       # 2018-01-03 Wednesday
+       # Spent 10k VND on snacks
+       2018-01-03 on snacks
+         Undescribed  10,000 VND
+         Assets:Cash:VND
+
+       """
+
   Scenario: Output the numbers in a human-readable format
     Given an expenses file "expenses.txt"
       """
