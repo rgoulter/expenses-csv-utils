@@ -2,10 +2,12 @@
 
 module TestDocumentParser (parseExpensesFileSpec) where
 
+import Data.Either (isLeft, isRight)
+
 import Data.String.Interpolate (i)
 import Data.String.Interpolate.Util (unindent)
 
-import Test.Hspec (Spec, describe, expectationFailure, it, shouldBe)
+import Test.Hspec (Spec, context, describe, expectationFailure, it, shouldBe, shouldSatisfy)
 
 import Test.Hspec.Megaparsec
   ( err
@@ -18,6 +20,7 @@ import Text.Megaparsec (parse)
 
 
 import qualified Data.Expenses.Parse.Megaparsec.Document as PED
+import qualified Data.Expenses.Parse.Megaparsec.Types as PT
 import Data.Expenses.Parse.Megaparsec.Document (modelFromAst)
 
 
@@ -88,16 +91,29 @@ parseExpensesFileSpec :: Spec
 parseExpensesFileSpec =
   describe "Data.Expenses.Parse.Megaparsec.ExpensesDoc" $
     describe "parseExpensesFile" $ do
-      -- direction Spent/Rcv
-      it "should successfully parse well-formed doc" $ do
-        parse docParser "" `shouldSucceedOn` goodExpensesDoc
-        parse docParser "" `shouldSucceedOn` goodExpensesDocWithCmts
-      it "does not fail to parse malformed doc" $
-        -- n.b. it should successfully return a list with at least one Left.
-        parse docParser "" `shouldSucceedOn` badExpensesDoc
-      it "does not fail to parse malformed doc, typo on last line (no EOL)" $
-        -- n.b. it should successfully return a list with at least one Left.
-        parse docParser "" `shouldSucceedOn` badExpensesDocTypoLastLine
+      context "should successfully parse well-formed doc" $ do
+        let shouldSuccessfullyParseDocument p d = do
+              parse p "" `shouldSucceedOn` d
+              let rawResult = parse p "" d
+              case rawResult of
+                Left _ -> expectationFailure "parser shouldn't fail"
+                Right (PT.AST rawLines) -> rawLines `shouldSatisfy` all isRight
+        it "simple document" $
+          docParser `shouldSuccessfullyParseDocument` goodExpensesDoc
+        it "document with comments" $
+          docParser `shouldSuccessfullyParseDocument` goodExpensesDocWithCmts
+
+      context "recovers parsing malformed doc" $ do
+        let shouldRecoverWithAtLeastOneError p d = do
+              parse p "" `shouldSucceedOn` d
+              let rawResult = parse p "" d
+              case rawResult of
+                Left _ -> expectationFailure "parser shouldn't fail"
+                Right (PT.AST rawLines) -> rawLines `shouldSatisfy` any isLeft
+        it "malformed with simple typo" $ do
+          docParser `shouldRecoverWithAtLeastOneError` badExpensesDoc
+        it "malformed typo on last line (no EOL)" $ do
+          docParser `shouldRecoverWithAtLeastOneError` badExpensesDocTypoLastLine
 
       -- XXX: need to update these to assert that the Lefts of the
       -- raw result are as asserted!
