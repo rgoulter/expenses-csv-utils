@@ -29,6 +29,7 @@ ledgerSpec =
         L.showCommaSeparatedNumber 1 `shouldBe` "1"
         L.showCommaSeparatedNumber 1000 `shouldBe` "1,000"
         L.showCommaSeparatedNumber 1234567 `shouldBe` "1,234,567"
+        L.showCommaSeparatedNumber (-1234567) `shouldBe` "-1,234,567"
 
 
     describe "showHumanReadableMoney" $

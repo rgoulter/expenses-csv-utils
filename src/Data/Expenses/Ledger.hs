@@ -126,6 +126,7 @@ showMoney (amount, currency) =
 
 
 showCommaSeparatedNumber :: Int -> String
+showCommaSeparatedNumber x | x < 0 = "-" ++ showCommaSeparatedNumber (-x)
 showCommaSeparatedNumber x | x < 1000 = show x
 showCommaSeparatedNumber x =
   let first = showCommaSeparatedNumber (x `div` 1000)
