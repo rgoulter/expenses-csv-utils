@@ -51,6 +51,8 @@ import qualified Data.Expenses.Parse.Megaparsec.DateDirective
                                                as PD
 import qualified Data.Expenses.Parse.Megaparsec.ExpenseDirective
                                                as PE
+import qualified Data.Expenses.Parse.Megaparsec.UsingDirective
+                                               as PU
 import           Data.Expenses.Expense          ( nextDate )
 import           Data.Expenses.Types            ( Model
                                                 , modelFromEntries
@@ -70,7 +72,8 @@ scn = hidden . skipMany $ choice [void spaceChar, L.skipLineComment "#"]
 
 lineDirective :: Parser LineDirective
 lineDirective =
-  (DateCmd <$> PD.dateDirective <* scn <?> "Date directive")
+  (UsingCmd <$> PU.using <* scn <?> "Using directive")
+    <|> (DateCmd <$> PD.dateDirective <* scn <?> "Date directive")
     <|> (ExpCmd <$> PE.expense <* scn <?> "Expense directive")
 
 
@@ -117,6 +120,8 @@ entriesFromDirectives directives =
           DateCmd dateDir ->
             let (date', day') = nextDate (date, day) dateDir
             in  (date', day', rows)
+
+          UsingCmd _config -> (date, day, rows)
         )
         initial
         directives

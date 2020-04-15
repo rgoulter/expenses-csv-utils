@@ -56,6 +56,7 @@ data Expense = Expense
 
 data LineDirective = DateCmd DateDirective
                    | ExpCmd Expense
+                   | UsingCmd Configuration
                    deriving (Show, Eq)
 
 

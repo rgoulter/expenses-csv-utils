@@ -52,6 +52,17 @@ goodExpensesDocWithCmts =
 
 
 
+goodExpensesDocWithUsing :: String
+goodExpensesDocWithUsing =
+  unindent [i|
+    Using VND as the default currency
+
+    2016-01-01 MON
+    Spent 10k on stuff
+  |]
+
+
+
 badExpensesDoc :: String
 badExpensesDoc =
   unindent [i|
@@ -102,6 +113,8 @@ parseExpensesFileSpec =
           docParser `shouldSuccessfullyParseDocument` goodExpensesDoc
         it "document with comments" $
           docParser `shouldSuccessfullyParseDocument` goodExpensesDocWithCmts
+        it "document with Using directive" $
+          docParser `shouldSuccessfullyParseDocument` goodExpensesDocWithUsing
 
       context "recovers parsing malformed doc" $ do
         let shouldRecoverWithAtLeastOneError p d = do
@@ -110,9 +123,9 @@ parseExpensesFileSpec =
               case rawResult of
                 Left _ -> expectationFailure "parser shouldn't fail"
                 Right (PT.AST rawLines) -> rawLines `shouldSatisfy` any isLeft
-        it "malformed with simple typo" $ do
+        it "malformed with simple typo" $
           docParser `shouldRecoverWithAtLeastOneError` badExpensesDoc
-        it "malformed typo on last line (no EOL)" $ do
+        it "malformed typo on last line (no EOL)" $
           docParser `shouldRecoverWithAtLeastOneError` badExpensesDocTypoLastLine
 
       -- XXX: need to update these to assert that the Lefts of the
@@ -129,9 +142,11 @@ parseExpensesFileSpec =
                   errors
                     `shouldBe`
                       [ err 32    -- row 4, col 1
-                        (utoks "Sent" <>
+                        -- Extra space b/c 'Using' parser not as strict as directives
+                        (utoks "Sent " <>
                          elabel "Date directive" <>
-                         elabel "Expense directive")
+                         elabel "Expense directive" <>
+                         elabel "Using directive")
                       ]
                 Right _ ->
                   expectationFailure "should have recovered from an error"
@@ -148,13 +163,16 @@ parseExpensesFileSpec =
                   errors
                     `shouldBe`
                       [ err 32    -- row 4, col 1
-                        (utoks "Sent" <>
+                        -- Extra space b/c 'Using' parser not as strict as directives
+                        (utoks "Sent " <>
                          elabel "Date directive" <>
-                         elabel "Expense directive")
+                         elabel "Expense directive" <>
+                         elabel "Using directive")
                       , err 55    -- row 7, col 1
                         (utoks "spent" <>
                          elabel "Date directive" <>
-                         elabel "Expense directive")
+                         elabel "Expense directive" <>
+                         elabel "Using directive")
                       ]
                 Right _ ->
                   expectationFailure "should have recovered from an error"
