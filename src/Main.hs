@@ -109,6 +109,10 @@ readAccount sugs = do
     "3" | sugsLen > 2 -> sugs !! 2
     "4" | sugsLen > 3 -> sugs !! 3
     "5" | sugsLen > 4 -> sugs !! 4
+    "6" | sugsLen > 5 -> sugs !! 5
+    "7" | sugsLen > 6 -> sugs !! 6
+    "8" | sugsLen > 7 -> sugs !! 7
+    "9" | sugsLen > 8 -> sugs !! 8
     _                 -> line
 
 
@@ -119,7 +123,7 @@ promptForEntry e = do
   putStrLn ""
   putStr "Debitted account:"
   hFlush stdout
-  readAccount []
+  readAccount [] <* putStrLn ""
 
 promptForEntryWith :: [String] -> Entry -> IO String
 promptForEntryWith sugs e = do
@@ -132,7 +136,7 @@ promptForEntryWith sugs e = do
   forM_ zipped (\(s, idx) -> putStrLn [i| (#{idx}) #{s}|])
   putStr "Debitted account:"
   hFlush stdout
-  readAccount sugs
+  readAccount sugs <* putStrLn ""
 
 
 runLedgerMode :: String -> String -> Bool -> [FilePath] -> IO ()
