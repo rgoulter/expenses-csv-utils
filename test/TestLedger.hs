@@ -27,6 +27,7 @@ ledgerSpec =
     describe "showCommaSeparatedNumber" $
       it "should show numbers with commas (e.g. 1000 -> 1,000)" $ do
         L.showCommaSeparatedNumber 1 `shouldBe` "1"
+        L.showCommaSeparatedNumber (-1) `shouldBe` "-1"
         L.showCommaSeparatedNumber 1000 `shouldBe` "1,000"
         L.showCommaSeparatedNumber 1234567 `shouldBe` "1,234,567"
         L.showCommaSeparatedNumber (-1234567) `shouldBe` "-1,234,567"
@@ -43,6 +44,7 @@ ledgerSpec =
         (5, "SGD") `shouldShowAsHumanReadable` "5 SGD"
         (fromRational 5.05, "SGD") `shouldShowAsHumanReadable` "5.05 SGD"
         (fromRational 1.25, "SGD") `shouldShowAsHumanReadable` "1.25 SGD"
+        (fromRational (-1.25), "SGD") `shouldShowAsHumanReadable` "-1.25 SGD"
         (fromRational 1.50, "SGD") `shouldShowAsHumanReadable` "1.5 SGD"
         (2000, "SGD") `shouldShowAsHumanReadable` "2k SGD"
         (65000, "VND") `shouldShowAsHumanReadable` "65k VND"
@@ -66,6 +68,7 @@ ledgerSpec =
         (fromRational 1.05, "SGD") `shouldShowAsMoney` "1.05 SGD"
         (fromRational 1.5, "SGD") `shouldShowAsMoney` "1.50 SGD"
         (fromRational 1.25, "SGD") `shouldShowAsMoney` "1.25 SGD"
+        (fromRational (-1.25), "SGD") `shouldShowAsMoney` "-1.25 SGD"
       context "shows cents, separates by comma" $
         (fromRational 1234567.89, "SGD") `shouldShowAsMoney` "1,234,567.89 SGD"
 

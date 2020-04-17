@@ -118,14 +118,16 @@ showEntryDateWithDay Entry { entryDate = (y, m, d) } = printf
 
 showMoney :: (D.Decimal, String) -> String
 showMoney (amount, currency) =
-  let (dollars, cents) = properFraction amount
-      dollars'         = showCommaSeparatedNumber dollars
-      andCents
-        | cents == 0
-        = ""
-        | otherwise
-        = "." ++ printf "%.02d" (truncate $ cents * 100 :: Integer) :: String
-  in  [i|#{dollars'}#{andCents} #{currency}|]
+  let
+    (dollars, cents) = properFraction amount
+    dollars'         = showCommaSeparatedNumber dollars
+    andCents
+      | cents == 0
+      = ""
+      | otherwise
+      = "." ++ printf "%.02d" (truncate $ abs $ cents * 100 :: Integer) :: String
+  in
+    [i|#{dollars'}#{andCents} #{currency}|]
 
 
 
@@ -160,7 +162,7 @@ showHumanReadableMoney (amount, currency) =
       | useK
       = (dollars `div` 1000, D.Decimal 3 $ dollars `mod` 1000, "k")
       | otherwise
-      = (dollars, cents, "")
+      = (dollars, abs cents, "")
     humanReadableDollars = showCommaSeparatedNumber $ fromIntegral dollars'
     humanReadableCents
       | cents' == 0  = ""
