@@ -109,6 +109,24 @@ ledgerSpec =
           `shouldBe`
             sampleTransaction
 
+      it "should show a simple Ledger transaction for an Entry with Received" $
+        let
+          sampleEntry =
+            Entry (2018, 01, 01)
+                  (-5, "SGD")
+                  "from a friend"
+                  Nothing
+          sampleTransaction =
+            unindent [i|
+            # Received 5 SGD from a friend
+            2018-01-01 from a friend
+              Assets:Cash:SGD  5 SGD
+              Undescribed|]
+        in
+        L.showLedgerTransactionFromEntry sampleEntry "Undescribed"
+          `shouldBe`
+            sampleTransaction
+
       it "should show a simple Ledger transaction for an Entry with a comment" $
         let
           entryWithComment =

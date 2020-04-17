@@ -92,10 +92,10 @@ simpleTransactionsInJournal j =
 
 
 directiveFromEntry :: Entry -> String
-directiveFromEntry Entry { entryDate = _, entryPrice = price@(dollars, _), entryRemark = remark }
+directiveFromEntry Entry { entryDate = _, entryPrice = (dollars, cents), entryRemark = remark }
   = [i|#{direction} #{price'} #{remark}|]
  where
-  price'    = showHumanReadableMoney price
+  price'    = showHumanReadableMoney (abs dollars, cents)
   direction = if dollars >= 0 then "Spent" else "Received"
 
 
@@ -173,26 +173,24 @@ showHumanReadableMoney (amount, currency) =
 
 
 
-showEntryPrice :: Entry -> String
-showEntryPrice = showMoney . entryPrice
-
-
-
 showLedgerTransactionFromEntry :: Entry -> String -> String
 showLedgerTransactionFromEntry entry account =
   unindent [i|
   # #{originalDirective}
   #{date} #{remark}
-    #{account}  #{price}
-    Assets:Cash:#{cur}|]
+    #{deb}  #{price}
+    #{cred}|]
     ++ cmt
  where
   date              = showEntryDate entry
-  (_, cur)          = entryPrice entry
-  price             = showEntryPrice entry
+  (amount, cur)     = entryPrice entry
+  price             = showMoney (abs amount, cur)
   remark            = entryRemark entry
   cmt               = maybe "" ((:) '\n') $ entryComment entry
   originalDirective = directiveFromEntry entry
+  (deb, cred)       = if amount >= 0
+    then (account, [i|Assets:Cash:#{cur}|])
+    else ([i|Assets:Cash:#{cur}|], account)
 
 
 
