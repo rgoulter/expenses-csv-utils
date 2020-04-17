@@ -58,6 +58,7 @@ test-suite tests
   main-is:             TestSpec.hs
   type: exitcode-stdio-1.0
   other-modules:       TestDateParser
+                     , TestEntry
                      , TestExpense
                      , TestDocumentParser
                      , TestExpenseParser

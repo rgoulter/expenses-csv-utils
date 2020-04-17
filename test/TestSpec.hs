@@ -3,6 +3,7 @@ module Main (main) where
 import Test.Hspec (hspec)
 
 import TestDateParser (parseDateDirectiveSpec)
+import TestEntry (entrySpec)
 import TestExpense (expenseSpec)
 import TestExpenseParser (parseExpenseDirectiveSpec)
 import TestUsingParser (parseUsingDirectiveSpec)
@@ -22,6 +23,7 @@ main = hspec $ do
   parseDateDirectiveSpec
   parseExpenseDirectiveSpec
   parseUsingDirectiveSpec
+  entrySpec
   parseExpensesFileSpec
   ledgerSpec
   ledgerAccountSuggestionsSpec
